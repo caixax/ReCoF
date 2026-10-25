@@ -249,6 +249,7 @@ def merged_symbols(d, dll, tag=""):
             if rows.get(va, ("",))[0] == r["name"]:
                 rows.pop(va)
             forget.append((va, r["name"]))
+    os.makedirs(os.path.join(ROOT, "build", "jobs"), exist_ok=True)
     with open(os.path.join(ROOT, "build", "jobs", "forget_%s%s.csv" % (dll, tag)), "w", newline="") as f:
         w = csv.writer(f, lineterminator="\n")
         w.writerow(["va", "name"])
