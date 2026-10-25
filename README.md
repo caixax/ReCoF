@@ -13,7 +13,7 @@ ReCoF fixes the bugs of **Cry of Fear** (Steam release, version string `1.6a`) a
 - **Speedrun techniques stay.** Movement tech, skips and exploits that runners use are not removed unless they crash the game or corrupt saves. When a fix changes something runners rely on, the original behavior stays available behind a cvar.
 - **New cvars and commands use the prefix `rc_`.**
 - **Retail saves keep loading.** A fix that has to change a save table versions it and still reads the old format.
-- **Every change is measured against the baseline.** Before any fix, a ReCoF build is identical to DeCoF's except for timestamps, so each fix can be checked to change only the functions it means to change.
+- **Every change is measured against the baseline.** Before any fix, a ReCoF build is identical to DeCoF's except for build stamps and the name of the build folder, so each fix can be checked to change only the functions it means to change.
 
 ## Building
 
@@ -57,6 +57,7 @@ git merge decof/master
 | [docs/structs.md](docs/structs.md) | Struct and class layouts that differ from the Half-Life SDK |
 | [docs/original_bugs.md](docs/original_bugs.md) | Bugs of the retail game found during the decompilation, the starting point for ReCoF's fixes |
 | [docs/refs.md](docs/refs.md) | Reference repositories, what each provides and its license |
+| [docs/baseline.md](docs/baseline.md) | The baseline build every fix is compared with, and how to compare (`tools/compare_build.py`) |
 
 ## License
 
