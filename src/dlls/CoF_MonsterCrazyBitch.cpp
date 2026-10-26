@@ -625,7 +625,12 @@ void CCrazyBitch :: MonsterThink( void )
 	if ( b_StartSuicide && m_flSuicideAttempt < gpGlobals->time && b_ReadyToSuicide )
 	{
 		CBasePlayer *pPlayer = NULL;
-		pPlayer = (CBasePlayer *)CBaseEntity::Instance( INDEXENT( 1 ) );
+
+		// ReCoF (B099): retail always took player 1, so in multiplayer player 1 shot himself whoever the enemy was
+		if ( m_hEnemy != NULL && m_hEnemy->IsPlayer() )
+			pPlayer = GetClassPtr( (CBasePlayer *)m_hEnemy->pev );
+		else
+			pPlayer = (CBasePlayer *)CBaseEntity::Instance( INDEXENT( 1 ) );
 
 		if ( pPlayer && pPlayer->m_pActiveItem && IsAlive() )
 		{
