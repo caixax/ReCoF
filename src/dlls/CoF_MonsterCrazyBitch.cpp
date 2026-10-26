@@ -24,6 +24,7 @@
 #include	"player.h"
 #include	"weapons.h"
 #include	"animation.h"
+#include	"game.h"
 
 
 //=========================================================
@@ -823,6 +824,9 @@ void CCrazyBitch :: MonsterThink( void )
 						}
 					}
 				}
+				// ReCoF (B052): retail fell through and tested the rifle again as a shotgun; rc_retail_gameplay 1 keeps that
+				if ( !rc_retail_gameplay.value )
+					break;
 
 			case 4:
 				{
@@ -872,6 +876,9 @@ void CCrazyBitch :: MonsterThink( void )
 						}
 					}
 				}
+				// ReCoF (B052): retail fell through and tested the TMP again as an MP5 and a VP70; rc_retail_gameplay 1 keeps that
+				if ( !rc_retail_gameplay.value )
+					break;
 
 			case 27:
 				{
@@ -897,6 +904,8 @@ void CCrazyBitch :: MonsterThink( void )
 						}
 					}
 				}
+				if ( !rc_retail_gameplay.value )	// ReCoF (B052): the MP5 also fell through into the VP70 case
+					break;
 
 			case 19:
 				{
