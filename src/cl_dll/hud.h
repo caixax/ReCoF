@@ -772,16 +772,19 @@ public:
 	HSPRITE	m_hMuzzleflash_guess;		// "sprites/muzzleflash.spr"
 
 	// 0x364-0xf1b (3000 bytes): not referenced by any code of the 1.6a, 1.55 or 1.0 client.dll
-	char	m_szUnused364_guess[3000];
+	// ReCoF (B133): 416 bytes of it (one note) go to m_Notes_guess below, so every later member,
+	// including the ones the LiveSplit autosplitter reads, keeps its retail offset
+	char	m_szUnused364_guess[3000 - 416];
 
 	// notes (AddNote message); the code uses index 1-16, so note 16 runs over the members that follow (original bug)
+	// ReCoF (B133): 17 entries, so index 16 is inside the array; entry 0 stays unused
 	struct
 	{
 		char	szLine_guess[8][32];
 		char	szText1_guess[48];
 		char	szText2_guess[64];
 		char	szText3_guess[48];
-	} m_Notes_guess[16];
+	} m_Notes_guess[17];
 
 	Vector	m_vecIronSightOfs_guess;	// IronSights message
 	Vector	m_vecIronSightOfs2_guess;
