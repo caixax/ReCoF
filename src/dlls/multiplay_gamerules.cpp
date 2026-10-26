@@ -1406,16 +1406,6 @@ void CHalfLifeMultiplay :: ClientDisconnected( edict_t *pClient )
 						{
 							plr->PlayerStopMP3( 1 );
 						}
-
-						if ( survivalmode && pSurvivalEntity && !pSurvivalEntity->pev->iuser3 )
-						{
-							if ( pSurvivalEntity->pev->target )
-							{
-								FireTargets( STRING( pSurvivalEntity->pev->target ), pSurvivalEntity, pSurvivalEntity, USE_TOGGLE, 0 );
-								pSurvivalEntity->pev->iuser3 = 1;
-								GetClassPtr( (CCoFSurvivalMode *)pSurvivalEntity->pev )->m_bSurvivalModeRunning = false;
-							}
-						}
 						else
 						{
 							plr->m_flDeadTime = gpGlobals->time + 5;
@@ -1426,6 +1416,13 @@ void CHalfLifeMultiplay :: ClientDisconnected( edict_t *pClient )
 							UTIL_ProMessage( plr, "Game over", 4, false );
 						}
 					}
+				}
+
+				if ( survivalmode && !pSurvivalEntity->pev->iuser3 && pSurvivalEntity->pev->target )
+				{
+					FireTargets( STRING( pSurvivalEntity->pev->target ), pSurvivalEntity, pSurvivalEntity, USE_TOGGLE, 0 );
+					pSurvivalEntity->pev->iuser3 = 1;
+					GetClassPtr( (CCoFSurvivalMode *)pSurvivalEntity->pev )->m_bSurvivalModeRunning = false;
 				}
 			}
 
