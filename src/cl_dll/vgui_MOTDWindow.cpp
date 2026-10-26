@@ -99,7 +99,7 @@ CMessageWindowPanel::CMessageWindowPanel( const char *szMOTD, const char *szTitl
 	pSchemes->getBgColor( hTitleScheme, r, g, b, a );
 	pLabel->setBgColor( r, g, b, a );
 	pLabel->setContentAlignment( vgui::Label::a_west );
-	pLabel->setText(szTitle);
+	pLabel->setText( "%s", szTitle );	// ReCoF (B135): the server name is not a format string
 
 	// Create the Scroll panel
 	ScrollPanel *pScrollPanel = new CTFScrollPanel( iXPos + XRES(16), iYPos + MOTD_TITLE_Y*2 + YRES(16), iXSize - XRES(32), iYSize - (YRES(48) + BUTTON_SIZE_Y*2) );

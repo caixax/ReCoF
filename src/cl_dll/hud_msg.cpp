@@ -1269,7 +1269,8 @@ int CHud :: MsgFunc_Objectives( const char *pszName, int iSize, void *pbuf )
 			szText[iLen] = '\0';
 
 			int w, h;
-			gViewPort->m_pHUDControl_guess->m_pHintLabel_guess->setText( szText );
+			// ReCoF (B135): Label::setText is printf style; retail passed player names and chat text as the format
+			gViewPort->m_pHUDControl_guess->m_pHintLabel_guess->setText( "%s", szText );
 			gViewPort->m_pHUDControl_guess->m_pCreditsFont_guess->getTextSize( gViewPort->m_pHUDControl_guess->m_szHintLine1_guess, w, h );
 			gViewPort->m_pHUDControl_guess->m_pHintLabel_guess->setPos( ScreenWidth / 2 - 400, -48 );
 			gViewPort->m_pHUDControl_guess->m_bHint_guess = true;

@@ -183,7 +183,8 @@ int CHudDeathNotice :: MsgFunc_DeathMsg( const char *pszName, int iSize, void *p
 			gViewPort->m_pHUDControl_guess->m_pDeathLabel_guess->setPos( ScreenWidth - w - 5, 0 );
 			ConsolePrint( szText );
 			gViewPort->m_pHUDControl_guess->m_iDeathAlpha_guess = 0;
-			gViewPort->m_pHUDControl_guess->m_pDeathLabel_guess->setText( szText );
+			// ReCoF (B135): Label::setText is printf style; retail passed player names and chat text as the format
+			gViewPort->m_pHUDControl_guess->m_pDeathLabel_guess->setText( "%s", szText );
 		}
 	}
 

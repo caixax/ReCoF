@@ -144,7 +144,8 @@ int CHudSayText :: Draw( float flTime )
 	if ( gViewPort && gViewPort->m_pHUDControl_guess )
 	{
 		for ( i = 0; i < MAX_LINES; i++ )
-			gViewPort->m_pHUDControl_guess->m_pSayTextLabel_guess[i]->setText( g_szLineBuffer[i] + 1 );
+			// ReCoF (B135): Label::setText is printf style; retail passed player names and chat text as the format
+			gViewPort->m_pHUDControl_guess->m_pSayTextLabel_guess[i]->setText( "%s", g_szLineBuffer[i] + 1 );
 	}
 
 	return 1;
