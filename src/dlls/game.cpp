@@ -60,6 +60,8 @@ cvar_t	cf_recordmodels = {"cf_recordmodels","0", FCVAR_SERVER };
 cvar_t	cf_recordsounds = {"cf_recordsounds","0", FCVAR_SERVER };
 // ReCoF: 1 brings back the retail behavior of every balance fix (damage, health, AI, collision), for runners
 cvar_t	rc_retail_gameplay = {"rc_retail_gameplay","0", FCVAR_SERVER };
+// ReCoF: 0 removes the bunny hop speed cap (retail and default: 1); sent to client prediction as physinfo "nbh"
+cvar_t	rc_bhopcap = {"rc_bhopcap","1", FCVAR_SERVER };
 cvar_t	cof_walksteptime = {"cof_walksteptime","410", FCVAR_SERVER };
 cvar_t	cof_runsteptime = {"cof_runsteptime","375", FCVAR_SERVER };
 cvar_t	cof_sprintsteptime = {"cof_sprintsteptime","300", FCVAR_SERVER };
@@ -534,6 +536,7 @@ void GameDLLInit( void )
 	CVAR_REGISTER (&cf_recordmodels);
 	CVAR_REGISTER (&cf_recordsounds);
 	CVAR_REGISTER (&rc_retail_gameplay);
+	CVAR_REGISTER (&rc_bhopcap);
 	CVAR_REGISTER (&cof_walksteptime);
 	CVAR_REGISTER (&cof_runsteptime);
 	CVAR_REGISTER (&cof_sprintsteptime);

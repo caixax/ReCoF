@@ -3947,8 +3947,18 @@ void CBasePlayer::UpdateStatusBar()
 #define	CLIMB_PUNCH_X			-7  // how far to 'punch' client X axis when climbing
 #define CLIMB_PUNCH_Z			7	// how far to 'punch' client Z axis when climbing
 
+// ReCoF: set a physinfo key only when its value changes; pm_shared reads these keys on the server
+// and in client prediction, so both sides move the same way
+static void RcSetPhysicsKey( edict_t *pEdict, const char *key, const char *value )
+{
+	if ( strcmp( g_engfuncs.pfnInfoKeyValue( (char *)g_engfuncs.pfnGetPhysicsInfoString( pEdict ), (char *)key ), value ) )
+		g_engfuncs.pfnSetPhysicsKeyValue( pEdict, key, value );
+}
+
 void CBasePlayer::PreThink(void)
 {
+	RcSetPhysicsKey( edict(), "nbh", rc_bhopcap.value ? "0" : "1" );	// ReCoF (B131)
+
 	if ( m_bHoldingBreath )
 	{
 		if ( m_pActiveItem && FClassnameIs( m_pActiveItem->edict(), "weapon_rifle" ) )

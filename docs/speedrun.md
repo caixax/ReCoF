@@ -38,3 +38,4 @@ These tools work on the retail binaries by address or by byte pattern. Any ReCoF
 ## ReCoF cvars
 
 - **`rc_retail_gameplay`** (server, default 0). ReCoF fixes balance bugs by default: damage, health, AI and collision behave as the developers wrote them to. Set it to 1 to get the retail behavior of every such fix back at once. It covers: B047 (saw crazy hit timer), B052 (crazy bitch weapon cases), B062 (co-op door moves the monsters near its exit back to their spawn).
+- **`rc_bhopcap`** (server, default 1 as in retail). 0 removes the bunny hop speed cap (B131). The server passes it to client prediction as the physinfo key `nbh`, so both sides agree; a separate category if used.

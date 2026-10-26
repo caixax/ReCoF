@@ -2962,6 +2962,10 @@ void PM_PreventMegaBunnyJumping( void )
 	// Speed at which bunny jumping is limited
 	float maxscaledspeed;
 
+	// ReCoF (B131): the server sets physinfo "nbh" to 1 with rc_bhopcap 0; without the key the cap is retail's
+	if ( atoi( pmove->PM_Info_ValueForKey( pmove->physinfo, "nbh" ) ) )
+		return;
+
 	maxscaledspeed = BUNNYJUMP_MAX_SPEED_FACTOR * pmove->maxspeed;
 
 	// Don't divide by zero
