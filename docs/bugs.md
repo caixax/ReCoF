@@ -16,7 +16,7 @@ Every known problem of the retail game that ReCoF may fix, one row per issue. Th
   - **cosmetic**: text and menu details.
   - **latent**: wrong code with no visible effect in the shipped game.
 - **Runners** is yes when speedrunners rely on the behavior, check when a fix could change something they use and that has to be checked first, and no otherwise. A fix to a yes or check row keeps the original behavior available behind an `rc_` cvar.
-- **Status** is open, fixed (with the commit) or keep (decided not to fix, with the reason in the fix plan).
+- **Status** is open, test (fixed in the source and waiting for an in-game test, with the commit), fixed (confirmed in game) or keep (decided not to fix, with the reason in the fix plan).
 
 Rows imported from DeCoF can hold several related problems of one function or file. A fix commit names the part it fixes, and the row is fixed when all its parts are.
 
