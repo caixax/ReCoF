@@ -60,6 +60,7 @@ git merge decof/master
 | [docs/bugs.md](docs/bugs.md) | The bug inventory: every known problem, its evidence, severity, runner impact and fix plan |
 | [docs/speedrun.md](docs/speedrun.md) | Speedrun techniques ReCoF keeps, and the runner tools that depend on the binaries |
 | [docs/baseline.md](docs/baseline.md) | The baseline build every fix is compared with, and how to compare (`tools/compare_build.py`) |
+| [docs/feasibility/](docs/feasibility/README.md) | Feasibility studies for the larger projects: GPU and multicore, `rc_hlmovement`, a launcher repository, a server SDK |
 
 ## License
 
