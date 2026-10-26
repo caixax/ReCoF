@@ -25,6 +25,7 @@
 #include	"schedule.h"
 #include	"player.h"
 #include	"weapons.h"
+#include	"game.h"
 
 
 //=========================================================
@@ -197,7 +198,8 @@ void CTwitcher4 :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		{
 			// do stuff for this event.
 	//		ALERT( at_console, "Slash right!\n" );
-			CBaseEntity *pHurt = CheckTraceHullAttack( 55, gSkillData.twitcherDmgOneSlash, DMG_SLASH, false, 0 );
+			// ReCoF (B025): retail used the twitcher skill values here; the twitcher4 values in skill.cfg were never read
+			CBaseEntity *pHurt = CheckTraceHullAttack( 55, ( rc_retail_gameplay.value ? gSkillData.twitcherDmgOneSlash : gSkillData.twitcher4DmgOneSlash ), DMG_SLASH, false, 0 );
 			if ( pHurt )
 			{
 				if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
@@ -221,7 +223,7 @@ void CTwitcher4 :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		{
 			// do stuff for this event.
 	//		ALERT( at_console, "Slash left!\n" );
-			CBaseEntity *pHurt = CheckTraceHullAttack( 55, gSkillData.twitcherDmgOneSlash, DMG_SLASH, false, 0 );
+			CBaseEntity *pHurt = CheckTraceHullAttack( 55, ( rc_retail_gameplay.value ? gSkillData.twitcherDmgOneSlash : gSkillData.twitcher4DmgOneSlash ), DMG_SLASH, false, 0 );
 			if ( pHurt )
 			{
 				if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
@@ -243,7 +245,7 @@ void CTwitcher4 :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		case TWITCHER_AE_ATTACK_BOTH:
 		{
 			// do stuff for this event.
-			CBaseEntity *pHurt = CheckTraceHullAttack( 55, gSkillData.twitcherDmgBothSlash, DMG_SLASH, false, 0 );
+			CBaseEntity *pHurt = CheckTraceHullAttack( 55, ( rc_retail_gameplay.value ? gSkillData.twitcherDmgBothSlash : gSkillData.twitcher4DmgBothSlash ), DMG_SLASH, false, 0 );
 			if ( pHurt )
 			{
 				if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
@@ -285,7 +287,7 @@ void CTwitcher4 :: Spawn()
 	pev->solid			= SOLID_SLIDEBOX;
 	pev->movetype		= MOVETYPE_STEP;
 	m_bloodColor		= BLOOD_COLOR_RED;
-	pev->health			= gSkillData.twitcherHealth;
+	pev->health			= ( rc_retail_gameplay.value ? gSkillData.twitcherHealth : gSkillData.twitcher4Health );
 	pev->view_ofs		= VEC_VIEW;// position of the eyes relative to monster's origin.
 	m_flFieldOfView		= 0.5;// indicates the width of this monster's forward view cone ( as a dotproduct result )
 	m_MonsterState		= MONSTERSTATE_NONE;
