@@ -26,7 +26,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 
 | Binary | crash | save | gameplay | performance | visual | audio | cosmetic | latent | total |
 |---|---|---|---|---|---|---|---|---|---|
-| hl.dll | 10 | 3 | 53 | 10 | 9 | 10 | 4 | 32 | 131 |
+| hl.dll | 10 | 3 | 52 | 10 | 9 | 10 | 4 | 33 | 131 |
 | client.dll | 3 | 0 | 8 | 26 | 21 | 3 | 11 | 18 | 90 |
 | hw.dll | 1 | 2 | 6 | 22 | 5 | 3 | 4 | 30 | 73 |
 | GameUI.dll | 0 | 0 | 0 | 1 | 0 | 0 | 4 | 5 | 10 |
@@ -34,7 +34,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | cof.exe | 2 | 0 | 0 | 0 | 2 | 0 | 0 | 2 | 6 |
 | CoFLaunchApp.exe | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 0 | 4 |
 | unknown | 2 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 3 |
-| all issues | 17 | 5 | 63 | 51 | 36 | 14 | 20 | 82 | 288 |
+| all issues | 17 | 5 | 62 | 51 | 36 | 14 | 20 | 83 | 288 |
 
 ## User reports
 
@@ -55,7 +55,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 
 | ID | Binary | Where | Problem | Repro | Evidence | Severity | Runners | Fix plan | Status |
 |---|---|---|---|---|---|---|---|---|---|
-| B010 | hl.dll | `CShotgunAmmo::AddAmmo` (CoF_Shotgun.cpp) | When `pev->message` is set, it is passed as the ammo amount to `GiveAmmo`. `message` is a `string_t` (an offset into the string pool), so a mapper-set message gives a huge amount. | An ammo_shotgun with a message key gives a huge amount. | retail reads entvars +0x1d8 (`message` in 1.6a, +0x1d4 in 1.55) into the amount argument (DeCoF original_bugs.md) | gameplay | check | Check the retail maps for ammo entities with a message; if none rely on it, parse message as a number or ignore it. | open |
+| B010 | hl.dll | `CShotgunAmmo::AddAmmo` (CoF_Shotgun.cpp) | When `pev->message` is set, it is passed as the ammo amount to `GiveAmmo`. `message` is a `string_t` (an offset into the string pool), so a mapper-set message gives a huge amount. | An ammo_shotgun with a message key gives a huge amount. | retail reads entvars +0x1d8 (`message` in 1.6a, +0x1d4 in 1.55) into the amount argument (DeCoF original_bugs.md) | latent | check | Leave: no retail map gives ammo_shells a message key (all 42 checked), the only runtime creation (monster drops, monsters.cpp) sets none, and GiveAmmo caps the amount at the 50 shell maximum anyway. | keep |
 | B011 | hl.dll | `CFAMAS::PrimaryAttack`, `CFAMAS::SuicideShot` (CoF_FAMAS.cpp) | Play `weapons_new/famas/famas_shoot.wav`, while `Precache` loads `weapons/famas/famas_shoot.wav`. The played sound is never precached by the weapon. | Fire the FAMAS with developer 1 and look for a not precached warning. | string literals in the three functions (DeCoF original_bugs.md) | audio | no | Play the precached path, or precache the one that is played. | open |
 | B012 | hl.dll | `CTmp::PrimaryAttack` (CoF_TMP.cpp) | Calls `g_pGameRules->IsMultiplayer()` for the looping fire sound without the usual null test of `g_pGameRules`. | None in game. | no `test ecx, ecx` before the virtual call (DeCoF original_bugs.md) | latent | no | Add the null test. | open |
 | B013 | hl.dll | `CBasePlayerItem::m_SaveData` (weapons.cpp) | Lists `m_iSprintIdleAnim1` twice (once as `FIELD_INTEGER`, once as `FIELD_TIME`); `m_iSprintIdleAnim2` is never saved. | Save and load with a weapon out, then sprint. | both table entries point at the same offset in the retail save table (DeCoF original_bugs.md) | latent | no | Leave: nothing in hl.dll or client.dll reads m_iSprintIdleAnim1 or m_iSprintIdleAnim2 (the weapons only set them in Spawn), so the broken entry has no effect. Changing it would also hurt retail saves: their second m_iSprintIdleAnim1 record holds a time value, which a fixed table would load into the integer. | keep |
