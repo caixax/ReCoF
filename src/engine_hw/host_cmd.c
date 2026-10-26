@@ -4064,6 +4064,13 @@ void Host_Crash_f( void )
 	*p = 0xdeadbeef;
 }
 
+// ReCoF (B095): the command names as const data, which VC6 puts in .rdata; plain string literals go to
+// .data here and would move every uninitialized global after it (docs/speedrun.md, room in hw.dll)
+static const char rc_szGod[] = "god";
+static const char rc_szNotarget[] = "notarget";
+static const char rc_szFly[] = "fly";
+static const char rc_szNoclip[] = "noclip";
+
 /*
 ==================
 Host_InitCommands
@@ -4099,10 +4106,10 @@ void Host_InitCommands( void )
 	Cmd_AddCommand( "tell", Host_Tell_f );
 	Cmd_AddCommand( "kill", Host_Kill_f );
 	// ReCoF (B095): Cry of Fear kept these cheats but never registered them; they need sv_cheats 1
-	Cmd_AddCommand( "god", Host_God_f );
-	Cmd_AddCommand( "notarget", Host_Notarget_f );
-	Cmd_AddCommand( "fly", Host_Fly_f );
-	Cmd_AddCommand( "noclip", Host_Noclip_f );
+	Cmd_AddCommand( (char *)rc_szGod, Host_God_f );
+	Cmd_AddCommand( (char *)rc_szNotarget, Host_Notarget_f );
+	Cmd_AddCommand( (char *)rc_szFly, Host_Fly_f );
+	Cmd_AddCommand( (char *)rc_szNoclip, Host_Noclip_f );
 	Cmd_AddCommand( "pause", Host_TogglePause_f );
 	Cmd_AddCommand( "setpause", Host_Pause_f );
 	Cmd_AddCommand( "unpause", Host_Unpause_f );
