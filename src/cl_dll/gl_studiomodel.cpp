@@ -1473,6 +1473,127 @@ void CStudioModelRenderer::GL_SetupModel ( int bodypart )
 
 
 
+// ReCoF (B287): whether GL_DrawPoints hides the vertices of a bone. Retail made these tests for every
+// vertex; the answer only depends on the bone, so GL_DrawPoints now asks once per bone
+static bool RcHideBone( const char *name, bool bDualHands, bool bViewModel, int severed )
+{
+	// Cry of Fear: hide one hand of the view model while the other one holds a second weapon
+	if (bDualHands)
+	{
+		if (g_iHeadShieldType_guess == 3 && g_DrawHeadShied)
+		{
+			if (g_iDualWeapon1_guess == 13)
+			{
+				if (strstr(name, "r_"))
+					return true;
+			}
+			else
+			{
+				if (strstr(name, "l_"))
+					return true;
+			}
+		}
+
+		if (bViewModel)
+		{
+			if (g_iDualWeapon2_guess == 13)
+			{
+				if (strstr(name, "r_"))
+					return true;
+			}
+			else
+			{
+				if (strstr(name, "l_"))
+					return true;
+			}
+		}
+	}
+
+	// Cry of Fear: severed limbs (bits in curstate.playerclass)
+	if (severed > 0)
+	{
+		if (severed & 0x100)
+		{
+			if (!strcmp(name, "Bip01 L Leg1"))
+				return true;
+			if (!strcmp(name, "Bip01 L Leg"))
+				return true;
+			if (!strcmp(name, "Bip01 L Foot"))
+				return true;
+		}
+		else if (severed & 0x80)
+		{
+			if (!strcmp(name, "Bip01 L Leg1"))
+				return true;
+			if (!strcmp(name, "Bip01 L Foot"))
+				return true;
+		}
+
+		if (severed & 0x400)
+		{
+			if (!strcmp(name, "Bip01 R Leg1"))
+				return true;
+			if (!strcmp(name, "Bip01 R Leg"))
+				return true;
+			if (!strcmp(name, "Bip01 R Foot"))
+				return true;
+		}
+		else if (severed & 0x200)
+		{
+			if (!strcmp(name, "Bip01 R Leg1"))
+				return true;
+			if (!strcmp(name, "Bip01 R Foot"))
+				return true;
+		}
+
+		if (severed & 0x10)
+		{
+			if (!strcmp(name, "Bip01 L Arm1"))
+				return true;
+			if (!strcmp(name, "Bip01 L Arm2"))
+				return true;
+			if (!strcmp(name, "Bip01 L Hand"))
+				return true;
+		}
+		else if (severed & 8)
+		{
+			if (!strcmp(name, "Bip01 L Arm2"))
+				return true;
+			if (!strcmp(name, "Bip01 L Hand"))
+				return true;
+		}
+		else if (severed & 2)
+		{
+			if (!strcmp(name, "Bip01 L Hand"))
+				return true;
+		}
+
+		if (severed & 0x40)
+		{
+			if (!strcmp(name, "Bip01 R Arm1"))
+				return true;
+			if (!strcmp(name, "Bip01 R Arm2"))
+				return true;
+			if (!strcmp(name, "Bip01 R Hand"))
+				return true;
+		}
+		else if (severed & 0x20)
+		{
+			if (!strcmp(name, "Bip01 R Arm2"))
+				return true;
+			if (!strcmp(name, "Bip01 R Hand"))
+				return true;
+		}
+		else if (severed & 4)
+		{
+			if (!strcmp(name, "Bip01 R Hand"))
+				return true;
+		}
+	}
+
+	return false;
+}
+
 void CStudioModelRenderer::GL_DrawPoints ( )
 {
 	// Cry of Fear: nothing is drawn in this mode
@@ -1610,6 +1731,21 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 	gl.glCullFace(GL_FRONT);
 
 	mstudiobone_t *pbones = (mstudiobone_t *)((byte *)m_pStudioHeader + m_pStudioHeader->boneindex);
+
+	// ReCoF (B287): the bones a dual weapon or a severed limb hides, worked out once per bone (RcHideBone)
+	static bool s_bHideBone[256];
+	bool bHideBones = false;
+	int severedBits = m_pCurrentEntity->curstate.playerclass;
+	bool bDualHands = (gHUD.m_Ammo.m_pWeapon && gHUD.m_Ammo.m_pWeapon->iId == 15 && !iGoro_guess) ? true : false;
+
+	if (bDualHands || severedBits > 0)
+	{
+		bool bViewModel = (m_pCurrentEntity == gEngfuncs.GetViewModel()) ? true : false;
+
+		bHideBones = true;
+		for (int b = 0; b < m_pStudioHeader->numbones && b < 256; b++)
+			s_bHideBone[b] = RcHideBone(pbones[b].name, bDualHands, bViewModel, severedBits);
+	}
 
 	for (j = 0; j < m_pSubModel->nummesh; j++)
 	{
@@ -1860,6 +1996,24 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 			gl.glAlphaFunc(GL_GREATER, 0.5);
 		}
 
+		// ReCoF (B287): retail made these texture name and view model tests for every vertex; they cannot
+		// change inside a mesh, so they are made once here, with the same results
+		int bFullbrightTex = strstr(ptex->name, "fullbright") != NULL;
+		int bFullbrightMess = strstr(ptex->name, "fullbright_mess") != NULL;
+		int bCoronaTex = strstr(ptex->name, "corona_") != NULL;
+		int bHandTex = (strstr(ptex->name, "sleeve") || strstr(ptex->name, "glove")) ? TRUE : FALSE;
+		int bMeshIsViewModel = (m_pCurrentEntity == gEngfuncs.GetViewModel()) ? TRUE : FALSE;
+
+		// the hands fade in after the view came back
+		float handScale = 1;
+		if (bHandTex && flUnknown105595A0_guess + flUnknown105595A4_guess > gEngfuncs.GetClientTime())
+		{
+			float frac = (gEngfuncs.GetClientTime() - flUnknown105595A0_guess) / flUnknown105595A4_guess;
+			if (frac > 1)
+				frac = 1;
+			handScale = (1 - frac) + 2;
+		}
+
 		if (ptexture[pskinref[pmesh->skinref]].flags & STUDIO_NF_CHROME)
 		{
 			while (i = *(ptricmds++))
@@ -1879,10 +2033,10 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 					// FIX: put these in as integer coords, not floats
 					gl.glTexCoord2f(g_chrome[ptricmds[1]][0]*s, g_chrome[ptricmds[1]][1]*t);
 
-					if (strstr(ptex->name, "fullbright"))
+					if (bFullbrightTex)
 					{
 						float bright = cv_fullbrighttextures_guess->value;
-						if (strstr(ptex->name, "corona_"))
+						if (bCoronaTex)
 							bright += gEngfuncs.pfnRandomFloat(-0.1, 0.1);
 						gl.glColor4f( bright, bright, bright, alpha );
 					}
@@ -1914,131 +2068,18 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 
 				for( ; i > 0; i--, ptricmds += 4)
 				{
-					// Cry of Fear: hide one hand of the view model while the other one holds a second weapon
-					if (gHUD.m_Ammo.m_pWeapon && gHUD.m_Ammo.m_pWeapon->iId == 15 && !iGoro_guess)
-					{
-						if (g_iHeadShieldType_guess == 3 && g_DrawHeadShied)
-						{
-							if (g_iDualWeapon1_guess == 13)
-							{
-								if (strstr(pbones[pvertbone[ptricmds[0]]].name, "r_"))
-									continue;
-							}
-							else
-							{
-								if (strstr(pbones[pvertbone[ptricmds[0]]].name, "l_"))
-									continue;
-							}
-						}
-
-						if (m_pCurrentEntity == gEngfuncs.GetViewModel())
-						{
-							if (g_iDualWeapon2_guess == 13)
-							{
-								if (strstr(pbones[pvertbone[ptricmds[0]]].name, "r_"))
-									continue;
-							}
-							else
-							{
-								if (strstr(pbones[pvertbone[ptricmds[0]]].name, "l_"))
-									continue;
-							}
-						}
-					}
-
-					// Cry of Fear: severed limbs (bits in curstate.playerclass)
-					int severed = m_pCurrentEntity->curstate.playerclass;
-					if (severed > 0)
-					{
-						if (severed & 0x100)
-						{
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 L Leg1"))
-								continue;
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 L Leg"))
-								continue;
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 L Foot"))
-								continue;
-						}
-						else if (severed & 0x80)
-						{
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 L Leg1"))
-								continue;
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 L Foot"))
-								continue;
-						}
-
-						if (severed & 0x400)
-						{
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 R Leg1"))
-								continue;
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 R Leg"))
-								continue;
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 R Foot"))
-								continue;
-						}
-						else if (severed & 0x200)
-						{
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 R Leg1"))
-								continue;
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 R Foot"))
-								continue;
-						}
-
-						if (severed & 0x10)
-						{
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 L Arm1"))
-								continue;
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 L Arm2"))
-								continue;
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 L Hand"))
-								continue;
-						}
-						else if (severed & 8)
-						{
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 L Arm2"))
-								continue;
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 L Hand"))
-								continue;
-						}
-						else if (severed & 2)
-						{
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 L Hand"))
-								continue;
-						}
-
-						if (severed & 0x40)
-						{
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 R Arm1"))
-								continue;
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 R Arm2"))
-								continue;
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 R Hand"))
-								continue;
-						}
-						else if (severed & 0x20)
-						{
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 R Arm2"))
-								continue;
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 R Hand"))
-								continue;
-						}
-						else if (severed & 4)
-						{
-							if (!strcmp(pbones[pvertbone[ptricmds[0]]].name, "Bip01 R Hand"))
-								continue;
-						}
-					}
+					// the hidden hand of a dual weapon and the severed limbs (RcHideBone)
+					if (bHideBones && s_bHideBone[pvertbone[ptricmds[0]]])
+						continue;
 
 					// FIX: put these in as integer coords, not floats
 					gl.glTexCoord2f(ptricmds[2]*s, ptricmds[3]*t);
 
 					if (cv_fullbrighttextures_guess->value)
 					{
-						int isViewModel = (m_pCurrentEntity == gEngfuncs.GetViewModel()) ? TRUE : FALSE;
-
-						if (strstr(ptex->name, "fullbright"))
+						if (bFullbrightTex)
 						{
-							if (strstr(ptex->name, "fullbright_mess"))
+							if (bFullbrightMess)
 							{
 								if (!gHUD.m_bPhoneOff_guess)
 								{
@@ -2053,27 +2094,15 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 							else
 							{
 								float bright = cv_fullbrighttextures_guess->value;
-								if (strstr(ptex->name, "corona_"))
+								if (bCoronaTex)
 									bright += gEngfuncs.pfnRandomFloat(-0.1, 0.1);
 								gl.glColor4f( bright, bright, bright, alpha );
 							}
 						}
-						else if ((g_DrawHeadShied || isViewModel) && (strstr(ptex->name, "sleeve") || strstr(ptex->name, "glove")))
+						else if ((g_DrawHeadShied || bMeshIsViewModel) && bHandTex)
 						{
-							// the hands fade in after the view came back
-							float scale;
-							if (flUnknown105595A0_guess + flUnknown105595A4_guess > gEngfuncs.GetClientTime())
-							{
-								float frac = (gEngfuncs.GetClientTime() - flUnknown105595A0_guess) / flUnknown105595A4_guess;
-								if (frac > 1)
-									frac = 1;
-								scale = (1 - frac) + 2;
-							}
-							else
-								scale = 1;
-
 							float *lv = (float*)&g_pvlightvalues[ptricmds[1]];
-							gl.glColor4f( lv[0] / scale, lv[1] / scale, lv[2] / scale, alpha );
+							gl.glColor4f( lv[0] / handScale, lv[1] / handScale, lv[2] / handScale, alpha );
 						}
 						else
 						{
