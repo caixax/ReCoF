@@ -92,6 +92,9 @@ void CEngine::Unload( void )
 // ReCoF (B254): a const array goes to .rdata; a new string literal would land in .data and move the
 // variables the LiveSplit autosplitter reads (docs/speedrun.md)
 static const char rc_szAff[] = "-rc_aff";
+static const char rc_szNoSleep[] = "-rc_nosleep";
+static const char rc_szWinmm[] = "winmm.dll";
+static const char rc_szTimeBeginPeriod[] = "timeBeginPeriod";
 
 bool CEngine::Load( bool dedicated, char *basedir, char *cmdline )
 {
@@ -111,6 +114,16 @@ bool CEngine::Load( bool dedicated, char *basedir, char *cmdline )
 		SetThreadAffinityMask( GetCurrentThread(), dwAffinityMask_guess );
 	}
 
+	// ReCoF (B252): a 1 ms timer period, so the frame limiter in Host_FilterTime can sleep 1 ms at a time;
+	// looked up at run time because an import would change hw.dll's layout. -rc_nosleep keeps the retail spin
+	if ( !COM_CheckParm( (char *)rc_szNoSleep ) )
+	{
+		HMODULE hWinmm = GetModuleHandleA( rc_szWinmm );
+		FARPROC pfnTimeBeginPeriod = hWinmm ? GetProcAddress( hWinmm, rc_szTimeBeginPeriod ) : NULL;
+
+		if ( pfnTimeBeginPeriod )
+			( (UINT (WINAPI *)( UINT ))pfnTimeBeginPeriod )( 1 );
+	}
 
 	if ( Sys_InitGame( cmdline, basedir, game->GetMainWindowAddress(), dedicated ) )
 		success = true;

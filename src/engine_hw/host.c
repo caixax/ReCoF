@@ -883,6 +883,10 @@ Host_FilterTime
 Returns false if the time is too short to run a frame
 ===================
 */
+// ReCoF (B252): const data goes to .rdata; a string literal would land in .data and move the variables the
+// LiveSplit autosplitter reads (docs/speedrun.md)
+static const char rc_szNoSleep[] = "-rc_nosleep";
+
 qboolean Host_FilterTime( float time )
 {
 	float	fps;
@@ -922,7 +926,16 @@ qboolean Host_FilterTime( float time )
 		if ( !cls.timedemo )
 		{
 			if ( realtime - oldrealtime < sys_timescale.value / fps )
+			{
+				// ReCoF (B252): retail spun a whole core until the frame was due. Sleep 1 ms (1 to 2 ms with the
+				// 1 ms timer period CEngine::Load sets) while more than 3 ms remain, so the last part still spins
+				// and the frame starts at the same moment as before: host_frametime and the msec of each
+				// command do not change. -rc_nosleep keeps the retail spin
+				if ( sys_timescale.value / fps - ( realtime - oldrealtime ) > 0.003 * sys_timescale.value && !COM_CheckParm( (char *)rc_szNoSleep ) )
+					Sys_Sleep( 1 );
+
 				return false;		// framerate is too high
+			}
 		}
 	}
 	else
