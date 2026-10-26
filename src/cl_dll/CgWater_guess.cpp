@@ -97,19 +97,32 @@ void CCgWater_guess::Init_guess( void )
 	if ( !m_bEnabled_guess )
 		return;
 
-	m_flTexWidth_guess = 2;
-	while ( m_flTexWidth_guess < ScreenWidth )
-		m_flTexWidth_guess *= 2;
+	// ReCoF (B182): retail made new screen textures on every map load and never freed them, three
+	// power of two copies of the screen per load (4096x2048 at 2560x1440); keep them while the size holds
+	float flTexWidth = 2;
+	while ( flTexWidth < ScreenWidth )
+		flTexWidth *= 2;
 
-	m_flTexHeight_guess = 2;
-	while ( m_flTexHeight_guess < ScreenHeight )
-		m_flTexHeight_guess *= 2;
+	float flTexHeight = 2;
+	while ( flTexHeight < ScreenHeight )
+		flTexHeight *= 2;
 
-	m_iSceneTexture_guess = 256;
-	g_TextureManager_guess.CreateTexture_guess( m_flTexWidth_guess, m_flTexHeight_guess, &m_iSceneTexture_guess, GL_TEXTURE_2D, GL_RGB );
-	g_TextureManager_guess.CreateTexture_guess( m_flTexWidth_guess, m_flTexHeight_guess, &m_iMaskTexture_guess, GL_TEXTURE_2D, GL_RGB );
-	g_TextureManager_guess.CreateTexture_guess( 256, 256, &m_iOffsetTexture_guess, GL_TEXTURE_2D, GL_RGB );
-	g_TextureManager_guess.CreateTexture_guess( m_flTexWidth_guess, m_flTexHeight_guess, &m_iDistortTexture_guess, GL_TEXTURE_2D, GL_RGB );
+	if ( !m_iSceneTexture_guess || !glIsTexture( m_iSceneTexture_guess ) || flTexWidth != m_flTexWidth_guess || flTexHeight != m_flTexHeight_guess )
+	{
+		if ( m_iSceneTexture_guess && glIsTexture( m_iSceneTexture_guess ) )
+		{
+			GLuint textures[4] = { m_iSceneTexture_guess, m_iMaskTexture_guess, m_iOffsetTexture_guess, m_iDistortTexture_guess };
+			glDeleteTextures( 4, textures );
+		}
+
+		m_flTexWidth_guess = flTexWidth;
+		m_flTexHeight_guess = flTexHeight;
+
+		g_TextureManager_guess.CreateTexture_guess( m_flTexWidth_guess, m_flTexHeight_guess, &m_iSceneTexture_guess, GL_TEXTURE_2D, GL_RGB );
+		g_TextureManager_guess.CreateTexture_guess( m_flTexWidth_guess, m_flTexHeight_guess, &m_iMaskTexture_guess, GL_TEXTURE_2D, GL_RGB );
+		g_TextureManager_guess.CreateTexture_guess( 256, 256, &m_iOffsetTexture_guess, GL_TEXTURE_2D, GL_RGB );
+		g_TextureManager_guess.CreateTexture_guess( m_flTexWidth_guess, m_flTexHeight_guess, &m_iDistortTexture_guess, GL_TEXTURE_2D, GL_RGB );
+	}
 
 	unsigned char offsets[256][256][2];
 

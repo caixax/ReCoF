@@ -81,8 +81,7 @@ void CTextureManager_guess::CheckMipmapSupport_guess( void )
 
 void CTextureManager_guess::CreateTexture_guess( int width, int height, GLuint *texture, GLenum target, GLenum format )
 {
-	unsigned char *data = new unsigned char[width * height * 4];
-
+	// ReCoF (B182): retail also allocated an unused width * height * 4 buffer here (64 MB at 4096x4096)
 	*texture = m_iNextTexture_guess++;
 
 	glBindTexture( target, *texture );
@@ -99,8 +98,6 @@ void CTextureManager_guess::CreateTexture_guess( int width, int height, GLuint *
 	tex.iFormat_guess = GL_RGBA;
 	tex.texture_guess = *texture;
 	m_Textures_guess.push_back( tex );
-
-	delete[] data;
 }
 
 std::string CTextureManager_guess::GetPath_guess( const std::string &name, int type, int *found )
