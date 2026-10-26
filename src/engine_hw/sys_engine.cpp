@@ -89,13 +89,19 @@ void CEngine::Unload( void )
 	m_nDLLState = DLL_INACTIVE;
 }
 
+// ReCoF (B254): a const array goes to .rdata; a new string literal would land in .data and move the
+// variables the LiveSplit autosplitter reads (docs/speedrun.md)
+static const char rc_szAff[] = "-rc_aff";
+
 bool CEngine::Load( bool dedicated, char *basedir, char *cmdline )
 {
 	bool success = false;
 
 	SetState( DLL_ACTIVE );
 
-	bool bSetProcessor_guess = true;
+	// ReCoF (B254): retail pinned the main thread to the first core unless -noaff was given, which also
+	// leaves it sharing that core with much of the system's interrupt work; it pins only with -rc_aff now
+	bool bSetProcessor_guess = COM_CheckParm( (char *)rc_szAff ) != 0;
 	if ( COM_CheckParm( "-noaff" ) )
 		bSetProcessor_guess = false;
 
@@ -104,6 +110,7 @@ bool CEngine::Load( bool dedicated, char *basedir, char *cmdline )
 		DWORD dwAffinityMask_guess = 1;
 		SetThreadAffinityMask( GetCurrentThread(), dwAffinityMask_guess );
 	}
+
 
 	if ( Sys_InitGame( cmdline, basedir, game->GetMainWindowAddress(), dedicated ) )
 		success = true;
