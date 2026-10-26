@@ -5364,7 +5364,12 @@ void CBasePlayer::PostThink()
 		if ( pev->movetype == MOVETYPE_NOCLIP )
 			pev->movetype = MOVETYPE_WALK;
 
-		if ( pev->flags & FL_GODMODE )
+		// ReCoF (B096): the ladder sets FL_GODMODE for its climb animation (with FL_NOTARGET, the climb camera
+		// in pDeathScene and control off), which this cleared in the same frame; keep it during the climb.
+		// rc_retail_gameplay 1 keeps retail
+		bool bLadderClimb = !rc_retail_gameplay.value && pDeathScene && ( pev->flags & FL_FROZEN ) && ( pev->flags & FL_NOTARGET );
+
+		if ( ( pev->flags & FL_GODMODE ) && !bLadderClimb )
 			pev->flags &= ~FL_GODMODE;
 	}
 
