@@ -57,6 +57,8 @@ git merge decof/master
 | [docs/structs.md](docs/structs.md) | Struct and class layouts that differ from the Half-Life SDK |
 | [docs/original_bugs.md](docs/original_bugs.md) | Bugs of the retail game found during the decompilation, the starting point for ReCoF's fixes |
 | [docs/refs.md](docs/refs.md) | Reference repositories, what each provides and its license |
+| [docs/bugs.md](docs/bugs.md) | The bug inventory: every known problem, its evidence, severity, runner impact and fix plan |
+| [docs/speedrun.md](docs/speedrun.md) | Speedrun techniques ReCoF keeps, and the runner tools that depend on the binaries |
 | [docs/baseline.md](docs/baseline.md) | The baseline build every fix is compared with, and how to compare (`tools/compare_build.py`) |
 
 ## License
