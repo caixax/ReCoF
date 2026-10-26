@@ -378,7 +378,8 @@ void PM_PlayGroupSound( const char* szValue, int irand, float fvol )
 
 void PM_ViewPunch( float p, float y, float r )
 {
-	if ( pmove->multiplayer )
+	// ReCoF (rc_hlmovement): no Cry of Fear step and ladder camera punches in Half-Life movement
+	if ( pmove->multiplayer || PM_HLMovement() )
 		return;
 
 	// vuser3 is punch speed
@@ -3306,11 +3307,15 @@ void PM_CheckFalling( void )
 			}*/
 
 			// buz: new punch system
+			// ReCoF (rc_hlmovement): no landing camera punch in Half-Life movement
+			if ( !PM_HLMovement() )
+			{
 			punch = (pmove->flFallVelocity > 700 ? 700 : pmove->flFallVelocity) * 0.42;
 		//	pmove->Con_DPrintf("fall vel: %f, punch: %f\n", pmove->flFallVelocity, punch/20);
 			pmove->vuser3[0] += punch;
 			pmove->vuser3[1] += pmove->RandomFloat(punch/-10, punch/10);
 			pmove->vuser3[2] += pmove->RandomFloat(punch/-10, punch/10);
+			}
 		}
 	}
 

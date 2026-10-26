@@ -3735,7 +3735,8 @@ void CBasePlayer::Jump()
 
 	SetAnimation( PLAYER_JUMP );
 
-	ViewPunch( -6, 1, 1 );
+	if ( !RcHLMovementOn( edict() ) )	// ReCoF (rc_hlmovement): no jump camera punch in Half-Life movement
+		ViewPunch( -6, 1, 1 );
 
 	if ( m_fLongJump && (pev->button & IN_DUCK) && ( pev->flDuckTime > 0 ) && pev->velocity.Length() > 50 )
 	{
@@ -3964,6 +3965,10 @@ static void RcSetPhysicsKey( edict_t *pEdict, const char *key, const char *value
 
 void CBasePlayer::PreThink(void)
 {
+	// ReCoF (rc_hlmovement): the sprint key does nothing in Half-Life movement
+	if ( RcHLMovementOn( edict() ) )
+		pev->button &= ~IN_RUN;
+
 	RcSetPhysicsKey( edict(), "nbh", rc_bhopcap.value ? "0" : "1" );	// ReCoF (B131)
 	RcSetPhysicsKey( edict(), "dkt", rc_ducktap.value ? "1" : "0" );	// ReCoF (B132)
 
@@ -13620,6 +13625,9 @@ void CBasePlayer::ViewLock( bool Lock, float time )
 void CBasePlayer::Dodge( int direction )
 {
 	if ( m_bDodgeDisabled )
+		return;
+
+	if ( RcHLMovementOn( edict() ) )	// ReCoF (rc_hlmovement): no dodge in Half-Life movement
 		return;
 
 	if ( pev->flags & FL_FROZEN )

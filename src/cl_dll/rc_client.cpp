@@ -73,6 +73,10 @@ int RcHLMovement( void )
 //-----------------------------------------------------------------------------
 void RcClient_CreateMove( usercmd_t *cmd )
 {
+	// rc_hlmovement: the sprint key does nothing in Half-Life movement (the server strips it too)
+	if ( RcHLMovement() )
+		cmd->buttons &= ~IN_RUN;
+
 	if ( !pmove || !rc_autojump )
 		return;
 

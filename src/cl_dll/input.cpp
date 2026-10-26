@@ -1166,14 +1166,6 @@ void DLLEXPORT CL_CreateMove ( float frametime, struct usercmd_s *cmd, int activ
 			cmd->forwardmove -= flBackSpeed * CL_KeyState (&in_back);
 		}	
 
-		// ReCoF (rc_hlmovement): the sprint key walks, like Half-Life's +speed (cl_movespeedkey 0.3)
-		if ( bHLMovement && ( in_speed.state & 1 ) )
-		{
-			cmd->forwardmove *= 0.3;
-			cmd->sidemove *= 0.3;
-			cmd->upmove *= 0.3;
-		}
-
 		if ( ( in_dodge.state & 1 ) && bCanDodge_guess )
 		{
 			if ( in_forward.state & 1 )
