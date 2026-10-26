@@ -1204,6 +1204,8 @@ void DLLEXPORT CL_CreateMove ( float frametime, struct usercmd_s *cmd, int activ
 	if(GetClientVoiceMgr()->IsInSquelchMode())
 		cmd->buttons &= ~IN_ATTACK;
 
+	RcClient_CreateMove( cmd );	// ReCoF: +rc_ducktap and rc_autojump
+
 	// Using joystick?
 	if ( in_joystick->value )
 	{
@@ -1634,6 +1636,8 @@ void InitInput (void)
 
 	iMenuMode_guess = 1;
 	gEngfuncs.pfnClientCmd( "map c_game_menu1" );
+
+	RcClient_Init();	// ReCoF: the ReCoF client cvars and commands
 }
 
 /*
