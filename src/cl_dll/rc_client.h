@@ -15,4 +15,9 @@ int RcHLMovement( void );
 // the movement mode tag and the speedometer (called from CHud::Redraw)
 void RcClient_Redraw( float flTime, int intermission );
 
+// B184 rc_rawinput (called from inputw32.cpp)
+int RcRawInputOn( void );
+void RcRawMouseReset( void );
+void RcRawMouse( int *mx, int *my );
+
 #endif // RC_CLIENT_H

@@ -9,6 +9,7 @@
 // 02/21/97 JCB Added extended DirectInput code to support external controllers.
 
 #include "hud.h"
+#include "rc_client.h"
 #include "cl_util.h"
 #include "camera.h"
 #include "kbutton.h"
@@ -188,8 +189,10 @@ void DLLEXPORT IN_ActivateMouse (void)
 {
 	if (mouseinitialized)
 	{
-		if (mouseparmsvalid)
+		// ReCoF (B184): with rc_rawinput the Windows mouse settings are left alone (raw counts ignore them)
+		if (mouseparmsvalid && !RcRawInputOn())
 			restore_spi = SystemParametersInfo (SPI_SETMOUSE, 0, newmouseparms, 0);
+		RcRawMouseReset();
 		mouseactive = 1;
 	}
 }
@@ -345,6 +348,8 @@ void IN_MouseMove ( float frametime, usercmd_t *cmd)
 
 		mx_accum = 0;
 		my_accum = 0;
+
+		RcRawMouse( &mx, &my );	// ReCoF (B184): with rc_rawinput 1, the raw mouse counts
 
 		if (m_filter->value)
 		{

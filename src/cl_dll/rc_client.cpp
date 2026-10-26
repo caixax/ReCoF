@@ -15,8 +15,11 @@
 #include "rc_client.h"
 
 #include <stdio.h>
+#include <windows.h>
 
 extern "C" playermove_t *pmove;		// pm_shared.c: the move client prediction ran last
+
+extern int g_iVisibleMouse;			// inputw32.cpp: a menu cursor is on screen
 
 void KeyDown( kbutton_t *b );		// input.cpp
 void KeyUp( kbutton_t *b );
@@ -33,6 +36,11 @@ static cvar_t		*rc_speedometer_color;
 static int			s_bDucktapReleased;	// +rc_ducktap released duck on the frame before
 static vec3_t		s_vecLastVelocity;	// speedometer: the velocity of the frame before
 static int			s_iJumpSpeed;		// speedometer: the speed at the last takeoff
+static cvar_t		*rc_rawinput;
+static HWND			s_hRawWnd;			// raw input: the game window, once hooked
+static WNDPROC		s_pfnRawOldProc;	// raw input: the engine's window procedure
+static int			s_bRawFailed;		// raw input: the window or the registration failed
+static int			s_iRawDX, s_iRawDY;	// raw input: mouse counts since the last mouse move
 
 static void IN_RcDucktapDown( void ) { KeyDown( &in_rcducktap ); }
 static void IN_RcDucktapUp( void ) { KeyUp( &in_rcducktap ); }
@@ -54,6 +62,8 @@ void RcClient_Init( void )
 	rc_speedometer_3d = gEngfuncs.pfnRegisterVariable( "rc_speedometer_3d", "0", FCVAR_ARCHIVE );
 	rc_speedometer_pos = gEngfuncs.pfnRegisterVariable( "rc_speedometer_pos", ".5 .9", FCVAR_ARCHIVE );
 	rc_speedometer_color = gEngfuncs.pfnRegisterVariable( "rc_speedometer_color", "255 255 255", FCVAR_ARCHIVE );
+
+	rc_rawinput = gEngfuncs.pfnRegisterVariable( "rc_rawinput", "1", FCVAR_ARCHIVE );
 }
 
 //-----------------------------------------------------------------------------
@@ -176,4 +186,79 @@ void RcClient_Redraw( float flTime, int intermission )
 		sprintf( text, "%d", s_iJumpSpeed );
 		RcDrawCentered( px, py + h + 2, text, color );
 	}
+}
+
+//-----------------------------------------------------------------------------
+// B184 rc_rawinput: raw mouse counts (WM_INPUT) instead of the cursor movement, which Windows accelerates
+// and which the game forced to "enhance pointer precision". The game window's procedure belongs to the
+// engine, so the client chains its own in front of it the first time the mouse moves in game.
+//-----------------------------------------------------------------------------
+static LRESULT CALLBACK RcRawWndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
+{
+	if ( msg == WM_INPUT && !g_iVisibleMouse )
+	{
+		RAWINPUT ri;
+		UINT size = sizeof( ri );
+
+		if ( GetRawInputData( (HRAWINPUT)lParam, RID_INPUT, &ri, &size, sizeof( RAWINPUTHEADER ) ) != (UINT)-1 &&
+			 ri.header.dwType == RIM_TYPEMOUSE && !( ri.data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE ) )
+		{
+			s_iRawDX += ri.data.mouse.lLastX;
+			s_iRawDY += ri.data.mouse.lLastY;
+		}
+	}
+
+	return CallWindowProcA( s_pfnRawOldProc, hWnd, msg, wParam, lParam );
+}
+
+int RcRawInputOn( void )
+{
+	return rc_rawinput && rc_rawinput->value && !s_bRawFailed;
+}
+
+// called from IN_ActivateMouse: drop what came in while the console or a menu had the mouse
+void RcRawMouseReset( void )
+{
+	s_iRawDX = s_iRawDY = 0;
+}
+
+// called from IN_MouseMove: replaces *mx and *my with the raw counts since the last call
+void RcRawMouse( int *mx, int *my )
+{
+	if ( !RcRawInputOn() )
+		return;
+
+	if ( !s_hRawWnd )
+	{
+		// the engine's window class (sys_sdlwind.cpp); skip another game's window
+		HWND hWnd = NULL;
+		DWORD pid;
+
+		while ( ( hWnd = FindWindowExA( NULL, hWnd, "Valve001", NULL ) ) != NULL )
+		{
+			if ( GetWindowThreadProcessId( hWnd, &pid ) && pid == GetCurrentProcessId() )
+				break;
+		}
+
+		RAWINPUTDEVICE rid;
+		rid.usUsagePage = 1;	// generic desktop
+		rid.usUsage = 2;		// mouse
+		rid.dwFlags = 0;
+		rid.hwndTarget = hWnd;
+
+		if ( !hWnd || !RegisterRawInputDevices( &rid, 1, sizeof( rid ) ) )
+		{
+			s_bRawFailed = 1;	// keep the cursor movement
+			return;
+		}
+
+		s_pfnRawOldProc = (WNDPROC)SetWindowLongPtrA( hWnd, GWLP_WNDPROC, (LONG_PTR)RcRawWndProc );
+		s_hRawWnd = hWnd;
+		s_iRawDX = s_iRawDY = 0;
+		return;
+	}
+
+	*mx = s_iRawDX;
+	*my = s_iRawDY;
+	s_iRawDX = s_iRawDY = 0;
 }
