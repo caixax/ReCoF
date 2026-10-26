@@ -473,14 +473,14 @@ void CGameRules::StartVoteKick( CBasePlayer *pCaller, CBasePlayer *pVictim )
 	{
 		char *idtest = (char *)GETPLAYERAUTHID( pVictim->edict() );
 
-		if ( idtest )
-		{
-			if ( !strcmp( idtest, "STEAM_ID_PENDING" ) )
-				return;
+		if ( !idtest )	// ReCoF (B016): retail started the vote anyway, and a vote with no victim id never ended
+			return;
 
-			if ( !strcmp( idtest, "STEAM_ID_LAN" ) )
-				return;
-		}
+		if ( !strcmp( idtest, "STEAM_ID_PENDING" ) )
+			return;
+
+		if ( !strcmp( idtest, "STEAM_ID_LAN" ) )
+			return;
 
 		m_bInVoteKick = true;
 		m_flVoteKickTime = gpGlobals->time + CVAR_GET_FLOAT( "sv_votekick_time" );
