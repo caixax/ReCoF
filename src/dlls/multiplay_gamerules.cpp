@@ -793,13 +793,16 @@ void CHalfLifeMultiplay :: Think ( void )
 		bool all_ready = true;
 		bool has_players = false;
 
+		// ReCoF (B017): retail reset the timer inside the loop, so only the first player's state was sent each second
+		bool bSendLobby = m_flNextLobbyUpdateTime < gpGlobals->time;
+
 		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 		{
 			CBasePlayer *plr = (CBasePlayer *)UTIL_PlayerByIndex( i );
 
 			if ( plr )
 			{
-				if ( m_flNextLobbyUpdateTime < gpGlobals->time )
+				if ( bSendLobby )
 				{
 					int voted = 0;
 
