@@ -244,6 +244,13 @@ ApplyCFGSettingToPlayer
 Restores the player state saved in txtfiles/<netname>.cfg
 ==============
 */
+// ReCoF (B091): retail copied each line into a 256 byte buffer with strcpy and no length check
+static void CopyCFGLine( char *buffer, int size, const std::string &line )
+{
+	strncpy( buffer, line.c_str(), size - 1 );
+	buffer[size - 1] = 0;
+}
+
 void ApplyCFGSettingToPlayer( CBasePlayer *pPlayer )
 {
 	if ( !pPlayer )
@@ -302,119 +309,104 @@ void ApplyCFGSettingToPlayer( CBasePlayer *pPlayer )
 					if ( strstr( line.c_str(), "health " ) )
 					{
 						line.erase( 0, strlen( "health " ) );
-						strcpy( buffer, line.c_str() );
-						buffer[line.length()] = 0;
+						CopyCFGLine( buffer, sizeof( buffer ), line );
 						pPlayer->pev->health = atoi( buffer );
 					}
 
 					if ( strstr( line.c_str(), "stamina " ) )
 					{
 						line.erase( 0, strlen( "stamina " ) );
-						strcpy( buffer, line.c_str() );
-						buffer[line.length()] = 0;
+						CopyCFGLine( buffer, sizeof( buffer ), line );
 						pPlayer->m_fStamina = atoi( buffer );
 					}
 
 					if ( strstr( line.c_str(), "quicksel1 " ) )
 					{
 						line.erase( 0, strlen( "quicksel1 " ) );
-						strcpy( buffer, line.c_str() );
-						buffer[line.length()] = 0;
+						CopyCFGLine( buffer, sizeof( buffer ), line );
 						strcpy( buffer, pPlayer->m_sQuickSel1 );
 					}
 
 					if ( strstr( line.c_str(), "quicksel2 " ) )
 					{
 						line.erase( 0, strlen( "quicksel2 " ) );
-						strcpy( buffer, line.c_str() );
-						buffer[line.length()] = 0;
+						CopyCFGLine( buffer, sizeof( buffer ), line );
 						strcpy( buffer, pPlayer->m_sQuickSel2 );
 					}
 
 					if ( strstr( line.c_str(), "quicksel3 " ) )
 					{
 						line.erase( 0, strlen( "quicksel3 " ) );
-						strcpy( buffer, line.c_str() );
-						buffer[line.length()] = 0;
+						CopyCFGLine( buffer, sizeof( buffer ), line );
 						strcpy( buffer, pPlayer->m_sQuickSel3 );
 					}
 
 					if ( strstr( line.c_str(), "playerstats_shotsfired " ) )
 					{
 						line.erase( 0, strlen( "playerstats_shotsfired " ) );
-						strcpy( buffer, line.c_str() );
-						buffer[line.length()] = 0;
+						CopyCFGLine( buffer, sizeof( buffer ), line );
 						pPlayer->playerstats.shots_fired = atoi( buffer );
 					}
 
 					if ( strstr( line.c_str(), "playerstats_shotshit " ) )
 					{
 						line.erase( 0, strlen( "playerstats_shotshit " ) );
-						strcpy( buffer, line.c_str() );
-						buffer[line.length()] = 0;
+						CopyCFGLine( buffer, sizeof( buffer ), line );
 						pPlayer->playerstats.shots_hit = atoi( buffer );
 					}
 
 					if ( strstr( line.c_str(), "playerstats_syringesused " ) )
 					{
 						line.erase( 0, strlen( "playerstats_syringesused " ) );
-						strcpy( buffer, line.c_str() );
-						buffer[line.length()] = 0;
+						CopyCFGLine( buffer, sizeof( buffer ), line );
 						pPlayer->playerstats.syringes_used = atoi( buffer );
 					}
 
 					if ( strstr( line.c_str(), "playerstats_monsterskilledmelee " ) )
 					{
 						line.erase( 0, strlen( "playerstats_monsterskilledmelee " ) );
-						strcpy( buffer, line.c_str() );
-						buffer[line.length()] = 0;
+						CopyCFGLine( buffer, sizeof( buffer ), line );
 						pPlayer->playerstats.monsters_killed_melee = atoi( buffer );
 					}
 
 					if ( strstr( line.c_str(), "playerstats_monsterskilledshooting " ) )
 					{
 						line.erase( 0, strlen( "playerstats_monsterskilledshooting " ) );
-						strcpy( buffer, line.c_str() );
-						buffer[line.length()] = 0;
+						CopyCFGLine( buffer, sizeof( buffer ), line );
 						pPlayer->playerstats.monsters_killed_shooting = atoi( buffer );
 					}
 
 					if ( strstr( line.c_str(), "playerstats_seconds " ) )
 					{
 						line.erase( 0, strlen( "playerstats_seconds " ) );
-						strcpy( buffer, line.c_str() );
-						buffer[line.length()] = 0;
+						CopyCFGLine( buffer, sizeof( buffer ), line );
 						pPlayer->playerstats.time_seconds = atoi( buffer );
 					}
 
 					if ( strstr( line.c_str(), "playerstats_minutes " ) )
 					{
 						line.erase( 0, strlen( "playerstats_minutes " ) );
-						strcpy( buffer, line.c_str() );
-						buffer[line.length()] = 0;
+						CopyCFGLine( buffer, sizeof( buffer ), line );
 						pPlayer->playerstats.time_minutes = atoi( buffer );
 					}
 
 					if ( strstr( line.c_str(), "playerstats_hours " ) )
 					{
 						line.erase( 0, strlen( "playerstats_hours " ) );
-						strcpy( buffer, line.c_str() );
-						buffer[line.length()] = 0;
+						CopyCFGLine( buffer, sizeof( buffer ), line );
 						pPlayer->playerstats.time_hours = atoi( buffer );
 					}
 
 					if ( strstr( line.c_str(), "playerstats_damagetaken " ) )
 					{
 						line.erase( 0, strlen( "playerstats_damagetaken " ) );
-						strcpy( buffer, line.c_str() );
-						buffer[line.length()] = 0;
+						CopyCFGLine( buffer, sizeof( buffer ), line );
 						pPlayer->playerstats.damagetaken = atoi( buffer );
 					}
 
 					if ( strstr( line.c_str(), "weapon_" ) )
 					{
-						strcpy( buffer, line.c_str() );
-						buffer[line.length()] = 0;
+						CopyCFGLine( buffer, sizeof( buffer ), line );
 
 						pPlayer->GiveNamedItem( line.c_str(), false, false );
 
@@ -430,15 +422,13 @@ void ApplyCFGSettingToPlayer( CBasePlayer *pPlayer )
 									{
 										if ( std::getline( file, line ) )
 										{
-											strcpy( buffer, line.c_str() );
-											buffer[line.length()] = 0;
+											CopyCFGLine( buffer, sizeof( buffer ), line );
 											((CBasePlayerWeapon *)pPlayerItem)->m_iClip = atoi( buffer );
 										}
 
 										if ( std::getline( file, line ) )
 										{
-											strcpy( buffer, line.c_str() );
-											buffer[line.length()] = 0;
+											CopyCFGLine( buffer, sizeof( buffer ), line );
 											pPlayer->m_rgAmmo[((CBasePlayerWeapon *)pPlayerItem)->m_iPrimaryAmmoType] = atoi( buffer );
 										}
 									}
@@ -488,47 +478,41 @@ void ApplyCFGSettingToPlayerLate( CBasePlayer *pPlayer )
 		if ( strstr( line.c_str(), "health " ) )
 		{
 			line.erase( 0, strlen( "health " ) );
-			strcpy( buffer, line.c_str() );
-			buffer[line.length()] = 0;
+			CopyCFGLine( buffer, sizeof( buffer ), line );
 			pPlayer->pev->health = atoi( buffer );
 		}
 
 		if ( strstr( line.c_str(), "stamina " ) )
 		{
 			line.erase( 0, strlen( "stamina " ) );
-			strcpy( buffer, line.c_str() );
-			buffer[line.length()] = 0;
+			CopyCFGLine( buffer, sizeof( buffer ), line );
 			pPlayer->m_fStamina = atoi( buffer );
 		}
 
 		if ( strstr( line.c_str(), "quicksel1 " ) )
 		{
 			line.erase( 0, strlen( "quicksel1 " ) );
-			strcpy( buffer, line.c_str() );
-			buffer[line.length()] = 0;
+			CopyCFGLine( buffer, sizeof( buffer ), line );
 			strcpy( buffer, pPlayer->m_sQuickSel1 );
 		}
 
 		if ( strstr( line.c_str(), "quicksel2 " ) )
 		{
 			line.erase( 0, strlen( "quicksel2 " ) );
-			strcpy( buffer, line.c_str() );
-			buffer[line.length()] = 0;
+			CopyCFGLine( buffer, sizeof( buffer ), line );
 			strcpy( buffer, pPlayer->m_sQuickSel2 );
 		}
 
 		if ( strstr( line.c_str(), "quicksel3 " ) )
 		{
 			line.erase( 0, strlen( "quicksel3 " ) );
-			strcpy( buffer, line.c_str() );
-			buffer[line.length()] = 0;
+			CopyCFGLine( buffer, sizeof( buffer ), line );
 			strcpy( buffer, pPlayer->m_sQuickSel3 );
 		}
 
 		if ( strstr( line.c_str(), "weapon_" ) )
 		{
-			strcpy( buffer, line.c_str() );
-			buffer[line.length()] = 0;
+			CopyCFGLine( buffer, sizeof( buffer ), line );
 
 			gNoWeaponDrop = true;
 			pPlayer->GiveNamedItem( line.c_str(), false, false );
@@ -546,15 +530,13 @@ void ApplyCFGSettingToPlayerLate( CBasePlayer *pPlayer )
 						{
 							if ( std::getline( file, line ) )
 							{
-								strcpy( buffer, line.c_str() );
-								buffer[line.length()] = 0;
+								CopyCFGLine( buffer, sizeof( buffer ), line );
 								((CBasePlayerWeapon *)pPlayerItem)->m_iClip = atoi( buffer );
 							}
 
 							if ( std::getline( file, line ) )
 							{
-								strcpy( buffer, line.c_str() );
-								buffer[line.length()] = 0;
+								CopyCFGLine( buffer, sizeof( buffer ), line );
 								pPlayer->m_rgAmmo[((CBasePlayerWeapon *)pPlayerItem)->m_iPrimaryAmmoType] = atoi( buffer );
 							}
 						}
