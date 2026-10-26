@@ -2387,7 +2387,9 @@ void PM_UnDuck( void )
 
 	VectorCopy( pmove->origin, newOrigin );
 
-	if ( pmove->onground != -1 && pmove->flags & FL_DUCKING && pmove->bInDuck == false )
+	// ReCoF (B132): Cry of Fear added the FL_DUCKING and bInDuck test, which removed the Half-Life ducktap;
+	// with rc_ducktap 1 the server sets physinfo "dkt" and the Half-Life test (on the ground only) is used
+	if ( pmove->onground != -1 && ( ( pmove->flags & FL_DUCKING && pmove->bInDuck == false ) || atoi( pmove->PM_Info_ValueForKey( pmove->physinfo, "dkt" ) ) ) )
 	{
 		for ( i = 0; i < 3; i++ )
 		{

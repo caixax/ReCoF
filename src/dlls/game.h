@@ -40,6 +40,7 @@ extern cvar_t	allowmonsters;
 // Engine Cvars
 extern cvar_t	rc_retail_gameplay;	// ReCoF: 1 restores the retail behavior of the balance fixes
 extern cvar_t	rc_bhopcap;			// ReCoF: 0 removes the bunny hop speed cap
+extern cvar_t	rc_ducktap;			// ReCoF: 1 brings back the Half-Life ducktap
 
 extern cvar_t	*g_psv_gravity;
 extern cvar_t	*g_psv_aim;

@@ -3958,6 +3958,7 @@ static void RcSetPhysicsKey( edict_t *pEdict, const char *key, const char *value
 void CBasePlayer::PreThink(void)
 {
 	RcSetPhysicsKey( edict(), "nbh", rc_bhopcap.value ? "0" : "1" );	// ReCoF (B131)
+	RcSetPhysicsKey( edict(), "dkt", rc_ducktap.value ? "1" : "0" );	// ReCoF (B132)
 
 	if ( m_bHoldingBreath )
 	{
