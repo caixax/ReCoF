@@ -26,7 +26,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 
 | Binary | crash | save | gameplay | performance | visual | audio | cosmetic | latent | total |
 |---|---|---|---|---|---|---|---|---|---|
-| hl.dll | 12 | 5 | 56 | 10 | 9 | 10 | 2 | 27 | 131 |
+| hl.dll | 11 | 5 | 56 | 10 | 9 | 10 | 2 | 28 | 131 |
 | client.dll | 4 | 0 | 7 | 26 | 21 | 3 | 11 | 18 | 90 |
 | hw.dll | 5 | 2 | 6 | 22 | 5 | 3 | 4 | 26 | 73 |
 | GameUI.dll | 0 | 0 | 0 | 1 | 0 | 0 | 4 | 5 | 10 |
@@ -34,7 +34,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | cof.exe | 2 | 0 | 0 | 0 | 2 | 0 | 0 | 2 | 6 |
 | CoFLaunchApp.exe | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 0 | 4 |
 | unknown | 2 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 3 |
-| all issues | 24 | 7 | 65 | 51 | 36 | 14 | 18 | 73 | 288 |
+| all issues | 23 | 7 | 65 | 51 | 36 | 14 | 18 | 74 | 288 |
 
 ## User reports
 
@@ -121,7 +121,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | B073 | hl.dll | Sewer boss, chainsaw boss (CoF_SewerBoss.cpp, CoF_ChainsawBoss.cpp) | `IgnoreConditions` tests `ACT_MELEE_ATTACK1` twice (from the HLSDK zombie). | None. | inherited (DeCoF original_bugs.md) | latent | no | Leave. | open |
 | B074 | hl.dll | `UTIL_SplashCalculation` (util.cpp) | Passes an uninitialized `Vector Position` to WaterSplash, which ignores that parameter. | None. | the uninitialized local (DeCoF original_bugs.md) | latent | no | Leave. | open |
 | B075 | hl.dll | `UTIL_WallBetween` (util.cpp) | Calls Classify twice and returns TRUE on both branches; the null check on pEntity comes after the pointer is used. | AI acts as if a wall is always between it and the target. | both returns (DeCoF original_bugs.md) | gameplay | check | Return the real result; check AI behavior on known routes. | open |
-| B076 | hl.dll | `UTIL_BrushEntInSight` (util.cpp) | `!pHit | A trace that hits nothing. | DeCoF source, as written (DeCoF original_bugs.md) | crash | no | Reorder the tests and pass absmin and absmax. | open |
+| B076 | hl.dll | `UTIL_BrushEntInSight` (util.cpp) | `!pHit | A trace that hits nothing. | DeCoF source, as written (DeCoF original_bugs.md). Nothing in hl.dll calls UTIL_BrushEntInSight, so the crash cannot happen. | latent | no | Reorder the tests and pass absmin and absmax if a caller is ever added; until then the dead function stays as it is. | keep |
 | B077 | hl.dll | `UTIL_Remove` (util.cpp) | Sets `m_bIsBoss = false` twice. | None. | the second store (DeCoF original_bugs.md) | latent | no | Leave. | open |
 | B078 | hl.dll | `guess_UTIL_PlayWeaponSound` (util.cpp) | Always sends entity index 1 in singleplayer. | None in single player. | the constant (DeCoF original_bugs.md) | latent | no | Leave. | open |
 | B079 | hl.dll | `CCoFPlayerCheck::Use` (effects.cpp) | Case 3 tests `player1trigger` but fires `player3trigger`. | Co-op player check for player 3. | the field name (DeCoF original_bugs.md) | gameplay | no | Test player3trigger. | open |
