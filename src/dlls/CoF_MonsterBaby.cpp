@@ -326,7 +326,9 @@ void CBaby :: FakeDeath( void )
 	{
 		pOwner->DeathNotice( pev );
 	}
-	else if ( pev->flags & FL_MONSTER )
+
+	// ReCoF (B048): retail hung this on the owner test, so a baby with an owner never became dead
+	if ( pev->flags & FL_MONSTER )
 	{
 		SetTouch( NULL );
 		BecomeDead();
@@ -347,12 +349,10 @@ void CBaby :: Killed( entvars_t *pevAttacker, int iGib )
 	unsigned int	cCount = 0;
 	BOOL			fDone = FALSE;
 
+	// ReCoF (B048): with CallGibMonster() commented out the return became the if body, so a corpse
+	// that should not gib ran the death code again (kill points and stats on every hit)
 	if ( HasMemory( bits_MEMORY_KILLED ) )
-	{
-		if ( ShouldGibMonster( iGib ) )
-//			CallGibMonster();
 		return;
-	}
 
 	CBaseEntity *pAttacker = CBaseEntity::Instance( pevAttacker );
 
