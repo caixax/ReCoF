@@ -1476,6 +1476,27 @@ void CBaseMonster :: SetSequenceByName ( char *szSequence )
 	}
 }
 
+// ReCoF (B118): most Cry of Fear monsters get an 8 unit box (cof_monsterhumanscale 4), which the engine
+// collides as a point (hull 0), and a walking step only traces down at its destination, so a step could
+// cross a thin wall or a closed door. For these monsters, test the line from the old to the new position
+// at waist height. rc_retail_gameplay 1 keeps retail
+static BOOL RcStepCrossesWall( CBaseMonster *pMonster, const Vector &vecFrom )
+{
+	if ( rc_retail_gameplay.value || pMonster->pev->size.x > 8 || ( pMonster->pev->flags & ( FL_FLY | FL_SWIM ) ) )
+		return FALSE;
+
+	if ( ( pMonster->pev->origin - vecFrom ).Length2D() < 0.1 )
+		return FALSE;
+
+	TraceResult tr;
+	Vector vecUp( 0, 0, 36 );
+	UTIL_TraceLine( vecFrom + vecUp, pMonster->pev->origin + vecUp, ignore_monsters, pMonster->edict(), &tr );
+
+	// a start in solid means the monster is already stuck; let it move out
+	return !tr.fStartSolid && tr.flFraction < 1.0;
+}
+
+
 //=========================================================
 // CheckLocalMove - returns TRUE if the caller can walk a 
 // straight line from its current origin to the given 
@@ -1540,7 +1561,9 @@ int CBaseMonster :: CheckLocalMove ( const Vector &vecStart, const Vector &vecEn
 		
 //		UTIL_ParticleEffect ( pev->origin, g_vecZero, 255, 25 );
 
-		if ( !WALK_MOVE( ENT(pev), flYaw, stepSize, WALKMOVE_CHECKONLY ) )
+		Vector vecStepFrom = pev->origin;	// ReCoF (B118)
+
+		if ( !WALK_MOVE( ENT(pev), flYaw, stepSize, WALKMOVE_CHECKONLY ) || RcStepCrossesWall( this, vecStepFrom ) )
 		{// can't take the next step, fail!
 			
 			if ( pflDist != NULL )
@@ -2227,7 +2250,13 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 		{
 			// don't walk more than 16 units or stairs stop working
 			flStep = min( 16.0, flTotal );
+			Vector vecStepFrom = pev->origin;	// ReCoF (B118)
 			UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, flStep, MOVE_STRAFE );
+			if ( RcStepCrossesWall( this, vecStepFrom ) )
+			{
+				UTIL_SetOrigin( this, vecStepFrom );
+				break;
+			}
 			flTotal -= flStep;
 		}
 	}
@@ -2242,7 +2271,13 @@ void CBaseMonster::MoveExecute( CBaseEntity *pTargetEnt, const Vector &vecDir, f
 		{
 			// don't walk more than 16 units or stairs stop working
 			flStep = min( 16.0, flTotal );
+			Vector vecStepFrom = pev->origin;	// ReCoF (B118)
 			UTIL_MoveToOrigin ( ENT(pev), m_Route[ m_iRouteIndex ].vecLocation, flStep, MOVE_NORMAL );
+			if ( RcStepCrossesWall( this, vecStepFrom ) )
+			{
+				UTIL_SetOrigin( this, vecStepFrom );
+				break;
+			}
 			flTotal -= flStep;
 		}
 	}
