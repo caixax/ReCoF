@@ -13607,7 +13607,7 @@ void CCoFPlayerCheck::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TY
 
 		case 3:
 			// original bug: tests player1trigger but fires player3trigger
-			if ( player1trigger )
+			if ( player3trigger )	// ReCoF (B079)
 				FireTargets( STRING(player3trigger), pPlayer, pPlayer, USE_TOGGLE, 0 );
 			break;
 
