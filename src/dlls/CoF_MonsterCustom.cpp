@@ -80,7 +80,8 @@ public:
 
 LINK_ENTITY_TO_CLASS( monster_custom, CCustomMonster );
 
-// CoF: attackhitwallsound1 is saved twice and attackhitwallsound2 not at all (original bug)
+// ReCoF (B050): retail saved attackhitwallsound1 twice and attackhitwallsound2 not at all; fields
+// are matched by name, so a retail save sets attackhitwallsound1 twice and leaves attackhitwallsound2 empty, as before
 TYPEDESCRIPTION	CCustomMonster::m_SaveData[] =
 {
 	DEFINE_FIELD( CCustomMonster, attacksound1, FIELD_STRING ),
@@ -94,7 +95,7 @@ TYPEDESCRIPTION	CCustomMonster::m_SaveData[] =
 	DEFINE_FIELD( CCustomMonster, attackhitsound1, FIELD_STRING ),
 	DEFINE_FIELD( CCustomMonster, attackhitsound2, FIELD_STRING ),
 	DEFINE_FIELD( CCustomMonster, attackhitwallsound1, FIELD_STRING ),
-	DEFINE_FIELD( CCustomMonster, attackhitwallsound1, FIELD_STRING ),
+	DEFINE_FIELD( CCustomMonster, attackhitwallsound2, FIELD_STRING ),
 	DEFINE_FIELD( CCustomMonster, attackmisssound1, FIELD_STRING ),
 	DEFINE_FIELD( CCustomMonster, attackmisssound2, FIELD_STRING ),
 };
