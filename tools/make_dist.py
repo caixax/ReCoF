@@ -91,6 +91,11 @@ def main():
         dest = os.path.join(DIST, rel)
         shutil.copyfile(built, dest)
         print("replaced %s (sha256 %s)" % (rel, sha256(dest)))
+    # files ReCoF adds to the game folder, such as the test launch script
+    extra = os.path.join(ROOT, "tools", "dist_extra")
+    for name in sorted(os.listdir(extra)) if os.path.isdir(extra) else []:
+        shutil.copyfile(os.path.join(extra, name), os.path.join(DIST, name))
+        print("added    %s" % name)
     print("dist ready: %s" % DIST)
 
 
