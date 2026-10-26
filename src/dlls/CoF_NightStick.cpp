@@ -153,7 +153,9 @@ void CNightstick::PrimaryAttack( void )
 	case 0:
 		SendWeaponAnim( NIGHTSTICK_ATTACK1 );
 		m_pPlayer->SetNextThink( 0.31 );
-		m_pPlayer->SetThink( &CBasePlayer::MeleeHitThinkNightStick2 );
+		// ReCoF (B022): retail used the second attack's hit (view punch and swing sound) for all three,
+		// the dual weapon code (CoF_Dual_Weapon.cpp) already matches each attack to its own
+		m_pPlayer->SetThink( &CBasePlayer::MeleeHitThinkNightStick );
 		m_flNextPrimaryAttack = gpGlobals->time + 1;
 		break;
 
@@ -166,7 +168,7 @@ void CNightstick::PrimaryAttack( void )
 
 	case 2:
 		m_pPlayer->SetNextThink( 0.31 );
-		m_pPlayer->SetThink( &CBasePlayer::MeleeHitThinkNightStick2 );
+		m_pPlayer->SetThink( &CBasePlayer::MeleeHitThinkNightStick3 );	// ReCoF (B022)
 		m_flNextPrimaryAttack = gpGlobals->time + 1;
 		SendWeaponAnim( NIGHTSTICK_ATTACK3 );
 		break;
