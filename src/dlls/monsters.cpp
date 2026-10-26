@@ -3955,10 +3955,10 @@ void CBaseMonster :: GetPointsForKill( char *classname, CBasePlayer *pKiller )
 	if ( FClassnameIs( edict(), "monster_booksimon" ) )
 		points = 120;
 
-	pKiller->playerstats.suvivalpoints += points;
-
 	if ( pKiller && pKiller->IsPlayer() )
 	{
+		pKiller->playerstats.suvivalpoints += points;	// ReCoF (B042): retail added the points before testing pKiller
+
 		CBaseEntity *pSurvivalEntity = NULL;
 
 		pSurvivalEntity = UTIL_FindEntityByClassname( pSurvivalEntity, "cof_survivalmode" );
