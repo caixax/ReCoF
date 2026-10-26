@@ -26,7 +26,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 
 | Binary | crash | save | gameplay | performance | visual | audio | cosmetic | latent | total |
 |---|---|---|---|---|---|---|---|---|---|
-| hl.dll | 10 | 3 | 52 | 10 | 9 | 10 | 4 | 33 | 131 |
+| hl.dll | 10 | 3 | 51 | 10 | 9 | 10 | 4 | 34 | 131 |
 | client.dll | 3 | 0 | 8 | 26 | 21 | 3 | 11 | 18 | 90 |
 | hw.dll | 1 | 2 | 6 | 22 | 5 | 3 | 4 | 30 | 73 |
 | GameUI.dll | 0 | 0 | 0 | 1 | 0 | 0 | 4 | 5 | 10 |
@@ -34,7 +34,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | cof.exe | 2 | 0 | 0 | 0 | 2 | 0 | 0 | 2 | 6 |
 | CoFLaunchApp.exe | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 0 | 4 |
 | unknown | 2 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 3 |
-| all issues | 17 | 5 | 62 | 51 | 36 | 14 | 20 | 83 | 288 |
+| all issues | 17 | 5 | 61 | 51 | 36 | 14 | 20 | 84 | 288 |
 
 ## User reports
 
@@ -77,7 +77,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | B029 | hl.dll | `CFaster::Precache` (CoF_Faster.cpp) | Precaches `pDeathSounds` twice. | None. | two identical precache loops (DeCoF original_bugs.md) | latent | no | Remove the second loop. | open |
 | B030 | hl.dll | `CZombie::TraceAttack` (CoF_Slower.cpp) | Calls `IsHeadless()` and ignores the result (retail drops the call). | None. | 1.55 call with no use of the result (DeCoF original_bugs.md) | latent | no | Leave. | open |
 | B031 | hl.dll | `CZombie::Spawn` (CoF_Slower.cpp) | Uneven hull: the minimum is `-scale, -scale, 0`, the maximum the fixed `8, 8, 72`. | Slowers can sink into walls on one side. | the UTIL_SetSize arguments (DeCoF original_bugs.md) | gameplay | check | Make the hull symmetric; check that monster blocking in known skips does not change. | open |
-| B032 | hl.dll | `CMobile::FlashOff` (CoF_MobilePhone.cpp) | Uses `\|=` inside `if ( flags & bit )`, so it never clears the flashlight flags. | Turn the phone light off: its flags stay set. | `or` where an `and not` was meant (DeCoF original_bugs.md) | gameplay | check | Clear the bits with &= ~; check what the flags drive first. | open |
+| B032 | hl.dll | `CMobile::FlashOff` (CoF_MobilePhone.cpp) | Uses `\|=` inside `if ( flags & bit )`, so it never clears the flashlight flags. | Turn the phone light off: its flags stay set. | `or` where an `and not` was meant (DeCoF original_bugs.md) | latent | check | Leave: CMobile::FlashOff has no callers (the phone and the dual weapon code set m_iMobileFlashMode and the flags themselves), so the wrong operator has no effect. | keep |
 | B033 | hl.dll | `CSyringe::SecondaryAttack` (CoF_Syringe.cpp) | The multiplayer loop calls `CBaseEntity::Instance( tr.pHit )` (the outer trace) instead of `trace.pHit`; `vecEnd` uses `gpGlobals->v_forward` before `UTIL_MakeVectors`; `UTIL_MakeVectors( angles )` is overwritten right away by `UTIL_MakeVectors( v_angle )`; an unreachable CPR revive block follows the final return (1.55 lines 436 to 543, no code). | Co-op: use the syringe on another player. | operands of the calls; the 1.55 line gap (DeCoF original_bugs.md) | gameplay | no | Use the inner trace and compute the vectors before use. Done: the view vectors are made before vecEnd, and the per player test uses its own trace, so healing a teammate works where you aim. The unreachable CPR block has no code to fix. | test |
 | B034 | hl.dll | `CMobile::MessageGet` (CoF_MobilePhone.cpp) | `line = curLine;` assigns an int to a std::string as one character; `if ( sLineText && ... )` tests an array address (always true); `DestinationText` is never initialized, so garbage is sent when no line matches. | Phone message with no matching line shows garbage. | the calls and tests in 1.55 and 1.6a (DeCoF original_bugs.md) | visual | no | Initialize DestinationText and assign the line properly. | open |
 | B035 | hl.dll | `CCameraSpot` (bmodels.cpp and CoF_Camera.cpp) | Two different classes with the same name (one definition rule violation); the linker keeps the bmodels `GetClassPtr`, so `camera_spot` entities get the bmodels class. | camera_spot entities use the bmodels class. | both classes in the 1.55 PDB modules (DeCoF original_bugs.md) | gameplay | check | Find which behavior the maps expect; likely keep the bmodels one and rename the other class. | open |
