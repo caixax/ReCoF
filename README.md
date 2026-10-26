@@ -37,6 +37,16 @@ python tools/make_dist.py --bin build/bin
 
 The binaries land in `build/bin`, and `dist/` becomes a copy of the game that runs them.
 
+## Making a release
+
+Releases are installed and updated by the [ReCoF Launcher](https://github.com/caixax/ReCoF-Launcher), which only accepts the format described in its [docs/releases.md](https://github.com/caixax/ReCoF-Launcher/blob/main/docs/releases.md): `recof-<version>.zip`, `recof-manifest.json` and its Ed25519 signature `recof-manifest.json.sig`. After building every binary as above:
+
+```
+python tools/make_release.py --version 0.2.0 --channel beta
+```
+
+It stages the binaries in game folder layout with `Play ReCoF.bat` and `tools/dist_extra/recof-cvars.json` (the options the launcher shows; add a new `rc_` cvar there when it should appear in the launcher), and runs `cargo xtask pack-recof` from a ReCoF-Launcher checkout next to this one, which signs the manifest with the launcher key. `CoFLaunchApp.exe` is never part of a release: it embeds art and sound taken from the retail executable. Upload the three files from `build/release/v<version>/upload` to the GitHub release `v<version>`; its body is the changelog the launcher shows. A beta is a GitHub prerelease, which launchers on the stable channel do not see.
+
 ## Merging DeCoF corrections
 
 ReCoF keeps DeCoF's history, so later corrections to the decompilation merge in directly:

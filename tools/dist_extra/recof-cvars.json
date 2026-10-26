@@ -1,0 +1,119 @@
+{
+  "schema": 1,
+  "cvars": [
+    {
+      "name": "rc_retail_gameplay",
+      "type": "bool",
+      "default": "0",
+      "group": "Gameplay",
+      "label_en": "Retail balance",
+      "desc_en": "Brings back the retail behavior of every balance fix at once: monster damage and health, AI, ladder climbs and collision."
+    },
+    {
+      "name": "rc_infinite_stamina",
+      "type": "bool",
+      "default": "0",
+      "group": "Gameplay",
+      "label_en": "Infinite stamina",
+      "desc_en": "Stamina never runs out. The stamina bar still shows."
+    },
+    {
+      "name": "rc_hlmovement",
+      "type": "bool",
+      "default": "0",
+      "group": "Movement",
+      "label_en": "Half-Life 1 movement",
+      "desc_en": "Half-Life 1 physics: run speed 320, no sprint, dodge or stamina cost for jumps, no movement camera punches. A separate speedrun category."
+    },
+    {
+      "name": "rc_bhopcap",
+      "type": "bool",
+      "default": "1",
+      "group": "Movement",
+      "label_en": "Bunny hop speed cap",
+      "desc_en": "On as in retail. Off removes the cap, which a separate speedrun category uses."
+    },
+    {
+      "name": "rc_ducktap",
+      "type": "bool",
+      "default": "0",
+      "group": "Movement",
+      "label_en": "Ducktap",
+      "desc_en": "Brings back the Half-Life ducktap that Cry of Fear removed."
+    },
+    {
+      "name": "rc_autojump",
+      "type": "bool",
+      "default": "0",
+      "group": "Movement",
+      "label_en": "Autojump",
+      "desc_en": "Holding jump jumps again on landing."
+    },
+    {
+      "name": "rc_ducktap_priority",
+      "type": "bool",
+      "default": "1",
+      "group": "Movement",
+      "label_en": "Ducktap before autojump",
+      "desc_en": "While the ducktap key is held, autojump pauses."
+    },
+    {
+      "name": "rc_jump_priority",
+      "type": "bool",
+      "default": "0",
+      "group": "Movement",
+      "label_en": "Jump before ducktap",
+      "desc_en": "While jump is held, the ducktap key pauses."
+    },
+    {
+      "name": "rc_speedometer",
+      "type": "bool",
+      "default": "0",
+      "group": "HUD",
+      "label_en": "Speedometer",
+      "desc_en": "Shows your horizontal speed on screen."
+    },
+    {
+      "name": "rc_speedometer_jump",
+      "type": "bool",
+      "default": "1",
+      "group": "HUD",
+      "label_en": "Takeoff speed",
+      "desc_en": "Shows the speed at your last jump under the speedometer."
+    },
+    {
+      "name": "rc_speedometer_3d",
+      "type": "bool",
+      "default": "0",
+      "group": "HUD",
+      "label_en": "3D speed",
+      "desc_en": "The speedometer counts vertical speed too."
+    },
+    {
+      "name": "rc_rawinput",
+      "type": "bool",
+      "default": "1",
+      "group": "Input",
+      "label_en": "Raw mouse input",
+      "desc_en": "Reads the mouse directly, without Windows acceleration. Off gives the retail mouse."
+    },
+    {
+      "name": "rc_modelarrays",
+      "type": "bool",
+      "default": "1",
+      "group": "Performance",
+      "label_en": "Faster model drawing",
+      "desc_en": "Sends each model strip to the driver in one call. The picture is the same; off is the retail path, for comparison."
+    },
+    {
+      "name": "rc_prof",
+      "type": "int",
+      "default": "0",
+      "min": 0,
+      "max": 2,
+      "group": "Performance",
+      "label_en": "Frame profiler",
+      "desc_en": "1 shows how long each part of the frame takes, 2 adds GPU times."
+    }
+  ]
+}
