@@ -37,6 +37,7 @@
 #include "scripted.h"
 #include "defaultai.h"
 #include "movewith.h"
+#include "game.h"
 
 
 
@@ -850,6 +851,19 @@ BOOL CBaseMonster :: CineCleanup( )
 			// being set, so animations that really do move won't be caught.
 			if ((oldOrigin - new_origin).Length2D() < 8.0)
 				new_origin = oldOrigin;
+
+			// ReCoF (B119): the jump to the root bone had no trace, so an animation whose root travels through a
+			// wall or door left the monster on the other side; stay put when a line at waist height is blocked.
+			// rc_retail_gameplay 1 keeps retail
+			if ( !rc_retail_gameplay.value && new_origin != oldOrigin )
+			{
+				TraceResult tr;
+				Vector vecUp( 0, 0, 36 );
+				UTIL_TraceLine( oldOrigin + vecUp, Vector( new_origin.x, new_origin.y, oldOrigin.z ) + vecUp, ignore_monsters, ENT( pev ), &tr );
+
+				if ( !tr.fStartSolid && tr.flFraction < 1.0 )
+					new_origin = oldOrigin;
+			}
 
 			pev->origin.x = new_origin.x;
 			pev->origin.y = new_origin.y;
