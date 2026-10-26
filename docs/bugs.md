@@ -26,7 +26,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 
 | Binary | crash | save | gameplay | performance | visual | audio | cosmetic | latent | total |
 |---|---|---|---|---|---|---|---|---|---|
-| hl.dll | 10 | 3 | 56 | 10 | 9 | 10 | 3 | 30 | 131 |
+| hl.dll | 10 | 3 | 55 | 10 | 9 | 10 | 3 | 31 | 131 |
 | client.dll | 3 | 0 | 8 | 26 | 21 | 3 | 11 | 18 | 90 |
 | hw.dll | 1 | 2 | 6 | 22 | 5 | 3 | 4 | 30 | 73 |
 | GameUI.dll | 0 | 0 | 0 | 1 | 0 | 0 | 4 | 5 | 10 |
@@ -34,7 +34,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | cof.exe | 2 | 0 | 0 | 0 | 2 | 0 | 0 | 2 | 6 |
 | CoFLaunchApp.exe | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 0 | 4 |
 | unknown | 2 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 3 |
-| all issues | 17 | 5 | 66 | 51 | 36 | 14 | 19 | 80 | 288 |
+| all issues | 17 | 5 | 65 | 51 | 36 | 14 | 19 | 81 | 288 |
 
 ## User reports
 
@@ -69,7 +69,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | B021 | hl.dll | `CSwitchblade::Deploy` (CoF_Switchblade.cpp) | The draw sounds only play when `pev->max_health != 1`. | Switchblade draw sound missing when max_health is 1. | the test before the sound calls (DeCoF original_bugs.md) | audio | no | Find what max_health 1 means for weapons before changing it. | open |
 | B022 | hl.dll | `CNightstick` attacks (CoF_NightStick.cpp) | All three attacks set `MeleeHitThinkNightStick2` as the think. | Nightstick attacks 1 and 3 hit like attack 2. | the same function pointer stored in each (DeCoF original_bugs.md) | gameplay | check | Compare the three think functions, then give each attack its own. | open |
 | B023 | hl.dll | `CAxe::Fidget` (CoF_Axe.cpp) | Calls `RANDOM_LONG( 0, 599 )` and ignores the result. | None. | the call with no use of eax (DeCoF original_bugs.md) | latent | no | Leave: removing the call shifts the random sequence. | open |
-| B024 | hl.dll | `CSledgeHammer` (CoF_Sledgehammer.cpp) | Checks no suicide state, unlike the other melee weapons. | Attack with the sledgehammer during the suicide action. | no m_iSuicideState test (DeCoF original_bugs.md) | gameplay | no | Add the suicide state test the other melee weapons have. | open |
+| B024 | hl.dll | `CSledgeHammer` (CoF_Sledgehammer.cpp) | Checks no suicide state, unlike the other melee weapons. | Attack with the sledgehammer during the suicide action. | no m_iSuicideState test (DeCoF original_bugs.md) | latent | no | Leave: only CMonsterCrazyBitch sets m_iSuicideState (666 or 1, on the player's gun: CoF_MonsterCrazyBitch.cpp), so a melee weapon is never in that state and the missing test changes nothing. | keep |
 | B025 | hl.dll | `CTwitcher4` (CoF_Twitcher4.cpp) | Uses the Twitcher 1 skill values (`twitcherHealth`, `twitcherDmgOneSlash`, `twitcherDmgBothSlash`); the `twitcher4*` members are never read. Same in 1.55. | Twitcher 4 has twitcher 1 health and damage. | the gSkillData offsets loaded (DeCoF original_bugs.md) | gameplay | yes | Decide: keep the retail values, or use the twitcher4 skill values behind an rc_ cvar. Enemy health changes run times. | open |
 | B026 | hl.dll | `CFaceless`, `CFacelessV` (CoF_Faceless.cpp, CoF_FacelessValve.cpp) | Use `zombieHealth` and the zombie slash damages; the `faceless*` members are never read. Same in 1.55. | Faceless have zombie health and damage. | the gSkillData offsets loaded (DeCoF original_bugs.md) | gameplay | yes | Same decision as the Twitcher 4 skill values. | open |
 | B027 | hl.dll | `CFaster::TraceAttack` (CoF_Faster.cpp) | No `break` after `case HITGROUP_HEAD`: it falls into case 8, so a head hit makes sparks and plays `HeadHitSound` twice. | Head shot on a faster: double sparks and sound. | no jmp between the two case bodies (DeCoF original_bugs.md) | visual | no | Add the break. | open |
