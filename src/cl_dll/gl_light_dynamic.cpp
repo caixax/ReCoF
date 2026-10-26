@@ -906,7 +906,7 @@ void DrawDynamicLights()
 		{
 			for (int k = 0; k < numrenderents; k++)
 			{
-				if (!IsEntityMoved(renderents[k]) && renderents[k]->curstate.renderfx != 70 && renderents[k]->curstate.renderfx != 137)
+				if (renderents[k]->model && !IsEntityMoved(renderents[k]) && renderents[k]->curstate.renderfx != 70 && renderents[k]->curstate.renderfx != 137)	// ReCoF (B177): test the model
 				{
 					vec3_t mins, maxs;
 					cl_entity_t *e = renderents[k];

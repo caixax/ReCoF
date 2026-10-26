@@ -355,6 +355,9 @@ void R_DrawBrushModel (cl_entity_t *e, int onlyfirstpass)
 	currententity = e;
 	clmodel = e->model;
 
+	if (!clmodel)	// ReCoF (B177): a stale list entry can have no model
+		return;
+
 	if (e->angles[0] || e->angles[1] || e->angles[2])
 	{
 		rotated = true;
@@ -1240,6 +1243,7 @@ void RendererVidInit()
 	ResetSky();
 	reloaded = 1;
 	framecount = 0;
+	numrenderents = 0;	// ReCoF (B177): retail kept the previous map's brush entity list until prediction ran again
 //	maxmsgnum = -1;
 //	addedents = 0;
 
