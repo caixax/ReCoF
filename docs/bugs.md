@@ -28,13 +28,13 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 |---|---|---|---|---|---|---|---|---|---|
 | hl.dll | 10 | 3 | 56 | 10 | 9 | 10 | 3 | 30 | 131 |
 | client.dll | 4 | 0 | 7 | 26 | 21 | 3 | 11 | 18 | 90 |
-| hw.dll | 5 | 2 | 6 | 22 | 5 | 3 | 4 | 26 | 73 |
+| hw.dll | 4 | 2 | 6 | 22 | 5 | 3 | 4 | 27 | 73 |
 | GameUI.dll | 0 | 0 | 0 | 1 | 0 | 0 | 4 | 5 | 10 |
 | opengl32.dll | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 |
 | cof.exe | 2 | 0 | 0 | 0 | 2 | 0 | 0 | 2 | 6 |
 | CoFLaunchApp.exe | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 0 | 4 |
 | unknown | 2 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 3 |
-| all issues | 22 | 5 | 65 | 51 | 36 | 14 | 19 | 76 | 288 |
+| all issues | 21 | 5 | 65 | 51 | 36 | 14 | 19 | 77 | 288 |
 
 ## User reports
 
@@ -279,7 +279,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | B215 | hw.dll | HPAK_RemoveLump, HPAK_Extract_f, HPAK_ResourceForIndex, HPAK_CreatePak (hw hashpak.c) | HPAK_RemoveLump builds the file name from Cmd_Argv(1) instead of pakname and leaks both directories when the lump is missing; HPAK_Extract_f passes an int to a %s format; HPAK_ResourceForIndex does not free the directory on a bad index; HPAK_CreatePak leaves the file open on an MD5 mismatch. | None. | DeCoF source, as written (DeCoF original_bugs.md) | latent | no | Fix. | open |
 | B216 | hw.dll | PM_PointContents, PM_WaterEntity, PM_TruePointContents (hw pmovetst.c) | Null-check &model->hulls[0], which can never be null. | None. | DeCoF source, as written (DeCoF original_bugs.md) | latent | no | Leave. | open |
 | B217 | hw.dll | SV_RequestMissingResources (hw sv_upld.c) | Always returns false and never calls SV_BatchUploadRequest. | None. | DeCoF source, as written (DeCoF original_bugs.md) | latent | no | Leave. | open |
-| B218 | hw.dll | scr_downloading (hw net_chan.c, screen.h) | net_chan.c declares scr_downloading as a float, but it is the cvar_t at 01EBA5F0 (CL_MAIN.C reads its value at +0xC), so Netchan writes -1.0 and the download percent over the cvar's name pointer. Each file keeps its own declaration, as the binary shows. | Multiplayer download, then anything that walks the cvar list. | DeCoF source, as written (DeCoF original_bugs.md) | crash | no | Declare scr_downloading as the cvar and write its value. | open |
+| B218 | hw.dll | scr_downloading (hw net_chan.c, screen.h) | net_chan.c declares scr_downloading as a float, but it is the cvar_t at 01EBA5F0 (CL_MAIN.C reads its value at +0xC), so Netchan writes -1.0 and the download percent over the cvar's name pointer. Each file keeps its own declaration, as the binary shows. | Multiplayer download, then anything that walks the cvar list. | Not a retail bug: the float declaration was a decompilation error that DeCoF corrected in 32f83a6 ("net_chan.c writes scr_downloading.value (the cvar)"); hw net_chan matches retail at 100% writing the value field. The DeCoF original_bugs.md entry is out of date. | latent | no | Nothing to fix; correct the DeCoF original_bugs.md entry. | keep |
 | B219 | hw.dll | CL_UpdateSoundFade, CL_PrintEntities_f, CL_Rate_f (hw CL_MAIN.C) | The fade-in phase is divided by soundFadeOutTime instead of soundFadeInTime; curstate.frame (a float) is printed with %2i; the ints 20000 and 1000 are passed to %f. | Sound fade in. | DeCoF source, as written (DeCoF original_bugs.md) | audio | no | Divide by the fade in time. | open |
 | B220 | hw.dll | CL_LoadSecurityModules, CL_Retry_f, CL_ParseServerList, CL_ParseBatchUserList, CL_ConnectTest (hw CL_MAIN.C) | CL_LoadSecurityModules calls CloseSecurityModule() first, which clears g_module.fLoaded, so "sendres" is never sent (nothing calls it anyway); CL_Retry_f tests !cls.servername, the array address; CL_ParseServerList starts its count at 1 and reports one server too many; CL_ParseBatchUserList starts its static count at 1 but resets it to 0 after each batch; CL_ConnectTest is empty apart from 4 unused doubles. | None. | DeCoF source, as written (DeCoF original_bugs.md) | latent | no | Leave. | open |
 | B221 | hw.dll | LoadTGA2, GL_Upload16, LoadTransPic, Draw_TransPicTranslate (hw GL_DRAW.C) | LoadTGA2's size check `( numPixels * ( pixel_size == 24 ) ? 3 : 4 ) > bufferSize` compares 3 or 4 with the buffer size (precedence) and never fires; GL_Upload16 compares a pixel count with sizeof( trans ) (a byte size) and reads *(unsigned *)&pPal[765] and pPal[p*3] for p = 255, one byte past the 768-byte palette; LoadTransPic returns the WAD lump ppic instead of ppicNew when the texture is cached and leaks ppicNew; Draw_TransPicTranslate ignores translation and writes 0xff0000ff for every opaque texel. | Player color preview. | DeCoF source, as written (DeCoF original_bugs.md) | visual | no | Fix the checks, the palette read and the leak. | open |
