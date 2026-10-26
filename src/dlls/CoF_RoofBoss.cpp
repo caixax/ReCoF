@@ -386,9 +386,6 @@ int UTIL_FindRoofBossTargetsInSphere( CBaseEntity **pList, int listMax, const Ve
 		if ( pEdict->free )	// Not in use
 			continue;
 
-		if ( !pEdict )
-			continue;
-
 		// only the targets
 		if ( pEdict->v.takedamage != 50 )
 			continue;
@@ -835,8 +832,9 @@ void CRoofBoss :: MonsterThink( void )
 			else if ( !m_bHasAttacked && !m_bStartingAttack )
 			{
 				// move to another target
-				CBaseEntity *pList[32];
-				int count = UTIL_FindRoofBossTargetsInSphere( pList, 96, pev->origin, 4096 );
+				// ReCoF (B069): retail passed 96 for this 32 entry list and read pList[1] uninitialized with fewer than two targets
+				CBaseEntity *pList[32] = { NULL };
+				int count = UTIL_FindRoofBossTargetsInSphere( pList, ARRAYSIZE( pList ), pev->origin, 4096 );
 				int target = 1;
 
 //				ALERT( at_console, "ROOFBOSS - Found %i targets!\n", count );
@@ -903,17 +901,21 @@ void CRoofBoss :: MonsterThink( void )
 			}
 
 			CBaseEntity *pHead = CBaseEntity::Create( "roofboss_head", vecSrc, UTIL_VecToAngles( vecDirToEnemy ), edict() );
-			UTIL_MakeVectors ( pHead->pev->angles );
-			pHead->pev->velocity = gpGlobals->v_forward * 300;
 
-			CBaseMonster *pHeadMonster = pHead->MyMonsterPointer();
-
-			if ( pHeadMonster )
+			if ( pHead )	// ReCoF (B069): Create returns NULL when the entity cannot be made
 			{
-				CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+				UTIL_MakeVectors ( pHead->pev->angles );
+				pHead->pev->velocity = gpGlobals->v_forward * 300;
 
-				if ( pPlayer )
-					pHeadMonster->m_hEnemy = pPlayer;
+				CBaseMonster *pHeadMonster = pHead->MyMonsterPointer();
+
+				if ( pHeadMonster )
+				{
+					CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+
+					if ( pPlayer )
+						pHeadMonster->m_hEnemy = pPlayer;
+				}
 			}
 		}
 	}
