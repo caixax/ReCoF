@@ -21,6 +21,7 @@
 #include "pmtrace.h"
 #include "gl_renderer.h"
 #include "gl_dlight.h" // buz
+#include "rc_prof.h"	// ReCoF
 
 
 extern vec3_t	render_origin;
@@ -662,6 +663,8 @@ void DrawBump()
 	if (!renderer_prepared_for_this_frame)
 		return;
 
+	RcProfScope prof( RCP_WORLD );	// ReCoF: rc_prof scopes in this function
+
 	RestoreWorldDrawing();
 	renderer_prepared_for_this_frame = 0;
 
@@ -677,6 +680,7 @@ void DrawBump()
 	VectorCopy(saved_view_orig, vec_to_eyes);
 	currententity = gEngfuncs.GetEntityByIndex(0);
 
+	RcProf_Push( RCP_WORLD_FIRST );
 	PrepareFirstPass();
 	RecursiveDrawWorld (world->nodes);
 
@@ -689,14 +693,25 @@ void DrawBump()
 		if (!IsEntityMoved(renderents[k])/* && !IsEntityTransparent(renderents[k])*/)
 			R_DrawBrushModel (renderents[k], TRUE);
 	}
+	RcProf_Pop();
 
+	RcProf_Push( RCP_WORLD_BUMP );
 	RenderAdditionalBumpPass();
+	RcProf_Pop();
 
 	if (cv_dynamiclight->value)
+	{
+		RcProf_Push( RCP_WORLD_DLIGHTS );
 		DrawDynamicLights();
+		RcProf_Pop();
+	}
 
+	RcProf_Push( RCP_WORLD_SECOND );
 	RenderSecondPass();
+	RcProf_Pop();
+	RcProf_Push( RCP_WORLD_SPECULAR );
 	RenderSpecular();
+	RcProf_Pop();
 
 //	CONPRINT("static end\n");
 
@@ -704,16 +719,20 @@ void DrawBump()
 		no_sky_visible = TRUE;
 
 	// Draw brush entities
+	RcProf_Push( RCP_WORLD_BRUSH );
 	for (k = 0; k < numrenderents; k++)
 	{
 		if (IsEntityMoved(renderents[k])/* && !IsEntityTransparent(renderents[k])*/)
 			R_DrawBrushModel (renderents[k], FALSE);
 	}
+	RcProf_Pop();
 
 	gl.glDepthFunc(GL_LEQUAL);
 
 	DisableVertexArray();
+	RcProf_Push( RCP_WORLD_DECALS );
 	DrawDecals();
+	RcProf_Pop();
 
 /*	// Draw transparent brush entities
 	EnableVertexArray();
@@ -1217,6 +1236,7 @@ void RendererDrawNormal()
 		if (gl.IsGLAllowed() && gl.Paranoia_hacks)
 		{
 			ResetRenderState();
+			RcProfScope prof( RCP_SKY );	// ReCoF
 			DrawSky();
 		}
 

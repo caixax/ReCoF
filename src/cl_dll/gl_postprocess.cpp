@@ -13,6 +13,7 @@
 #include "studio_util.h"
 #include "glmanager.h"
 #include "gl_texloader.h"
+#include "rc_prof.h"	// ReCoF
 
 #define DEAD_GRAYSCALE_TIME		5
 
@@ -182,6 +183,8 @@ void DrawQuad(int width, int height, int ofsX = 0, int ofsY = 0)
 
 void ApplyPostEffects()
 {
+	RcProfScope prof( RCP_POST );	// ReCoF
+
 	if (g_iDickMode_guess)
 	{
 		glMatrixMode(GL_MODELVIEW);

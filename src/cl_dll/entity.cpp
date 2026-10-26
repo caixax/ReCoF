@@ -24,6 +24,7 @@
 #include "gl_renderer.h" // buz
 #include "gl_dlight.h" // buz
 #include "particlemgr.h"
+#include "rc_prof.h"	// ReCoF
 
 #define DLLEXPORT __declspec( dllexport )
 
@@ -80,6 +81,8 @@ HUD_AddEntity
 */
 int DLLEXPORT HUD_AddEntity( int type, struct cl_entity_s *ent, const char *modelname )
 {
+	RcProfScope prof( RCP_ENTS );	// ReCoF
+
 	switch ( type )
 	{
 	case ET_NORMAL:
@@ -589,6 +592,8 @@ cl_entity_t testent;
 
 void DLLEXPORT HUD_CreateEntities( void )
 {
+	RcProfScope prof( RCP_ENTS );	// ReCoF
+
 	// e.g., create a persistent cl_entity_t somewhere.
 	// Load an appropriate model into it ( gEngfuncs.CL_LoadModel )
 	// Call gEngfuncs.CL_CreateVisibleEntity to add it to the visedicts list

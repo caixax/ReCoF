@@ -38,6 +38,7 @@ extern "C"
 #include "vgui_int.h"
 #include "interface.h"
 #include "mp3.h"
+#include "rc_prof.h"	// ReCoF
 
 #define DLLEXPORT __declspec( dllexport )
 
@@ -215,6 +216,9 @@ redraw the HUD.
 
 int DLLEXPORT HUD_Redraw( float time, int intermission )
 {
+	RcProf_Frame();	// ReCoF: rc_prof frame boundary
+	RcProfScope prof( RCP_HUD );
+
 	gHUD.Redraw( time, intermission );
 
 	return 1;
@@ -264,6 +268,8 @@ Called by engine every frame that client .dll is loaded
 
 void DLLEXPORT HUD_Frame( double time )
 {
+	RcProfScope prof( RCP_CLFRAME );	// ReCoF
+
 	ServersThink( time );
 
 	IrrKlangFrame_guess();

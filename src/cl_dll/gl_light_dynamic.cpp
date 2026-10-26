@@ -20,6 +20,7 @@
 #include "pmtrace.h"
 #include "gl_renderer.h"
 #include "gl_dlight.h"
+#include "rc_prof.h"	// ReCoF
 
 
 #define MAX_DLIGHTS 32
@@ -861,6 +862,7 @@ void DrawDynamicLights()
 		if (dl->die < time || !dl->radius)
 			continue;
 
+		RcProf_Count( RCC_DLIGHTS );	// ReCoF
 		current_light = dl;
 		current_light_origin = current_light->origin;
 		if (current_light->spot_texture[0]) // spotlight

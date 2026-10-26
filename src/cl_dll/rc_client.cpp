@@ -12,6 +12,7 @@
 #include "const.h"
 #include "pm_defs.h"
 #include "rc_client.h"
+#include "rc_prof.h"
 
 #include <stdio.h>
 #include <windows.h>
@@ -92,6 +93,8 @@ void RcClient_Init( void )
 	rc_speedometer_color = gEngfuncs.pfnRegisterVariable( "rc_speedometer_color", "255 255 255", FCVAR_ARCHIVE );
 
 	rc_rawinput = gEngfuncs.pfnRegisterVariable( "rc_rawinput", "1", FCVAR_ARCHIVE );
+
+	RcProf_Init();
 }
 
 //-----------------------------------------------------------------------------

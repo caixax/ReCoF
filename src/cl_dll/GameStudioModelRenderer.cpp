@@ -28,6 +28,7 @@
 #include "GameStudioModelRenderer.h"
 
 #include "gl_renderer.h"
+#include "rc_prof.h"	// ReCoF
 
 //
 // Override the StudioModelRender virtual member functions here to implement custom bone
@@ -61,6 +62,9 @@ R_StudioDrawPlayer
 */
 int R_StudioDrawPlayer( int flags, entity_state_t *pplayer )
 {
+	RcProfScope prof( RCP_MODELS );	// ReCoF
+	RcProf_Count( RCC_MODELS );
+
 	RendererDrawNormal(); // buz: make shure that world draws before any studiomodel
 	return g_StudioRenderer.StudioDrawPlayer( flags, pplayer );
 }
@@ -73,6 +77,9 @@ R_StudioDrawModel
 */
 int R_StudioDrawModel( int flags )
 {
+	RcProfScope prof( RCP_MODELS );	// ReCoF
+	RcProf_Count( RCC_MODELS );
+
 	if (IEngineStudio.GetCurrentEntity() != IEngineStudio.GetViewEntity() && IEngineStudio.GetCurrentEntity()->curstate.renderfx != 161)
 		RendererDrawNormal(); // buz: make shure that world draws before any studiomodel
 	return g_StudioRenderer.StudioDrawModel( flags );

@@ -31,6 +31,7 @@
 #include "triapiobjects.h"
 #include "gl_renderer.h" // buz
 #include "CgWater_guess.h"
+#include "rc_prof.h"	// ReCoF
 
 #define DLLEXPORT __declspec( dllexport )
 
@@ -757,6 +758,7 @@ void DLLEXPORT HUD_DrawNormalTriangles( void )
 
 	RendererDrawNormal(); // buz
 
+	RcProfScope prof( RCP_WATER );	// ReCoF
 	g_CgWater_guess.UpdateEntities_guess();
 
 #if defined( TEST_IT )
@@ -777,6 +779,8 @@ void DrawGlows(); // buz
 
 void DLLEXPORT HUD_DrawTransparentTriangles( void )
 {
+	RcProfScope prof( RCP_TRANS );	// ReCoF
+
 	RenderFog();
 	BlackFog();
 
@@ -816,6 +820,7 @@ void DLLEXPORT HUD_DrawTransparentTriangles( void )
 
 	if ( CVAR_GET_FLOAT( "cg_water" ) )
 	{
+		RcProfScope profWater( RCP_WATER );	// ReCoF
 		g_CgWater_guess.PreDraw_guess();
 		g_CgWater_guess.Render_guess();
 		g_CgWater_guess.PostDraw_guess();

@@ -83,6 +83,7 @@ void VectorAngles( const float *forward, float *angles );
 #include "com_model.h"
 #include "vgui_TeamFortressViewport.h"
 #include "RECBInventory_guess.h"
+#include "rc_prof.h"	// ReCoF
 
 extern engine_studio_api_t IEngineStudio;
 
@@ -2083,6 +2084,8 @@ extern "C" void V_CalcEmpty_guess( void )
 
 void DLLEXPORT V_CalcRefdef( struct ref_params_s *pparams )
 {
+	RcProfScope prof( RCP_VIEW );	// ReCoF
+
 	// intermission / finale rendering
 /*	if ( pparams->intermission )
 	{	

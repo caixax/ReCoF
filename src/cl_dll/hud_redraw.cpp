@@ -18,6 +18,7 @@
 #include <math.h>
 #include "hud.h"
 #include "rc_client.h"
+#include "rc_prof.h"
 #include "cl_util.h"
 #include "vgui_TeamFortressViewport.h"
 #include "vgui_hud.h"
@@ -647,6 +648,7 @@ int CHud :: Redraw( float flTime, int intermission )
 	*/
 
 	RcClient_Redraw( flTime, intermission );	// ReCoF
+	RcProf_Draw();								// ReCoF
 
 	return 1;
 }

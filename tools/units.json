@@ -1818,6 +1818,10 @@
         {
           "name": "cl_dll/rc_client",
           "source": "src/cl_dll/rc_client.cpp"
+        },
+        {
+          "name": "cl_dll/rc_prof",
+          "source": "src/cl_dll/rc_prof.cpp"
         }
       ],
       "link": {
@@ -2014,7 +2018,8 @@
           "cl_dll/vgui_teammenu",
           "cl_dll/vgui_tips",
           "cl_dll/view",
-          "cl_dll/rc_client"
+          "cl_dll/rc_client",
+          "cl_dll/rc_prof"
         ]
       }
     },
