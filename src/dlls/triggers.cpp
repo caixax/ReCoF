@@ -5425,7 +5425,7 @@ void CTriggerCamera::SkipCutscene( void )
 {
 	if ( m_flWait != 666 )
 	{
-		if ( m_hPlayer->IsAlive() )
+		if ( m_hPlayer != NULL && m_hPlayer->IsAlive() )	// ReCoF (B092): retail called IsAlive() through an empty handle
 		{
 			SET_VIEW( m_hPlayer->edict(), m_hPlayer->edict() );
 			((CBasePlayer *)((CBaseEntity *)m_hPlayer))->EnableControl( TRUE );
