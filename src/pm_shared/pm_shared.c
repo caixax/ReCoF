@@ -75,6 +75,22 @@ typedef struct hull_s
 #define VEC_DUCK_VIEW		12
 #define PM_DEAD_VIEWHEIGHT	-8
 #define MAX_CLIMB_SPEED	90
+
+// ReCoF (rc_hlmovement): Half-Life 1 movement, the steam_legacy pm_shared physics, when the server sets
+// physinfo "hlm" to 1 (docs/feasibility/hlmovement.md). Both DLLs read the same key, so prediction agrees.
+#define HL_TIME_TO_DUCK				0.4
+#define HL_MAX_CLIMB_SPEED			200
+#define HL_PLAYER_DUCKING_MULTIPLIER	0.333
+
+static int PM_HLMovement( void )
+{
+	return pmove && atoi( pmove->PM_Info_ValueForKey( pmove->physinfo, "hlm" ) ) != 0;
+}
+
+static float PM_TimeToDuck( void )
+{
+	return PM_HLMovement() ? HL_TIME_TO_DUCK : TIME_TO_DUCK;
+}
 #define STUCK_MOVEUP 1
 #define STUCK_MOVEDOWN -1
 #define VEC_HULL_MIN		-36
@@ -1500,7 +1516,8 @@ void PM_WalkMove ()
 	// buz: clientmaxspeed is now means speed factor to wishspeed -
 	// from 0 to 100 percent
 //	pmove->Con_Printf("wishspeed before: %f\n", wishspeed);
-	wishspeed = wishspeed * pmove->clientmaxspeed / (float)100;
+	if ( !PM_HLMovement() )	// ReCoF (rc_hlmovement): Half-Life has no speed percent
+		wishspeed = wishspeed * pmove->clientmaxspeed / (float)100;
 //	pmove->Con_Printf("wishspeed: %f, maxspeed: %f\n", wishspeed, pmove->clientmaxspeed);
 
 //
@@ -1514,7 +1531,7 @@ void PM_WalkMove ()
 
 	low = atoi( pmove->PM_Info_ValueForKey( pmove->physinfo, "low" ) );
 
-	if ( low && !( pmove->flags & (1<<18) ) )
+	if ( low && !( pmove->flags & (1<<18) ) && !PM_HLMovement() )	// ReCoF (rc_hlmovement): no limp in Half-Life
 	{
 		wishspeed *= 0.75;
 
@@ -1522,7 +1539,7 @@ void PM_WalkMove ()
 			wishspeed *= 0.75;
 	}
 
-	if ( wishspeed < 30 )
+	if ( wishspeed < 30 && !PM_HLMovement() )	// ReCoF (rc_hlmovement): no minimum in Half-Life
 		wishspeed = 30;
 
 	// Set pmove velocity
@@ -1795,7 +1812,8 @@ void PM_WaterMove (void)
 
 	// buz: clientmaxspeed is now means speed factor to wishspeed -
 	// from 0 to 100 percent
-	wishspeed = wishspeed * pmove->clientmaxspeed / (float)100;
+	if ( !PM_HLMovement() )	// ReCoF (rc_hlmovement): Half-Life has no speed percent
+		wishspeed = wishspeed * pmove->clientmaxspeed / (float)100;
 
 	// Cap speed.
 	if (wishspeed > pmove->maxspeed)
@@ -1804,7 +1822,7 @@ void PM_WaterMove (void)
 		wishspeed = pmove->maxspeed;
 	}
 	// Slow us down a bit.
-	if ( ( pmove->cmd.buttons & IN_RUN ) && ( pmove->flags & (1<<18) ) )
+	if ( ( pmove->cmd.buttons & IN_RUN ) && ( pmove->flags & (1<<18) ) && !PM_HLMovement() )
 	{
 		// sprinting, keep full speed
 	}
@@ -1903,7 +1921,8 @@ void PM_AirMove (void)
 
 	// buz: clientmaxspeed is now means speed factor to wishspeed -
 	// from 0 to 100 percent
-	wishspeed = wishspeed * pmove->clientmaxspeed / (float)100;
+	if ( !PM_HLMovement() )	// ReCoF (rc_hlmovement): Half-Life has no speed percent
+		wishspeed = wishspeed * pmove->clientmaxspeed / (float)100;
 
 	// Clamp to server defined max speed
 	if (wishspeed > pmove->maxspeed)
@@ -2389,7 +2408,7 @@ void PM_UnDuck( void )
 
 	// ReCoF (B132): Cry of Fear added the FL_DUCKING and bInDuck test, which removed the Half-Life ducktap;
 	// with rc_ducktap 1 the server sets physinfo "dkt" and the Half-Life test (on the ground only) is used
-	if ( pmove->onground != -1 && ( ( pmove->flags & FL_DUCKING && pmove->bInDuck == false ) || atoi( pmove->PM_Info_ValueForKey( pmove->physinfo, "dkt" ) ) ) )
+	if ( pmove->onground != -1 && ( ( pmove->flags & FL_DUCKING && pmove->bInDuck == false ) || atoi( pmove->PM_Info_ValueForKey( pmove->physinfo, "dkt" ) ) || PM_HLMovement() ) )
 	{
 		for ( i = 0; i < 3; i++ )
 		{
@@ -2467,7 +2486,7 @@ void PM_UnDuckNew( void )
 			
 			if ( !pmove->bInDuck )
 			{
-				if ( ( (float)pmove->flDuckTime / 1000.0 <= ( 1.0 - TIME_TO_DUCK ) ) ||
+				if ( ( (float)pmove->flDuckTime / 1000.0 <= ( 1.0 - PM_TimeToDuck() ) ) ||
 					 ( pmove->onground == -1 ) || pmove->fuser3 )
 				{
 					pmove->usehull = 0;
@@ -2493,7 +2512,7 @@ void PM_UnDuckNew( void )
 					float fMore = (VEC_DUCK_HULL_MIN - VEC_HULL_MAX);
 
 					// Calc parametric time
-					duckFraction = PM_SplineFraction( time, (1.0/TIME_TO_DUCK) );
+					duckFraction = PM_SplineFraction( time, (1.0/PM_TimeToDuck()) );
 					pmove->view_ofs[2] = ((VEC_DUCK_VIEW - fMore ) * duckFraction) + (VEC_VIEW * (1-duckFraction));
 				}
 			}
@@ -2556,7 +2575,7 @@ void PM_Duck( void )
 			if ( pmove->bInDuck )
 			{
 				// Finish ducking immediately if duck time is over or not on ground
-				if ( ( (float)pmove->flDuckTime / 1000.0 <= ( 1.0 - TIME_TO_DUCK ) ) ||
+				if ( ( (float)pmove->flDuckTime / 1000.0 <= ( 1.0 - PM_TimeToDuck() ) ) ||
 					 ( pmove->onground == -1 ) || pmove->fuser3 )
 				{
 					pmove->usehull = 1;
@@ -2583,7 +2602,7 @@ void PM_Duck( void )
 					float fMore = (VEC_DUCK_HULL_MIN - VEC_HULL_MIN);
 
 					// Calc parametric time
-					duckFraction = PM_SplineFraction( time, (1.0/TIME_TO_DUCK) );
+					duckFraction = PM_SplineFraction( time, (1.0/PM_TimeToDuck()) );
 					pmove->view_ofs[2] = ((VEC_DUCK_VIEW - fMore ) * duckFraction) + (VEC_VIEW * (1-duckFraction));
 				}
 			}
@@ -2631,16 +2650,29 @@ void PM_LadderMove( physent_t *pLadder )
 	{
 		float forward = 0, right = 0;
 		vec3_t vpn, v_right;
+		float flClimbSpeed = MAX_CLIMB_SPEED;
+
+		// ReCoF (rc_hlmovement): Half-Life climbs at 200, no faster than maxspeed, a third of it ducked
+		if ( PM_HLMovement() )
+		{
+			flClimbSpeed = HL_MAX_CLIMB_SPEED;
+
+			if ( flClimbSpeed > pmove->maxspeed )
+				flClimbSpeed = pmove->maxspeed;
+
+			if ( pmove->flags & FL_DUCKING )
+				flClimbSpeed *= HL_PLAYER_DUCKING_MULTIPLIER;
+		}
 
 		AngleVectors( pmove->angles, vpn, v_right, NULL );
 		if ( pmove->cmd.buttons & IN_BACK )
-			forward -= MAX_CLIMB_SPEED;
+			forward -= flClimbSpeed;
 		if ( pmove->cmd.buttons & IN_FORWARD )
-			forward += MAX_CLIMB_SPEED;
+			forward += flClimbSpeed;
 		if ( pmove->cmd.buttons & IN_MOVELEFT )
-			right -= MAX_CLIMB_SPEED;
+			right -= flClimbSpeed;
 		if ( pmove->cmd.buttons & IN_MOVERIGHT )
-			right += MAX_CLIMB_SPEED;
+			right += flClimbSpeed;
 
 		if ( pmove->cmd.buttons & IN_JUMP )
 		{
@@ -2689,7 +2721,7 @@ void PM_LadderMove( physent_t *pLadder )
 				VectorMA( lateral, -normal, tmp, pmove->velocity );
 				if ( onFloor && normal > 0 )	// On ground moving away from the ladder
 				{
-					VectorMA( pmove->velocity, MAX_CLIMB_SPEED, trace.plane.normal, pmove->velocity );
+					VectorMA( pmove->velocity, PM_HLMovement() ? HL_MAX_CLIMB_SPEED : MAX_CLIMB_SPEED, trace.plane.normal, pmove->velocity );
 				}
 				//pev->velocity = lateral - (CrossProduct( trace.vecPlaneNormal, perp ) * normal);
 			}
@@ -3119,6 +3151,8 @@ void PM_Jump (void)
 		//	jumpheight is percent from normal [0-100]
 
 		int jumpheight = atoi(pmove->PM_Info_ValueForKey(pmove->physinfo, "jh"));
+		if ( PM_HLMovement() )	// ReCoF (rc_hlmovement): Half-Life's fixed jump, sqrt( 2 * 800 * 45 )
+			jumpheight = 100;
 		pmove->velocity[2] = sqrt(2 * (800 / 100) * jumpheight * 45.0);
 //		pmove->Con_DPrintf("PM: jumping with: %d\n", jumpheight);
 	}
@@ -3433,7 +3467,11 @@ void PM_CheckParamters( void )
 	vec3_t	v_angle;
 	int inwheelchair;
 
-	if ( ( pmove->cmd.buttons & IN_RUN ) && ( pmove->flags & (1<<18) ) )
+	if ( PM_HLMovement() )
+	{
+		// ReCoF (rc_hlmovement): Half-Life has no sprint strafe rule and no diagonal halving
+	}
+	else if ( ( pmove->cmd.buttons & IN_RUN ) && ( pmove->flags & (1<<18) ) )
 		pmove->cmd.sidemove = 0;
 	else
 	{
@@ -3658,6 +3696,10 @@ void PM_PlayerMove ( qboolean server )
 			pmove->movetype = MOVETYPE_WALK;
 		}
 	}
+
+	// ReCoF (rc_hlmovement): Half-Life slows a player holding use on the ground; Cry of Fear removed it
+	if ( PM_HLMovement() && ( pmove->onground != -1 ) && ( pmove->cmd.buttons & IN_USE ) )
+		VectorScale( pmove->velocity, 0.3, pmove->velocity );
 
 	// Handle movement
 	switch ( pmove->movetype )

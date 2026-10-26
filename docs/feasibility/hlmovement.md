@@ -1,6 +1,6 @@
 # Feasibility: rc_hlmovement (Half-Life 1 movement)
 
-Study only, nothing is implemented. Written 2026-10-26 against the ReCoF tree (baseline = DeCoF, matching retail 1.6a).
+Written 2026-10-26 against the ReCoF tree (baseline = DeCoF, matching retail 1.6a). Implemented the same day as `rc_hlmovement` (docs/speedrun.md, ReCoF cvars), applied at once from PreThink instead of latched at Spawn and Restore.
 
 ## Question
 

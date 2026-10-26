@@ -33,6 +33,7 @@ extern "C"
 #include "Credits_guess.h"
 #include "HUDControl_guess.h"
 #include "RECBInventory_guess.h"
+#include "rc_client.h"
 #include "windows.h"
 
 //=========================================================
@@ -1147,17 +1148,31 @@ void DLLEXPORT CL_CreateMove ( float frametime, struct usercmd_s *cmd, int activ
 		if ( !gHUD.m_bViewLock_guess )
 			gEngfuncs.SetViewAngles( (float *)viewangles );
 
-		cmd->sidemove += cl_sidespeed->value * CL_KeyState (&in_moveright);
-		cmd->sidemove -= cl_sidespeed->value * CL_KeyState (&in_moveleft);
+		// ReCoF (rc_hlmovement): Half-Life moves at 400 in every direction (the server caps it at sv_maxspeed)
+		int bHLMovement = RcHLMovement();
+		float flSideSpeed = bHLMovement ? 400 : cl_sidespeed->value;
+		float flForwardSpeed = bHLMovement ? 400 : cl_forwardspeed->value;
+		float flBackSpeed = bHLMovement ? 400 : cl_backspeed->value;
+
+		cmd->sidemove += flSideSpeed * CL_KeyState (&in_moveright);
+		cmd->sidemove -= flSideSpeed * CL_KeyState (&in_moveleft);
 
 		cmd->upmove += cl_upspeed->value * CL_KeyState (&in_up);
 		cmd->upmove -= cl_upspeed->value * CL_KeyState (&in_down);
 
 		if ( !(in_klook.state & 1 ) )
 		{	
-			cmd->forwardmove += cl_forwardspeed->value * CL_KeyState (&in_forward);
-			cmd->forwardmove -= cl_backspeed->value * CL_KeyState (&in_back);
+			cmd->forwardmove += flForwardSpeed * CL_KeyState (&in_forward);
+			cmd->forwardmove -= flBackSpeed * CL_KeyState (&in_back);
 		}	
+
+		// ReCoF (rc_hlmovement): the sprint key walks, like Half-Life's +speed (cl_movespeedkey 0.3)
+		if ( bHLMovement && ( in_speed.state & 1 ) )
+		{
+			cmd->forwardmove *= 0.3;
+			cmd->sidemove *= 0.3;
+			cmd->upmove *= 0.3;
+		}
 
 		if ( ( in_dodge.state & 1 ) && bCanDodge_guess )
 		{

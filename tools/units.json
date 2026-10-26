@@ -1814,6 +1814,10 @@
           "name": "cl_dll/MP3FileInfo",
           "source": "src/cl_dll/MP3FileInfo.cpp",
           "functions_file": "tools/units/client_cl_dll_MP3FileInfo.txt"
+        },
+        {
+          "name": "cl_dll/rc_client",
+          "source": "src/cl_dll/rc_client.cpp"
         }
       ],
       "link": {
@@ -2009,7 +2013,8 @@
           "cl_dll/vgui_TeamFortressViewport",
           "cl_dll/vgui_teammenu",
           "cl_dll/vgui_tips",
-          "cl_dll/view"
+          "cl_dll/view",
+          "cl_dll/rc_client"
         ]
       }
     },

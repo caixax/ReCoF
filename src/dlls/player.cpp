@@ -34,6 +34,13 @@
 #include "decals.h"
 #include "gamerules.h"
 #include "game.h"
+
+// ReCoF (rc_hlmovement): the movement mode as pm_shared sees it (the physinfo key, not the cvar)
+static bool RcHLMovementOn( edict_t *pEdict )
+{
+	return atoi( g_engfuncs.pfnGetPhysicsKeyValue( pEdict, "hlm" ) ) != 0;
+}
+
 #include "hltv.h"
 #include "effects.h" //LRC
 #include "movewith.h" //LRC
@@ -3720,7 +3727,7 @@ void CBasePlayer::Jump()
 
 	// ClearBits(pev->flags, FL_ONGROUND);		// don't stairwalk
 
-	if ( !m_bInfiniteStamina )
+	if ( !m_bInfiniteStamina && !RcHLMovementOn( edict() ) )	// ReCoF (rc_hlmovement): jumping is free in Half-Life
 		m_fStamina -= 15;
 
 	if ( pev->waterlevel > 0 )
@@ -3959,6 +3966,24 @@ void CBasePlayer::PreThink(void)
 {
 	RcSetPhysicsKey( edict(), "nbh", rc_bhopcap.value ? "0" : "1" );	// ReCoF (B131)
 	RcSetPhysicsKey( edict(), "dkt", rc_ducktap.value ? "1" : "0" );	// ReCoF (B132)
+
+	// ReCoF (rc_hlmovement): Half-Life 1 movement. The mode reaches pm_shared on both sides through physinfo
+	// "hlm"; Half-Life runs at sv_maxspeed 320 (Cry of Fear's autoexec.cfg sets 300), and sprint is off
+	if ( ( rc_hlmovement.value != 0 ) != RcHLMovementOn( edict() ) )
+	{
+		if ( rc_hlmovement.value )
+		{
+			if ( CVAR_GET_FLOAT( "sv_maxspeed" ) != 320 )
+				CVAR_SET_FLOAT( "sv_maxspeed", 320 );
+		}
+		else if ( CVAR_GET_FLOAT( "sv_maxspeed" ) == 320 )
+			CVAR_SET_FLOAT( "sv_maxspeed", 300 );
+
+		pev->flags &= ~( (1<<18) | (1<<19) );
+		g_engfuncs.pfnSetPhysicsKeyValue( edict(), "hlm", rc_hlmovement.value ? "1" : "0" );
+	}
+	else if ( !*g_engfuncs.pfnGetPhysicsKeyValue( edict(), "hlm" ) )
+		g_engfuncs.pfnSetPhysicsKeyValue( edict(), "hlm", "0" );
 	m_bInfiniteStamina = rc_infinite_stamina.value != 0;	// ReCoF (B094): retail tested this flag but nothing set it
 
 	if ( m_bHoldingBreath )
@@ -6675,7 +6700,18 @@ void CBasePlayer::PostThink()
 		m_iClientViewEntIndex = m_iViewEntIndex;
 	}
 
-	StaminaThink();
+	// ReCoF (rc_hlmovement): Half-Life has no sprint; StaminaThink still regenerates stamina for dodge, melee
+	// and holding breath, so it runs with IN_RUN hidden and the sprint and exhaustion flags cleared after it
+	if ( RcHLMovementOn( edict() ) )
+	{
+		int iButtons = pev->button;
+		pev->button &= ~IN_RUN;
+		StaminaThink();
+		pev->button = iButtons;
+		pev->flags &= ~( (1<<18) | (1<<19) );
+	}
+	else
+		StaminaThink();
 	BreatheThink();
 
 	HeartBeatCheck();
