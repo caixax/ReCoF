@@ -5358,11 +5358,15 @@ void CBasePlayer::PostThink()
 		}
 	}
 
-	if ( pev->movetype == MOVETYPE_NOCLIP )
-		pev->movetype = MOVETYPE_WALK;
+	// ReCoF (B095): retail cancelled noclip and god mode every frame, even with sv_cheats 1
+	if ( !CVAR_GET_FLOAT( "sv_cheats" ) )
+	{
+		if ( pev->movetype == MOVETYPE_NOCLIP )
+			pev->movetype = MOVETYPE_WALK;
 
-	if ( pev->flags & FL_GODMODE )
-		pev->flags &= ~FL_GODMODE;
+		if ( pev->flags & FL_GODMODE )
+			pev->flags &= ~FL_GODMODE;
+	}
 
 	if ( m_bJustJumped )
 	{

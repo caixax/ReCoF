@@ -881,6 +881,9 @@ void Host_Notarget_f( void )
 	if ( gGlobalVariables.deathmatch )
 		return;
 
+	if ( !allow_cheats )	// ReCoF (B095): retail had no cheat test here, unlike god and noclip
+		return;
+
 	sv_player->v.flags = sv_player->v.flags ^ FL_NOTARGET;
 	if ( !( sv_player->v.flags & FL_NOTARGET ) )
 		SV_ClientPrintf( "notarget OFF\n" );
@@ -983,6 +986,9 @@ void Host_Fly_f( void )
 	}
 
 	if ( gGlobalVariables.deathmatch )
+		return;
+
+	if ( !allow_cheats )	// ReCoF (B095): retail had no cheat test here, unlike god and noclip
 		return;
 
 	if ( sv_player->v.movetype != MOVETYPE_FLY )
@@ -4092,6 +4098,11 @@ void Host_InitCommands( void )
 	Cmd_AddCommand( "say_team", Host_Say_Team_f );
 	Cmd_AddCommand( "tell", Host_Tell_f );
 	Cmd_AddCommand( "kill", Host_Kill_f );
+	// ReCoF (B095): Cry of Fear kept these cheats but never registered them; they need sv_cheats 1
+	Cmd_AddCommand( "god", Host_God_f );
+	Cmd_AddCommand( "notarget", Host_Notarget_f );
+	Cmd_AddCommand( "fly", Host_Fly_f );
+	Cmd_AddCommand( "noclip", Host_Noclip_f );
 	Cmd_AddCommand( "pause", Host_TogglePause_f );
 	Cmd_AddCommand( "setpause", Host_Pause_f );
 	Cmd_AddCommand( "unpause", Host_Unpause_f );
