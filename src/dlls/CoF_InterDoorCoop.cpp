@@ -28,6 +28,7 @@
 #include "cdll_dll.h"
 #include "studio.h"
 #include "animation.h"
+#include	"game.h"
 #include <fstream>
 
 extern int m_iSimonMode;
@@ -382,7 +383,8 @@ void CInterDoorCoop::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 	{
 		CBaseEntity *pEntity = UTIL_FindEntityByTargetname( NULL, STRING( m_sUseUnlock ) );
 
-		if ( pEntity && FClassnameIs( pEntity->pev, "inter_door" ) )
+		// ReCoF (B062): retail tested for "inter_door", the single player class, then used it as a CInterDoorCoop
+		if ( pEntity && FClassnameIs( pEntity->pev, "inter_door_coop" ) )
 		{
 			CInterDoorCoop *pDoor = GetClassPtr( (CInterDoorCoop *)pEntity->pev );
 
@@ -694,7 +696,8 @@ void CInterDoorCoop::ShiftMonsters( void )
 				if ( pEntity->IsAlive() )
 				{
 					// original bug: asks the target for its monster instead of the entity found
-					CBaseMonster *pMonster = pTarget->MyMonsterPointer();
+					// ReCoF (B062): use the entity found; rc_retail_gameplay 1 keeps retail, where nothing moved
+					CBaseMonster *pMonster = rc_retail_gameplay.value ? pTarget->MyMonsterPointer() : pEntity->MyMonsterPointer();
 
 					if ( pMonster && pMonster->m_vOriginalOrigin != g_vecZero )
 						UTIL_SetOrigin( pMonster, pMonster->m_vOriginalOrigin );
