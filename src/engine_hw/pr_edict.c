@@ -386,12 +386,10 @@ void ED_LoadFromFile( char *data )
 		if ( ent->free )
 			continue;
 
-		if ( deathmatch.value && ( ent->v.spawnflags & SF_NOTINDEATHMATCH ) )
-		{
-			ED_Free( ent );
-			inhibit++;
-			continue;
-		}
+		// ReCoF (B243): Quake's "not in deathmatch" flag (2048) freed these entities whenever deathmatch was
+		// set, and Cry of Fear's multiplayer (co-op) always sets it; the game uses 2048 for other meanings
+		// (func_button "fire when unlocked", trigger_camera), so 86 item lock buttons on 15 maps were missing
+		// in co-op. Cry of Fear has no deathmatch, so nothing is inhibited.
 
 		//
 		// immediately call spawn function
