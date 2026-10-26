@@ -84,22 +84,14 @@ void SetEngineDLL( const char **ppEngineDLL )
 {
 	*ppEngineDLL = "hw.dll";
 
-	const char *pEngineDLLSetting = registry->ReadString( "EngineDLL", "hw.dll" );
-	if ( !stricmp( pEngineDLLSetting, "hw.dll" ) )
-	{
-		*ppEngineDLL = "hw.dll";
-	}
-	else if ( !stricmp( pEngineDLLSetting, "sw.dll" ) )
-	{
-		*ppEngineDLL = "sw.dll";
-	}
-
+	// ReCoF (B279): Cry of Fear's client cannot run on the software engine, so an EngineDLL of
+	// sw.dll left by a failed start is not honoured any more; only -soft or -software picks it
 	// Override the registry with the command line
 	if ( cmdline->CheckParm( "-soft", NULL ) || cmdline->CheckParm( "-software", NULL ) )
 	{
 		*ppEngineDLL = "sw.dll";
 	}
-	else if ( cmdline->CheckParm( "-gl", NULL ) || cmdline->CheckParm( "-d3d", NULL ) )
+	else if ( cmdline->CheckParm( "-gl", NULL ) || cmdline->CheckParm( "-d3d", NULL ) || cmdline->CheckParm( "-hw", NULL ) )
 	{
 		*ppEngineDLL = "hw.dll";
 	}
@@ -113,12 +105,14 @@ void SetEngineDLL( const char **ppEngineDLL )
 //-----------------------------------------------------------------------------
 bool OnVideoModeFailed( void )
 {
-	registry->WriteInt( "ScreenBPP", 16 );
-	registry->WriteInt( "ScreenHeight", 640 );
-	registry->WriteInt( "ScreenWidth", 480 );
-	registry->WriteString( "EngineDLL", "sw.dll" );
+	// ReCoF (B279): retail switched to sw.dll for good and wrote the size swapped (480 wide, 640 high);
+	// retry in OpenGL at 640x480 instead
+	registry->WriteInt( "ScreenBPP", 32 );
+	registry->WriteInt( "ScreenHeight", 480 );
+	registry->WriteInt( "ScreenWidth", 640 );
+	registry->WriteString( "EngineDLL", "hw.dll" );
 
-	return MessageBox( NULL, "The specified video mode is not supported.\nThe game will now run in software mode.", "Video mode change failure", MB_OKCANCEL | MB_ICONWARNING ) == IDOK;
+	return MessageBox( NULL, "The engine failed to start in the selected video mode.\nThe game will now try again in OpenGL at 640x480.", "Video mode change failure", MB_OKCANCEL | MB_ICONWARNING ) == IDOK;
 }
 
 //-----------------------------------------------------------------------------
@@ -317,16 +311,17 @@ int APIENTRY WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
 			}
 			else
 			{
-				registry->WriteString( "EngineDLL", "sw.dll" );
-				nResult = MessageBox( NULL, "The game has detected that the previous attempt to start in openGL video mode failed.\nThe game will now run in software mode.", "Video mode change failure", MB_OKCANCEL | MB_ICONWARNING );
+				// ReCoF (B279): stay in OpenGL instead of switching to the software engine for good
+				nResult = MessageBox( NULL, "The game has detected that the previous attempt to start in openGL video mode failed.\nThe game will now try again in OpenGL at 640x480.", "Video mode change failure", MB_OKCANCEL | MB_ICONWARNING );
 			}
 
 			if ( nResult != IDOK )
 				return 0;
 
-			registry->WriteInt( "ScreenBPP", 16 );
-			registry->WriteInt( "ScreenHeight", 640 );
-			registry->WriteInt( "ScreenWidth", 480 );
+			// ReCoF (B279): retail wrote the size swapped (480 wide, 640 high) and 16 bit colour
+			registry->WriteInt( "ScreenBPP", 32 );
+			registry->WriteInt( "ScreenHeight", 480 );
+			registry->WriteInt( "ScreenWidth", 640 );
 		}
 	}
 
