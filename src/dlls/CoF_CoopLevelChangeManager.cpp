@@ -91,6 +91,17 @@ public:
 
 CCoopLevelChangeManager *g_pLevelChange;
 
+// ReCoF (B101): retail kept STRING( netname ), which points at the engine's per slot name buffer, and
+// compared pointers, so the carry followed the client slot, not the player; keep a copy and compare text
+static char g_szCarryName[33][32];
+
+static char *CopyCarryName( int i, CBasePlayer *pPlayer )
+{
+	strncpy( g_szCarryName[i], STRING( pPlayer->pev->netname ), sizeof( g_szCarryName[i] ) - 1 );
+	g_szCarryName[i][sizeof( g_szCarryName[i] ) - 1] = 0;
+	return g_szCarryName[i];
+}
+
 CCoopLevelChangeManager::CCoopLevelChangeManager( void )
 {
 	memset( playervariablestruct, 0, sizeof( playervariablestruct ) );
@@ -232,7 +243,7 @@ void CCoopLevelChangeManager::SetPlayerVariables( CBasePlayer *pPlayer )
 				playervariablestruct[i].doctor_mode = pPlayer->playerstats.doctor_mode;
 
 				playervariablestruct[i].m_bUsed = true;
-				playervariablestruct[i].szPlayerName = (char *)STRING( pPlayer->pev->netname );
+				playervariablestruct[i].szPlayerName = CopyCarryName( i, pPlayer );
 
 				playervariablestructstats[i] = playervariablestruct[i];
 				return;
@@ -241,7 +252,7 @@ void CCoopLevelChangeManager::SetPlayerVariables( CBasePlayer *pPlayer )
 			playervariablestruct[i].m_bIsADonator = pPlayer->IsDonator();
 
 			playervariablestruct[i].m_bWasDead = false;
-			playervariablestruct[i].szPlayerName = (char *)STRING( pPlayer->pev->netname );
+			playervariablestruct[i].szPlayerName = CopyCarryName( i, pPlayer );
 			playervariablestruct[i].m_iPlayerHealth = pPlayer->pev->health;
 			playervariablestruct[i].m_iPlayerStamina = pPlayer->m_fStamina;
 			playervariablestruct[i].m_bUsed = true;
@@ -314,7 +325,7 @@ bool CCoopLevelChangeManager::GivePlayerVariables( CBasePlayer *pPlayer )
 	for ( i = 1; i <= 32; i++ )
 	{
 		// after a game over only the statistics are kept
-		if ( m_bJustHadGameOver && playervariablestructstats[i].m_bUsed && playervariablestructstats[i].szPlayerName == STRING( pPlayer->pev->netname ) )
+		if ( m_bJustHadGameOver && playervariablestructstats[i].m_bUsed && playervariablestructstats[i].szPlayerName && !strcmp( playervariablestructstats[i].szPlayerName, STRING( pPlayer->pev->netname ) ) )
 		{
 			pPlayer->playerstats.shots_fired = playervariablestructstats[i].shots_fired;
 			pPlayer->playerstats.shots_hit = playervariablestructstats[i].shots_hit;
@@ -341,7 +352,7 @@ bool CCoopLevelChangeManager::GivePlayerVariables( CBasePlayer *pPlayer )
 			return true;
 		}
 
-		if ( playervariablestruct[i].m_bUsed && playervariablestruct[i].szPlayerName == STRING( pPlayer->pev->netname ) && playervariablestruct[i].m_bWasDead == true )
+		if ( playervariablestruct[i].m_bUsed && playervariablestruct[i].szPlayerName && !strcmp( playervariablestruct[i].szPlayerName, STRING( pPlayer->pev->netname ) ) && playervariablestruct[i].m_bWasDead == true )
 		{
 			hasfoundme = true;
 
@@ -379,7 +390,7 @@ bool CCoopLevelChangeManager::GivePlayerVariables( CBasePlayer *pPlayer )
 			return true;
 		}
 
-		if ( playervariablestruct[i].m_bUsed && playervariablestruct[i].szPlayerName == STRING( pPlayer->pev->netname ) && playervariablestruct[i].m_bWasDead == false )
+		if ( playervariablestruct[i].m_bUsed && playervariablestruct[i].szPlayerName && !strcmp( playervariablestruct[i].szPlayerName, STRING( pPlayer->pev->netname ) ) && playervariablestruct[i].m_bWasDead == false )
 		{
 			hasfoundme = true;
 

@@ -658,7 +658,8 @@ void ClientDisconnect( edict_t *pEntity )
 	{
 		for ( i = 1; i <= 32; i++ )
 		{
-			if ( g_pLevelChange->m_bJustHadGameOver && g_pLevelChange->playervariablestruct[i].m_bUsed && g_pLevelChange->playervariablestruct[i].szPlayerName == STRING(pEntity->v.netname) )
+			// ReCoF (B101): compare the stored name, not the pointer to the slot's name buffer
+			if ( g_pLevelChange->m_bJustHadGameOver && g_pLevelChange->playervariablestruct[i].m_bUsed && g_pLevelChange->playervariablestruct[i].szPlayerName && !strcmp( g_pLevelChange->playervariablestruct[i].szPlayerName, STRING(pEntity->v.netname) ) )
 			{
 				memset( &g_pLevelChange->playervariablestruct[i], 0, sizeof( playervariables ) );
 				memset( &g_pLevelChange->playervariablestructstats[i], 0, sizeof( playervariables ) );
