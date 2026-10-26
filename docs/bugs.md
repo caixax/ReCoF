@@ -26,7 +26,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 
 | Binary | crash | save | gameplay | performance | visual | audio | cosmetic | latent | total |
 |---|---|---|---|---|---|---|---|---|---|
-| hl.dll | 10 | 3 | 55 | 10 | 9 | 10 | 3 | 31 | 131 |
+| hl.dll | 10 | 3 | 54 | 10 | 9 | 10 | 3 | 32 | 131 |
 | client.dll | 3 | 0 | 8 | 26 | 21 | 3 | 11 | 18 | 90 |
 | hw.dll | 1 | 2 | 6 | 22 | 5 | 3 | 4 | 30 | 73 |
 | GameUI.dll | 0 | 0 | 0 | 1 | 0 | 0 | 4 | 5 | 10 |
@@ -34,7 +34,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | cof.exe | 2 | 0 | 0 | 0 | 2 | 0 | 0 | 2 | 6 |
 | CoFLaunchApp.exe | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 0 | 4 |
 | unknown | 2 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 3 |
-| all issues | 17 | 5 | 65 | 51 | 36 | 14 | 19 | 81 | 288 |
+| all issues | 17 | 5 | 64 | 51 | 36 | 14 | 19 | 82 | 288 |
 
 ## User reports
 
@@ -109,7 +109,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | B061 | hl.dll | `CPushableVan` (CoF_PushableVan.cpp) | Passes an unused argument to the "Max nerds are grabbing" message. | None. | the extra push (DeCoF original_bugs.md) | latent | no | Leave. | open |
 | B062 | hl.dll | `CInterDoorCoop::ShiftMonsters`, `Use` (CoF_InterDoorCoop.cpp) | ShiftMonsters calls `pTarget->MyMonsterPointer()` instead of using the entity it found; Use checks the "useunlock" door against the classname "inter_door" (not "inter_door_coop") and then casts it to CInterDoorCoop. | Co-op doors with monsters behind them, and useunlock doors. | the call and the string (DeCoF original_bugs.md) | gameplay | no | Use the found entity and the right class name. Done: useunlock looks for inter_door_coop, and ShiftMonsters moves the monsters it finds near the door's target back to where they spawned (rc_retail_gameplay 1 keeps retail, where nothing moved). | test |
 | B063 | hl.dll | `CInterDoor::EndSequence` (CoF_InterDoor.cpp) | Both branches of the `m_iMusicFadeIn` test call `PlayerSetMP3( ..., 0 )`, so the fade-in setting is never used. | Door music fade in. | identical calls (DeCoF original_bugs.md) | audio | no | Use m_iMusicFadeIn. | open |
-| B064 | hl.dll | `CNumeralPlateLeft::Think` (CoF_NumeralPlate.cpp) | `scriptleft`, `scriptright` and `codenumber` are uninitialized when the skin is not 1 to 3. | Numeral plate with a skin other than 1 to 3 fires garbage targets. | no store on the default path (DeCoF original_bugs.md) | gameplay | no | Initialize the strings. | open |
+| B064 | hl.dll | `CNumeralPlateLeft::Think` (CoF_NumeralPlate.cpp) | `scriptleft`, `scriptright` and `codenumber` are uninitialized when the skin is not 1 to 3. | Numeral plate with a skin other than 1 to 3 fires garbage targets. | no store on the default path (DeCoF original_bugs.md) | latent | no | Leave: Spawn sets the skin with RANDOM_LONG( 1, 3 ) (CoF_NumeralPlate.cpp line 60) and Think copies it to the right plate, so the skin is always 1 to 3. | keep |
 | B065 | hl.dll | `CCofTelephone::TelephoneRight`, `TelephoneWrong` (CoF_Telephone.cpp) | Use `m_pPlayer->pev` before checking `m_pPlayer`. | None. | the test after the use (DeCoF original_bugs.md) | latent | no | Test m_pPlayer first. | open |
 | B066 | hl.dll | `CStatuePuzzleComplete::Use`, `CheckStatuePuzzle` (CoF_Statues.cpp) | No NULL test of `pActivator`; CheckStatuePuzzle may pass a NULL player. | Statue puzzle triggered without a player. | no test (DeCoF original_bugs.md) | crash | no | Test pActivator and the player. | test |
 | B067 | hl.dll | `CTapeRecorder::BlinkThink` (CoF_TapeRecorder.cpp) | Checks `pSprite` for NULL only after using it. | None. | the test after the use (DeCoF original_bugs.md) | latent | no | Test pSprite before use. | open |
