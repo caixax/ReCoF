@@ -860,7 +860,9 @@ void CInterDoorCoopChangeLevel::BuildPlayerList( CBasePlayer *pPlayer )
 
 				os << ((CBasePlayerWeapon *)pPlayerItem)->m_iClip << "\n";
 
-				os << pPlayer->m_rgAmmo[ ((CBasePlayerWeapon *)pPlayerItem)->m_iPrimaryAmmoType ] << "\n";
+				// ReCoF (B121): melee weapons have no primary ammo type (-1); retail wrote m_rgAmmo[-1]
+				int iAmmoType = ((CBasePlayerWeapon *)pPlayerItem)->m_iPrimaryAmmoType;
+				os << ( iAmmoType >= 0 ? pPlayer->m_rgAmmo[ iAmmoType ] : 0 ) << "\n";
 
 				pPlayerItem = pPlayerItem->m_pNext;
 			}

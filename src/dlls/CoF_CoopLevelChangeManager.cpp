@@ -98,6 +98,21 @@ CCoopLevelChangeManager::CCoopLevelChangeManager( void )
 }
 
 // remember the clip and ammo of the weapon of quick slot 'slot'
+// ReCoF (B121): melee weapons have no primary ammo (m_iPrimaryAmmoType -1); retail carried
+// m_rgAmmo[-1], which is m_pStoredActionItem, into the next level
+static int GetCarriedAmmo( CBasePlayer *pPlayer, CBasePlayerItem *pPlayerItem )
+{
+	int type = ((CBasePlayerWeapon *)pPlayerItem)->m_iPrimaryAmmoType;
+	return ( type >= 0 && type < MAX_AMMO_SLOTS ) ? pPlayer->m_rgAmmo[type] : 0;
+}
+
+static void SetCarriedAmmo( CBasePlayer *pPlayer, CBasePlayerItem *pPlayerItem, int amount )
+{
+	int type = ((CBasePlayerWeapon *)pPlayerItem)->m_iPrimaryAmmoType;
+	if ( type >= 0 && type < MAX_AMMO_SLOTS )
+		pPlayer->m_rgAmmo[type] = amount;
+}
+
 void CCoopLevelChangeManager::GiveWeaponFromInventory( char *weapon, int slot, int i, CBasePlayer *pPlayer )
 {
 	for ( int j = 0; j < MAX_ITEM_TYPES; j++ )
@@ -117,7 +132,7 @@ void CCoopLevelChangeManager::GiveWeaponFromInventory( char *weapon, int slot, i
 						{
 							playervariablestruct[i].szWeapon1 = (char *)STRING( pPlayerItem->pev->classname );
 							playervariablestruct[i].iClip1 = ((CBasePlayerWeapon *)pPlayerItem)->m_iClip;
-							playervariablestruct[i].iAmmo1 = pPlayer->m_rgAmmo[((CBasePlayerWeapon *)pPlayerItem)->m_iPrimaryAmmoType];
+							playervariablestruct[i].iAmmo1 = GetCarriedAmmo( pPlayer, pPlayerItem );
 							return;
 						}
 						break;
@@ -127,7 +142,7 @@ void CCoopLevelChangeManager::GiveWeaponFromInventory( char *weapon, int slot, i
 						{
 							playervariablestruct[i].szWeapon2 = (char *)STRING( pPlayerItem->pev->classname );
 							playervariablestruct[i].iClip2 = ((CBasePlayerWeapon *)pPlayerItem)->m_iClip;
-							playervariablestruct[i].iAmmo2 = pPlayer->m_rgAmmo[((CBasePlayerWeapon *)pPlayerItem)->m_iPrimaryAmmoType];
+							playervariablestruct[i].iAmmo2 = GetCarriedAmmo( pPlayer, pPlayerItem );
 							return;
 						}
 						break;
@@ -137,7 +152,7 @@ void CCoopLevelChangeManager::GiveWeaponFromInventory( char *weapon, int slot, i
 						{
 							playervariablestruct[i].szWeapon3 = (char *)STRING( pPlayerItem->pev->classname );
 							playervariablestruct[i].iClip3 = ((CBasePlayerWeapon *)pPlayerItem)->m_iClip;
-							playervariablestruct[i].iAmmo3 = pPlayer->m_rgAmmo[((CBasePlayerWeapon *)pPlayerItem)->m_iPrimaryAmmoType];
+							playervariablestruct[i].iAmmo3 = GetCarriedAmmo( pPlayer, pPlayerItem );
 							return;
 						}
 						break;
@@ -147,7 +162,7 @@ void CCoopLevelChangeManager::GiveWeaponFromInventory( char *weapon, int slot, i
 						{
 							playervariablestruct[i].szWeapon4 = (char *)STRING( pPlayerItem->pev->classname );
 							playervariablestruct[i].iClip4 = ((CBasePlayerWeapon *)pPlayerItem)->m_iClip;
-							playervariablestruct[i].iAmmo4 = pPlayer->m_rgAmmo[((CBasePlayerWeapon *)pPlayerItem)->m_iPrimaryAmmoType];
+							playervariablestruct[i].iAmmo4 = GetCarriedAmmo( pPlayer, pPlayerItem );
 							return;
 						}
 						break;
@@ -157,7 +172,7 @@ void CCoopLevelChangeManager::GiveWeaponFromInventory( char *weapon, int slot, i
 						{
 							playervariablestruct[i].szWeapon5 = (char *)STRING( pPlayerItem->pev->classname );
 							playervariablestruct[i].iClip5 = ((CBasePlayerWeapon *)pPlayerItem)->m_iClip;
-							playervariablestruct[i].iAmmo5 = pPlayer->m_rgAmmo[((CBasePlayerWeapon *)pPlayerItem)->m_iPrimaryAmmoType];
+							playervariablestruct[i].iAmmo5 = GetCarriedAmmo( pPlayer, pPlayerItem );
 							return;
 						}
 						break;
@@ -167,7 +182,7 @@ void CCoopLevelChangeManager::GiveWeaponFromInventory( char *weapon, int slot, i
 						{
 							playervariablestruct[i].szWeapon6 = (char *)STRING( pPlayerItem->pev->classname );
 							playervariablestruct[i].iClip6 = ((CBasePlayerWeapon *)pPlayerItem)->m_iClip;
-							playervariablestruct[i].iAmmo6 = pPlayer->m_rgAmmo[((CBasePlayerWeapon *)pPlayerItem)->m_iPrimaryAmmoType];
+							playervariablestruct[i].iAmmo6 = GetCarriedAmmo( pPlayer, pPlayerItem );
 							return;
 						}
 						break;
@@ -426,7 +441,7 @@ bool CCoopLevelChangeManager::GivePlayerVariables( CBasePlayer *pPlayer )
 							if ( FClassnameIs( pPlayerItem->pev, playervariablestruct[i].szWeapon1 ) )
 							{
 								((CBasePlayerWeapon *)pPlayerItem)->m_iClip = playervariablestruct[i].iClip1;
-								pPlayer->m_rgAmmo[((CBasePlayerWeapon *)pPlayerItem)->m_iPrimaryAmmoType] = playervariablestruct[i].iAmmo1;
+								SetCarriedAmmo( pPlayer, pPlayerItem, playervariablestruct[i].iAmmo1 );
 							}
 
 							pPlayerItem = pPlayerItem->m_pNext;
@@ -458,7 +473,7 @@ bool CCoopLevelChangeManager::GivePlayerVariables( CBasePlayer *pPlayer )
 							if ( FClassnameIs( pPlayerItem->pev, playervariablestruct[i].szWeapon2 ) )
 							{
 								((CBasePlayerWeapon *)pPlayerItem)->m_iClip = playervariablestruct[i].iClip2;
-								pPlayer->m_rgAmmo[((CBasePlayerWeapon *)pPlayerItem)->m_iPrimaryAmmoType] = playervariablestruct[i].iAmmo2;
+								SetCarriedAmmo( pPlayer, pPlayerItem, playervariablestruct[i].iAmmo2 );
 							}
 
 							pPlayerItem = pPlayerItem->m_pNext;
@@ -490,7 +505,7 @@ bool CCoopLevelChangeManager::GivePlayerVariables( CBasePlayer *pPlayer )
 							if ( FClassnameIs( pPlayerItem->pev, playervariablestruct[i].szWeapon3 ) )
 							{
 								((CBasePlayerWeapon *)pPlayerItem)->m_iClip = playervariablestruct[i].iClip3;
-								pPlayer->m_rgAmmo[((CBasePlayerWeapon *)pPlayerItem)->m_iPrimaryAmmoType] = playervariablestruct[i].iAmmo3;
+								SetCarriedAmmo( pPlayer, pPlayerItem, playervariablestruct[i].iAmmo3 );
 							}
 
 							pPlayerItem = pPlayerItem->m_pNext;
@@ -522,7 +537,7 @@ bool CCoopLevelChangeManager::GivePlayerVariables( CBasePlayer *pPlayer )
 							if ( FClassnameIs( pPlayerItem->pev, playervariablestruct[i].szWeapon4 ) )
 							{
 								((CBasePlayerWeapon *)pPlayerItem)->m_iClip = playervariablestruct[i].iClip4;
-								pPlayer->m_rgAmmo[((CBasePlayerWeapon *)pPlayerItem)->m_iPrimaryAmmoType] = playervariablestruct[i].iAmmo4;
+								SetCarriedAmmo( pPlayer, pPlayerItem, playervariablestruct[i].iAmmo4 );
 							}
 
 							pPlayerItem = pPlayerItem->m_pNext;
@@ -554,7 +569,7 @@ bool CCoopLevelChangeManager::GivePlayerVariables( CBasePlayer *pPlayer )
 							if ( FClassnameIs( pPlayerItem->pev, playervariablestruct[i].szWeapon5 ) )
 							{
 								((CBasePlayerWeapon *)pPlayerItem)->m_iClip = playervariablestruct[i].iClip5;
-								pPlayer->m_rgAmmo[((CBasePlayerWeapon *)pPlayerItem)->m_iPrimaryAmmoType] = playervariablestruct[i].iAmmo5;
+								SetCarriedAmmo( pPlayer, pPlayerItem, playervariablestruct[i].iAmmo5 );
 							}
 
 							pPlayerItem = pPlayerItem->m_pNext;
@@ -586,7 +601,7 @@ bool CCoopLevelChangeManager::GivePlayerVariables( CBasePlayer *pPlayer )
 							if ( FClassnameIs( pPlayerItem->pev, playervariablestruct[i].szWeapon6 ) )
 							{
 								((CBasePlayerWeapon *)pPlayerItem)->m_iClip = playervariablestruct[i].iClip6;
-								pPlayer->m_rgAmmo[((CBasePlayerWeapon *)pPlayerItem)->m_iPrimaryAmmoType] = playervariablestruct[i].iAmmo6;
+								SetCarriedAmmo( pPlayer, pPlayerItem, playervariablestruct[i].iAmmo6 );
 							}
 
 							pPlayerItem = pPlayerItem->m_pNext;
