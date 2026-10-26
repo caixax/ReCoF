@@ -100,6 +100,7 @@ public:
 	void (APIENTRY *glVertex3f) (GLfloat x, GLfloat y, GLfloat z);
 	void (APIENTRY *glVertex3fv)	(const GLfloat *v);
 	void (APIENTRY *glVertexPointer) (GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
+	void (APIENTRY *glColorPointer) (GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);	// ReCoF: optional (B287)
 	void (APIENTRY *glViewport)	(GLint x, GLint y, GLsizei width, GLsizei height);
 	PROC (APIENTRY *wglGetProcAddress)	(LPCSTR);
 

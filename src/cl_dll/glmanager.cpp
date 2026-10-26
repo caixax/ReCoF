@@ -368,6 +368,7 @@ int GLManager::LoadFunctions()
 	LOAD_PROC(glVertex3f);
 	LOAD_PROC(glVertex3fv);
 	LOAD_PROC(glVertexPointer);
+	GLMLoadProc( glColorPointer, "glColorPointer", hOpengl32dll );	// ReCoF (B287): optional, a miss does not turn GL off
 	LOAD_PROC(glViewport);
 	LOAD_PROC(wglGetProcAddress);
 //	LOAD_PROC_EXT(glColorTableEXT);

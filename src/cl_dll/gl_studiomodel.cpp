@@ -1473,6 +1473,133 @@ void CStudioModelRenderer::GL_SetupModel ( int bodypart )
 
 
 
+// ReCoF (B287): the strips of a studio model go to the driver as one glDrawArrays each instead of three GL
+// calls per vertex, which also pass through the opengl32.dll wrapper. glDrawArrays draws exactly what the same
+// glBegin and glEnd would. GL_DrawPoints keeps its retail calls, spelled RcTexCoord2f, RcColor4f, RcVertex3fv,
+// RcBegin and RcEnd: with rc_modelarrays 0, inside the world pass (use_vertex_array, whose arrays these would
+// disturb) or for a strip longer than the buffer they are the retail immediate mode calls. The arrays are
+// enabled for the strips and disabled after them, the state the world pass leaves (the client active texture
+// unit is 0 there, GL_MtexStateSaver restores it), and the current texture coordinate and colour are set to
+// those of the last vertex, as immediate mode leaves them.
+extern int use_vertex_array;	// gl_rsurf.cpp
+extern cvar_t *rc_modelarrays;	// gl_renderer.cpp
+
+struct RcStripVert_t
+{
+	float	st[2];
+	float	color[4];
+	float	pos[3];
+};
+
+#define RC_STRIP_VERTS	4096
+
+static RcStripVert_t	s_RcStrip[RC_STRIP_VERTS];
+static int				s_iRcStripCount;
+static GLenum			s_RcStripMode;
+static int				s_bRcArrays;			// this GL_DrawPoints call draws its strips from arrays
+static int				s_bRcArraysOn;			// the arrays are enabled
+static int				s_bRcImmediate;			// the strip being drawn uses immediate mode
+static float			s_flRcSt[2];			// the texture coordinate and colour of the next vertex
+static float			s_flRcColor[4];
+
+static void RcArraysStart( void )
+{
+	s_bRcArrays = rc_modelarrays && rc_modelarrays->value && !use_vertex_array && gl.glColorPointer;
+	s_bRcArraysOn = FALSE;
+}
+
+static void RcArraysFinish( void )
+{
+	if ( !s_bRcArraysOn )
+		return;
+
+	gl.glDisableClientState( GL_VERTEX_ARRAY );
+	gl.glDisableClientState( GL_COLOR_ARRAY );
+	gl.glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+	gl.glTexCoord2f( s_flRcSt[0], s_flRcSt[1] );
+	gl.glColor4f( s_flRcColor[0], s_flRcColor[1], s_flRcColor[2], s_flRcColor[3] );
+	s_bRcArraysOn = FALSE;
+}
+
+static void RcBegin( GLenum mode, int count )
+{
+	s_bRcImmediate = !s_bRcArrays || count > RC_STRIP_VERTS;
+
+	if ( s_bRcImmediate )
+	{
+		gl.glBegin( mode );
+		return;
+	}
+
+	s_RcStripMode = mode;
+	s_iRcStripCount = 0;
+}
+
+static inline void RcTexCoord2f( float s, float t )
+{
+	if ( s_bRcImmediate )
+		gl.glTexCoord2f( s, t );
+	s_flRcSt[0] = s;
+	s_flRcSt[1] = t;
+}
+
+static inline void RcColor4f( float r, float g, float b, float a )
+{
+	if ( s_bRcImmediate )
+		gl.glColor4f( r, g, b, a );
+	s_flRcColor[0] = r;
+	s_flRcColor[1] = g;
+	s_flRcColor[2] = b;
+	s_flRcColor[3] = a;
+}
+
+static inline void RcVertex3fv( const float *pos )
+{
+	if ( s_bRcImmediate )
+	{
+		gl.glVertex3f( pos[0], pos[1], pos[2] );
+		return;
+	}
+
+	RcStripVert_t *v = &s_RcStrip[s_iRcStripCount++];
+	v->st[0] = s_flRcSt[0];
+	v->st[1] = s_flRcSt[1];
+	v->color[0] = s_flRcColor[0];
+	v->color[1] = s_flRcColor[1];
+	v->color[2] = s_flRcColor[2];
+	v->color[3] = s_flRcColor[3];
+	v->pos[0] = pos[0];
+	v->pos[1] = pos[1];
+	v->pos[2] = pos[2];
+}
+
+static void RcEnd( void )
+{
+	if ( s_bRcImmediate )
+	{
+		gl.glEnd();
+		return;
+	}
+
+	if ( !s_iRcStripCount )
+		return;
+
+	if ( !s_bRcArraysOn )
+	{
+		if ( gl.glClientActiveTextureARB )
+			gl.glClientActiveTextureARB( GL_TEXTURE0_ARB );
+		gl.glTexCoordPointer( 2, GL_FLOAT, sizeof( RcStripVert_t ), s_RcStrip[0].st );
+		gl.glColorPointer( 4, GL_FLOAT, sizeof( RcStripVert_t ), s_RcStrip[0].color );
+		gl.glVertexPointer( 3, GL_FLOAT, sizeof( RcStripVert_t ), s_RcStrip[0].pos );
+		gl.glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+		gl.glEnableClientState( GL_COLOR_ARRAY );
+		gl.glEnableClientState( GL_VERTEX_ARRAY );
+		s_bRcArraysOn = TRUE;
+	}
+
+	gl.glDrawArrays( s_RcStripMode, 0, s_iRcStripCount );
+}
+
 // ReCoF (B287): whether GL_DrawPoints hides the vertices of a bone. Retail made these tests for every
 // vertex; the answer only depends on the bone, so GL_DrawPoints now asks once per bone
 static bool RcHideBone( const char *name, bool bDualHands, bool bViewModel, int severed )
@@ -1729,6 +1856,8 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 	}
 
 	gl.glCullFace(GL_FRONT);
+
+	RcArraysStart();	// ReCoF (B287)
 
 	mstudiobone_t *pbones = (mstudiobone_t *)((byte *)m_pStudioHeader + m_pStudioHeader->boneindex);
 
@@ -2020,36 +2149,36 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 			{
 				if (i < 0)
 				{
-					gl.glBegin( GL_TRIANGLE_FAN );
 					i = -i;
+					RcBegin( GL_TRIANGLE_FAN, i );
 				}
 				else
 				{
-					gl.glBegin( GL_TRIANGLE_STRIP );
+					RcBegin( GL_TRIANGLE_STRIP, i );
 				}
 
 				for( ; i > 0; i--, ptricmds += 4)
 				{
 					// FIX: put these in as integer coords, not floats
-					gl.glTexCoord2f(g_chrome[ptricmds[1]][0]*s, g_chrome[ptricmds[1]][1]*t);
+					RcTexCoord2f(g_chrome[ptricmds[1]][0]*s, g_chrome[ptricmds[1]][1]*t);
 
 					if (bFullbrightTex)
 					{
 						float bright = cv_fullbrighttextures_guess->value;
 						if (bCoronaTex)
 							bright += gEngfuncs.pfnRandomFloat(-0.1, 0.1);
-						gl.glColor4f( bright, bright, bright, alpha );
+						RcColor4f( bright, bright, bright, alpha );
 					}
 					else
 					{
 						float *lv = (float*)&g_pvlightvalues[ptricmds[1]];
-						gl.glColor4f( lv[0], lv[1], lv[2], alpha );
+						RcColor4f( lv[0], lv[1], lv[2], alpha );
 					}
 
 					float *av = g_pxformverts[ptricmds[0]];
-					gl.glVertex3f(av[0], av[1], av[2]);
+					RcVertex3fv(av);
 				}
-				gl.glEnd( );
+				RcEnd( );
 			}
 		}
 		else
@@ -2058,12 +2187,12 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 			{
 				if (i < 0)
 				{
-					gl.glBegin( GL_TRIANGLE_FAN );
 					i = -i;
+					RcBegin( GL_TRIANGLE_FAN, i );
 				}
 				else
 				{
-					gl.glBegin( GL_TRIANGLE_STRIP );
+					RcBegin( GL_TRIANGLE_STRIP, i );
 				}
 
 				for( ; i > 0; i--, ptricmds += 4)
@@ -2073,7 +2202,7 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 						continue;
 
 					// FIX: put these in as integer coords, not floats
-					gl.glTexCoord2f(ptricmds[2]*s, ptricmds[3]*t);
+					RcTexCoord2f(ptricmds[2]*s, ptricmds[3]*t);
 
 					if (cv_fullbrighttextures_guess->value)
 					{
@@ -2083,12 +2212,12 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 							{
 								if (!gHUD.m_bPhoneOff_guess)
 								{
-									gl.glColor4f( cv_fullbrighttextures_guess->value, cv_fullbrighttextures_guess->value, cv_fullbrighttextures_guess->value, alpha );
+									RcColor4f( cv_fullbrighttextures_guess->value, cv_fullbrighttextures_guess->value, cv_fullbrighttextures_guess->value, alpha );
 								}
 								else
 								{
 									float *lv = (float*)&g_pvlightvalues[ptricmds[1]];
-									gl.glColor4f( lv[0], lv[1], lv[2], alpha );
+									RcColor4f( lv[0], lv[1], lv[2], alpha );
 								}
 							}
 							else
@@ -2096,35 +2225,35 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 								float bright = cv_fullbrighttextures_guess->value;
 								if (bCoronaTex)
 									bright += gEngfuncs.pfnRandomFloat(-0.1, 0.1);
-								gl.glColor4f( bright, bright, bright, alpha );
+								RcColor4f( bright, bright, bright, alpha );
 							}
 						}
 						else if ((g_DrawHeadShied || bMeshIsViewModel) && bHandTex)
 						{
 							float *lv = (float*)&g_pvlightvalues[ptricmds[1]];
-							gl.glColor4f( lv[0] / handScale, lv[1] / handScale, lv[2] / handScale, alpha );
+							RcColor4f( lv[0] / handScale, lv[1] / handScale, lv[2] / handScale, alpha );
 						}
 						else
 						{
 							float *lv = (float*)&g_pvlightvalues[ptricmds[1]];
-							gl.glColor4f( lv[0], lv[1], lv[2], alpha );
+							RcColor4f( lv[0], lv[1], lv[2], alpha );
 						}
 
 						float *av = g_pxformverts[ptricmds[0]];
-						gl.glVertex3f(av[0], av[1], av[2]);
+						RcVertex3fv(av);
 					}
 					else
 					{
 						float *lv = (float*)&g_pvlightvalues[ptricmds[1]];
-						gl.glColor4f( lv[0], lv[1], lv[2], alpha );
-					//	gl.glColor4f( 0.5, 0.5, 0.5, alpha );
-					//	gl.glColor4f( 1, 1, 1, alpha );
+						RcColor4f( lv[0], lv[1], lv[2], alpha );
+					//	RcColor4f( 0.5, 0.5, 0.5, alpha );
+					//	RcColor4f( 1, 1, 1, alpha );
 
 						float *av = g_pxformverts[ptricmds[0]];
-						gl.glVertex3f(av[0], av[1], av[2]);
+						RcVertex3fv(av);
 					}
 				}
-				gl.glEnd( );
+				RcEnd( );
 			}
 		}
 
@@ -2142,6 +2271,8 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 		if (bBlurTexture)
 			gl.glBindTexture( GL_TEXTURE_2D, g_iOldTexture_guess );
 	}
+
+	RcArraysFinish();	// ReCoF (B287)
 }
 
 
