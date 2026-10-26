@@ -789,7 +789,7 @@ TYPEDESCRIPTION CCoFLadderManagerUse::m_SaveData[] =
 	DEFINE_FIELD( CCoFLadderManagerUse, m_sMaster, FIELD_STRING ),
 };
 
-IMPLEMENT_SAVERESTORE( CCoFLadderManagerUse, CBaseEntity );
+IMPLEMENT_SAVERESTORE_RC( CCoFLadderManagerUse, CBaseToggle );	// ReCoF (B086): retail named CBaseEntity, so the CBaseToggle chain was not saved
 
 LINK_ENTITY_TO_CLASS( cof_ladder_manager_use, CCoFLadderManagerUse );
 

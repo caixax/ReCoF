@@ -88,7 +88,7 @@ TYPEDESCRIPTION CPasswordNote::m_SaveData[] =
 	DEFINE_FIELD( CPasswordNote, m_bIssuedNote, FIELD_BOOLEAN ),
 };
 
-IMPLEMENT_SAVERESTORE( CPasswordNote, CBaseEntity );
+IMPLEMENT_SAVERESTORE_RC( CPasswordNote, CBaseAnimating );	// ReCoF (B086): retail named CBaseEntity, so the CBaseAnimating chain was not saved
 
 LINK_ENTITY_TO_CLASS( cof_passwordnote, CPasswordNote );
 

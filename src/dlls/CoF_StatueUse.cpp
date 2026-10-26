@@ -53,7 +53,7 @@ TYPEDESCRIPTION CStatueUse::m_SaveData[] =
 	DEFINE_FIELD( CStatueUse, m_iStatueType, FIELD_INTEGER ),
 };
 
-IMPLEMENT_SAVERESTORE( CStatueUse, CBaseEntity );
+IMPLEMENT_SAVERESTORE_RC( CStatueUse, CBaseToggle );	// ReCoF (B086): retail named CBaseEntity, so the CBaseToggle chain was not saved
 
 LINK_ENTITY_TO_CLASS( trigger_statueuse, CStatueUse );
 

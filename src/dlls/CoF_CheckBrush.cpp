@@ -52,7 +52,7 @@ TYPEDESCRIPTION CCheckBrush::m_SaveData[] =
 	DEFINE_FIELD( CCheckBrush, m_sMaster, FIELD_STRING ),
 };
 
-IMPLEMENT_SAVERESTORE( CCheckBrush, CBaseEntity );
+IMPLEMENT_SAVERESTORE_RC( CCheckBrush, CBaseToggle );	// ReCoF (B086): retail named CBaseEntity, so the CBaseToggle chain was not saved
 
 LINK_ENTITY_TO_CLASS( trigger_checkbrush, CCheckBrush );
 

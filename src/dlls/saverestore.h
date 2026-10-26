@@ -134,6 +134,26 @@ private:
 	}
 
 
+// ReCoF (B086): IMPLEMENT_SAVERESTORE for the classes whose retail macro named CBaseEntity instead of their
+// real base, so the base classes in between were never saved. Save writes the whole chain. Restore goes on
+// when the base chain fails: a retail save has no tables for the classes in between, so the first missing
+// one rewinds and returns 0 with the buffer on this class's own header, which is then read as in retail
+#define IMPLEMENT_SAVERESTORE_RC(derivedClass,baseClass) \
+	int derivedClass::Save( CSave &save )\
+	{\
+		if ( !baseClass::Save(save) )\
+			return 0;\
+		if (pev->targetname)\
+			return save.WriteFields( STRING(pev->targetname), #derivedClass, this, m_SaveData, ARRAYSIZE(m_SaveData) );\
+		else\
+			return save.WriteFields( STRING(pev->classname), #derivedClass, this, m_SaveData, ARRAYSIZE(m_SaveData) );\
+	}\
+	int derivedClass::Restore( CRestore &restore )\
+	{\
+		baseClass::Restore(restore);\
+		return restore.ReadFields( #derivedClass, this, m_SaveData, ARRAYSIZE(m_SaveData) );\
+	}
+
 typedef enum { GLOBAL_OFF = 0, GLOBAL_ON = 1, GLOBAL_DEAD = 2 } GLOBALESTATE;
 
 typedef struct globalentity_s globalentity_t;

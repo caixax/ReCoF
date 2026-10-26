@@ -50,7 +50,7 @@ TYPEDESCRIPTION CCoFCoopAllPlayersButton::m_SaveData[] =
 	DEFINE_FIELD( CCoFCoopAllPlayersButton, m_sMaster, FIELD_STRING ),
 };
 
-IMPLEMENT_SAVERESTORE( CCoFCoopAllPlayersButton, CBaseEntity );
+IMPLEMENT_SAVERESTORE_RC( CCoFCoopAllPlayersButton, CBaseToggle );	// ReCoF (B086): retail named CBaseEntity, so the CBaseToggle chain was not saved
 
 LINK_ENTITY_TO_CLASS( func_coopallplayersbutton, CCoFCoopAllPlayersButton );
 

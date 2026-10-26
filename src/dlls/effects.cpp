@@ -6639,7 +6639,7 @@ TYPEDESCRIPTION	CCofInterDoorOnOff::m_SaveData[] =
 	DEFINE_FIELD( CCofInterDoorOnOff, m_iszNewLockedBy, FIELD_STRING ),
 };
 
-IMPLEMENT_SAVERESTORE( CCofInterDoorOnOff, CBaseEntity );
+IMPLEMENT_SAVERESTORE_RC( CCofInterDoorOnOff, CBaseMonster );	// ReCoF (B086): retail named CBaseEntity, so the CBaseMonster chain was not saved
 
 LINK_ENTITY_TO_CLASS( cof_interdooronoff, CCofInterDoorOnOff );
 
@@ -9734,7 +9734,7 @@ TYPEDESCRIPTION	CCoFMDLCutscene::m_SaveData[] =
 	DEFINE_FIELD( CCoFMDLCutscene, m_iCurrentAnimation, FIELD_INTEGER ),
 };
 
-IMPLEMENT_SAVERESTORE( CCoFMDLCutscene, CBaseEntity );
+IMPLEMENT_SAVERESTORE_RC( CCoFMDLCutscene, CBaseMonster );	// ReCoF (B086): retail named CBaseEntity, so the CBaseMonster chain was not saved
 
 void CCoFMDLCutscene::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {

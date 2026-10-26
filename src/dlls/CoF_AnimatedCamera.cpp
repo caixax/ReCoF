@@ -216,7 +216,7 @@ TYPEDESCRIPTION	CAnimatedCameraModel::m_SaveData[] =
 	DEFINE_FIELD( CAnimatedCameraModel, m_iCurrentAnimation, FIELD_INTEGER ),
 };
 
-IMPLEMENT_SAVERESTORE( CAnimatedCameraModel, CBaseEntity );
+IMPLEMENT_SAVERESTORE_RC( CAnimatedCameraModel, CBaseMonster );	// ReCoF (B086): retail named CBaseEntity, so the CBaseMonster chain was not saved
 
 LINK_ENTITY_TO_CLASS( camera_model, CAnimatedCameraModel );
 

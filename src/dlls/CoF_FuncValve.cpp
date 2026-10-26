@@ -63,7 +63,7 @@ TYPEDESCRIPTION CFuncValve::m_SaveData[] =
 	DEFINE_FIELD( CFuncValve, m_sLockedMsg, FIELD_STRING ),
 };
 
-IMPLEMENT_SAVERESTORE( CFuncValve, CBaseEntity );
+IMPLEMENT_SAVERESTORE_RC( CFuncValve, CBaseToggle );	// ReCoF (B086): retail named CBaseEntity, so the CBaseToggle chain was not saved
 
 LINK_ENTITY_TO_CLASS( func_valve, CFuncValve );
 
