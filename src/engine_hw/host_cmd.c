@@ -1673,7 +1673,7 @@ SaveExit
 */
 void SaveExit( SAVERESTOREDATA *save )
 {
-	if ( save->pTokens )
+	if ( save && save->pTokens )	// ReCoF (B227): retail read save->pTokens before testing save
 	{
 		Mem_Free( save->pTokens );
 		save->pTokens = NULL;
@@ -2348,13 +2348,19 @@ SAVERESTOREDATA *LoadSaveData( const char *level )
 	FS_Read( &i, sizeof( int ), 1, pFile );
 	// Is this a valid save?
 	if ( i != SAVEFILE_HEADER )
+	{
+		FS_Close( pFile );	// ReCoF (B227): retail left the file open
 		return NULL;
+	}
 
 	// Read the version
 	FS_Read( &i, sizeof( int ), 1, pFile );
 	// Is this a valid save?
 	if ( i > SAVEGAME_VERSION )
+	{
+		FS_Close( pFile );	// ReCoF (B227): retail left the file open
 		return NULL;
+	}
 
 	FS_Read( &size, sizeof( int ), 1, pFile );
 	FS_Read( &tableCount, sizeof( int ), 1, pFile );
@@ -2450,9 +2456,9 @@ void ParseSaveTables( SAVERESTOREDATA *pSaveData, SAVE_HEADER *pHeader, int upda
 
 		if ( updateGlobals )
 		{
+			// ReCoF (B227): retail copied only the first 3 characters, so animated styles came back cut after a load
 			sv.lightstyles[light.index] = (char *)Hunk_Alloc( Q_strlen( light.style ) + 1 );
-			Q_strncpy( sv.lightstyles[light.index], light.style, 3 );
-			sv.lightstyles[light.index][3] = 0;
+			Q_strcpy( sv.lightstyles[light.index], light.style );
 		}
 	}
 }
