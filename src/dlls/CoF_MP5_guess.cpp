@@ -283,9 +283,9 @@ void CMp5::PrimaryAttack( void )
 		}
 		else if ( gpGlobals->time > m_fEmptyClickTime )
 		{
-			if ( m_bIronSights )
-				SendWeaponAnim( MP5_IRONSIGHTS_SHOOT_EMPTY_guess );
-			else
+			// ReCoF (B087): v_mp5.mdl has no sequence 20, and the client falls back to sequence 0 (the
+			// deploy) for it; in iron sights only the click plays, as on the TMP
+			if ( !m_bIronSights )
 				SendWeaponAnim( MP5_SHOOT_EMPTY );
 
 			PlayEmptySound( );
