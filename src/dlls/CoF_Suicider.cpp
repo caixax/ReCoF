@@ -26,6 +26,7 @@
 #include	"weapons.h"
 #include	"effects.h"
 #include	"animation.h"
+#include	"game.h"
 
 extern int gmsgParticle;
 
@@ -239,6 +240,11 @@ void CSuicider :: HeadExplode( void )
 		EMIT_SOUND_DYN( ENT(pev), CHAN_ITEM, "baby/b_attack2.wav", 1, ATTN_NORM, 0, pitch );
 
 	// CoF: vecSrc is never set, the search uses an uninitialized position (original bug)
+	// ReCoF (B051): centre it on the gun at the head (attachment 0, as the suicide event uses);
+	// rc_retail_gameplay 1 keeps the retail read
+	if ( !rc_retail_gameplay.value )
+		GetAttachment( 0, vecSrc, vecAng );
+
 	while ( (pEntity = UTIL_FindEntityInSphere( pEntity, vecSrc, 64 )) != NULL )
 		pEntity->TakeDamage( pev, pev, gSkillData.suiciderSuicide, DMG_GENERIC );
 }
