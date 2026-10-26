@@ -5,6 +5,28 @@
 #include "mp3.h"
 
 #include <irrKlang.h>
+#include <windows.h>
+
+// ReCoF (B185): retail opened "<game>/mp3/<song>" and "<game>/sound/<sample>" relative to the current
+// folder, so music and these sounds were silent when the game started from another folder; build the
+// path from the folder of the running exe (no static buffer: a new global here would move later data)
+static void BuildGamePath( char *out, int size, const char *sub, const char *name )
+{
+	const char *game = gEngfuncs.pfnGetGameDirectory();
+	char base[MAX_PATH];
+	DWORD len = GetModuleFileNameA( NULL, base, sizeof( base ) );
+	char *slash = ( len && len < sizeof( base ) ) ? strrchr( base, '\\' ) : NULL;
+
+	if ( slash && !strchr( game, ':' ) )
+	{
+		*slash = 0;
+		_snprintf( out, size, "%s/%s/%s/%s", base, game, sub, name );
+	}
+	else
+		_snprintf( out, size, "%s/%s/%s", game, sub, name );
+
+	out[size - 1] = 0;
+}
 
 using namespace irrklang;
 
@@ -296,7 +318,7 @@ int CMP3::PlayMP3( const char *pszSong )
 
 	char song[256];
 
-	sprintf( song, "%s/mp3/%s", gEngfuncs.pfnGetGameDirectory(), pszSong );
+	BuildGamePath( song, sizeof( song ), "mp3", pszSong );
 
 	if ( m_bLoop_guess )
 	{
@@ -398,7 +420,7 @@ void CMP3::PlaySFX_guess( const char *pszSample, int iType, bool bFlag, Vector v
 		if ( g_pSFX_guess )
 			g_pSFX_guess->stop();
 
-		sprintf( szPath, "%s/sound/%s", gEngfuncs.pfnGetGameDirectory(), pszSample );
+		BuildGamePath( szPath, sizeof( szPath ), "sound", pszSample );
 		g_pSFX_guess = g_pSoundEngine_guess->play2D( szPath, true, true, true );
 		if ( g_pSFX_guess )
 		{
@@ -419,7 +441,7 @@ void CMP3::PlaySFX_guess( const char *pszSample, int iType, bool bFlag, Vector v
 	}
 	else
 	{
-		sprintf( szPath, "%s/sound/%s", gEngfuncs.pfnGetGameDirectory(), pszSample );
+		BuildGamePath( szPath, sizeof( szPath ), "sound", pszSample );
 		ISound *pSound = g_pSoundEngine_guess->play2D( szPath, false, true, true );
 		if ( pSound )
 		{
