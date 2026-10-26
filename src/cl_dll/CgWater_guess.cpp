@@ -91,7 +91,7 @@ void CCgWater_guess::Init_guess( void )
 	}
 
 	bool bTextureShader = true;
-	if ( !isExtensionSupported_guess( "GL_NV_texture_shader", strdup( (const char *)glGetString( GL_EXTENSIONS ) ) ) )
+	if ( !isExtensionSupported_guess( "GL_NV_texture_shader", (const char *)glGetString( GL_EXTENSIONS ) ) )	// ReCoF (B192): retail leaked a strdup copy
 		bTextureShader = false;
 
 	if ( !m_bEnabled_guess )

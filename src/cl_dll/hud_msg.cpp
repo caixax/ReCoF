@@ -486,8 +486,10 @@ void CHud :: MsgFunc_InitHUD( const char *pszName, int iSize, void *pbuf )
 	{
 		g_TextureManager_guess.LevelInit_guess();
 		g_TextureManager_guess.PrecachePlayerShadow_guess();
-		g_CgContext_guess.Shutdown_guess();
-		g_CgContext_guess.Startup_guess();
+		// ReCoF (B192): retail dropped the Cg programs and made a new context on every InitHUD,
+		// leaking the old one and compiling every shader again; keep them for the session
+		if ( !g_CgContext_guess.IsInitialized_guess() )
+			g_CgContext_guess.Startup_guess();
 		g_CgWater_guess.Init_guess();
 	}
 }

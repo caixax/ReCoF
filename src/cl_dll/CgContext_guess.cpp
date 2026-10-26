@@ -141,7 +141,8 @@ bool CCgContext_guess::Startup_guess( void )
 {
 	bool result;
 
-	m_context_guess = cgCreateContext();
+	if ( !m_context_guess )	// ReCoF (B192): retail made a new context on every call and leaked the old one
+		m_context_guess = cgCreateContext();
 
 	if ( m_context_guess )
 	{
