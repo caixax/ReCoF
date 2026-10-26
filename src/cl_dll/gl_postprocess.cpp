@@ -33,7 +33,9 @@ extern int g_iDickMode_guess;
 float GetGrayscaleFactor()
 {
 	float grayscale = v_grayscale->value;
-	float alpha;
+	// ReCoF (B172): retail left alpha unset unless black-and-white was on, so a fade back from grey
+	// started from whatever the stack held; the maps' from_grey fades expect full grey
+	float alpha = 255;
 	bool attachcam = false;
 
 	if (pAttachCamEnt_guess)
