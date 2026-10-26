@@ -24,6 +24,7 @@
 #include	"monsters.h"
 #include	"schedule.h"
 #include	"player.h"
+#include	"game.h"
 
 
 //=========================================================
@@ -178,7 +179,8 @@ void CFaceless :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		{
 			// do stuff for this event.
 	//		ALERT( at_console, "Slash right!\n" );
-			CBaseEntity *pHurt = CheckTraceHullAttack( 55, gSkillData.zombieDmgOneSlash, DMG_SLASH, false, 0 );
+			// ReCoF (B026): retail used the zombie skill values here; the faceless values in skill.cfg were never read
+			CBaseEntity *pHurt = CheckTraceHullAttack( 55, ( rc_retail_gameplay.value ? gSkillData.zombieDmgOneSlash : gSkillData.facelessDmgOneSlash ), DMG_SLASH, false, 0 );
 			if ( pHurt )
 			{
 				if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
@@ -202,7 +204,7 @@ void CFaceless :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		{
 			// do stuff for this event.
 	//		ALERT( at_console, "Slash left!\n" );
-			CBaseEntity *pHurt = CheckTraceHullAttack( 55, gSkillData.zombieDmgOneSlash, DMG_SLASH, false, 0 );
+			CBaseEntity *pHurt = CheckTraceHullAttack( 55, ( rc_retail_gameplay.value ? gSkillData.zombieDmgOneSlash : gSkillData.facelessDmgOneSlash ), DMG_SLASH, false, 0 );
 			if ( pHurt )
 			{
 				if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
@@ -224,7 +226,7 @@ void CFaceless :: HandleAnimEvent( MonsterEvent_t *pEvent )
 		case FACELESS_AE_ATTACK_BOTH:
 		{
 			// do stuff for this event.
-			CBaseEntity *pHurt = CheckTraceHullAttack( 55, gSkillData.zombieDmgBothSlash, DMG_SLASH, false, 0 );
+			CBaseEntity *pHurt = CheckTraceHullAttack( 55, ( rc_retail_gameplay.value ? gSkillData.zombieDmgBothSlash : gSkillData.facelessDmgBothSlash ), DMG_SLASH, false, 0 );
 			if ( pHurt )
 			{
 				if ( pHurt->pev->flags & (FL_MONSTER|FL_CLIENT) )
@@ -267,7 +269,7 @@ void CFaceless :: Spawn()
 	pev->movetype		= MOVETYPE_STEP;
 	m_bloodColor		= BLOOD_COLOR_RED;
 	if ( pev->health == 0 )
-		pev->health		= gSkillData.zombieHealth;
+		pev->health		= ( rc_retail_gameplay.value ? gSkillData.zombieHealth : gSkillData.facelessHealth );
 	pev->view_ofs		= VEC_VIEW;// position of the eyes relative to monster's origin.
 	m_flFieldOfView		= 0.5;// indicates the width of this monster's forward view cone ( as a dotproduct result )
 	m_MonsterState		= MONSTERSTATE_NONE;
