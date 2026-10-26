@@ -12492,7 +12492,7 @@ void CCoFStats::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 				if ( points <= 8 && points > 4 )
 					m_iGrade = 6;
 
-				if ( points <= 16 && points > 12 )
+				if ( points <= 16 && points > 8 )	// ReCoF (B080): retail had > 12, so 9 to 12 points got grade 0, shown as F
 					m_iGrade = 5;
 
 				if ( points <= 20 && points > 16 )

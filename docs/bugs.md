@@ -26,7 +26,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 
 | Binary | crash | save | gameplay | performance | visual | audio | cosmetic | latent | total |
 |---|---|---|---|---|---|---|---|---|---|
-| hl.dll | 10 | 4 | 56 | 10 | 9 | 10 | 2 | 30 | 131 |
+| hl.dll | 10 | 3 | 56 | 10 | 9 | 10 | 3 | 30 | 131 |
 | client.dll | 4 | 0 | 7 | 26 | 21 | 3 | 11 | 18 | 90 |
 | hw.dll | 5 | 2 | 6 | 22 | 5 | 3 | 4 | 26 | 73 |
 | GameUI.dll | 0 | 0 | 0 | 1 | 0 | 0 | 4 | 5 | 10 |
@@ -34,7 +34,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | cof.exe | 2 | 0 | 0 | 0 | 2 | 0 | 0 | 2 | 6 |
 | CoFLaunchApp.exe | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 0 | 4 |
 | unknown | 2 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 3 |
-| all issues | 22 | 6 | 65 | 51 | 36 | 14 | 18 | 76 | 288 |
+| all issues | 22 | 5 | 65 | 51 | 36 | 14 | 19 | 76 | 288 |
 
 ## User reports
 
@@ -125,7 +125,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | B077 | hl.dll | `UTIL_Remove` (util.cpp) | Sets `m_bIsBoss = false` twice. | None. | the second store (DeCoF original_bugs.md) | latent | no | Leave. | open |
 | B078 | hl.dll | `guess_UTIL_PlayWeaponSound` (util.cpp) | Always sends entity index 1 in singleplayer. | None in single player. | the constant (DeCoF original_bugs.md) | latent | no | Leave. | open |
 | B079 | hl.dll | `CCoFPlayerCheck::Use` (effects.cpp) | Case 3 tests `player1trigger` but fires `player3trigger`. | Co-op player check for player 3. | the field name (DeCoF original_bugs.md) | gameplay | no | Test player3trigger. | open |
-| B080 | hl.dll | `CCoFStats::Use` (effects.cpp) | Normal mode: a score of 9 to 12 gives grade 0. Doctor mode with unlocks: `unlockflags = 0` wipes the earlier flags before setting 0x1000000. | End grade with a score of 9 to 12; doctor mode unlocks. | the grade table and the store (DeCoF original_bugs.md) | save | no | Fix the grade table and keep the earlier unlock flags. | open |
+| B080 | hl.dll | `CCoFStats::Use` (effects.cpp) | Normal mode: a score of 9 to 12 gives grade 0. Doctor mode with unlocks: `unlockflags = 0` wipes the earlier flags before setting 0x1000000. | End grade with a score of 9 to 12; doctor mode unlocks. | the grade table and the store (DeCoF original_bugs.md) | cosmetic | no | Fix the grade table and keep the earlier unlock flags. Done for the grade: 9 to 16 points now give D (the client showed grade 0 as F). The doctor mode unlockflags = 0 is left: it only changes which unlocks the end screen lists, the stored unlocks are never cleared (SetEndingOrUnlockables only sets bits), and listing only the doctor unlock may be intended. | test |
 | B081 | hl.dll | `CCoFRandomTimedSpawner::CheckIfDead` (effects.cpp) | In the `iuser4` branch the delay from `iuser1` is overwritten by the final `SetNextThink( 0.25 )` (no `return`). | Random timed spawner in iuser4 mode. | the missing return (DeCoF original_bugs.md) | gameplay | check | Add the return; check spawn timing on speedrun routes. | open |
 | B082 | hl.dll | `CBasePlayer::PostThink` (player.cpp) | In multiplayer, `pev->frags = m_iFlashlightFlags;` overwrites the score with the flashlight flags, which ScoreInfo then sends. | Multiplayer scoreboard shows flashlight flags as the score. | the store (DeCoF original_bugs.md) | gameplay | no | Remove the store. | open |
 | B083 | hl.dll | `CBasePlayer::PostThink` (player.cpp) | The punch logic tests `frags != 4` but sets `frags = 10`, and tests `!= 5` but sets `11` (1.55 set 4 and 5; the tests were not updated). | Punch logic. | the constants (DeCoF original_bugs.md) | gameplay | check | Find what the frags states mean, then make the tests and stores agree. | open |
