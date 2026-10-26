@@ -26,7 +26,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 
 | Binary | crash | save | gameplay | performance | visual | audio | cosmetic | latent | total |
 |---|---|---|---|---|---|---|---|---|---|
-| hl.dll | 11 | 5 | 56 | 10 | 9 | 10 | 2 | 28 | 131 |
+| hl.dll | 10 | 5 | 56 | 10 | 9 | 10 | 2 | 29 | 131 |
 | client.dll | 4 | 0 | 7 | 26 | 21 | 3 | 11 | 18 | 90 |
 | hw.dll | 5 | 2 | 6 | 22 | 5 | 3 | 4 | 26 | 73 |
 | GameUI.dll | 0 | 0 | 0 | 1 | 0 | 0 | 4 | 5 | 10 |
@@ -34,7 +34,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | cof.exe | 2 | 0 | 0 | 0 | 2 | 0 | 0 | 2 | 6 |
 | CoFLaunchApp.exe | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 0 | 4 |
 | unknown | 2 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 3 |
-| all issues | 23 | 7 | 65 | 51 | 36 | 14 | 18 | 74 | 288 |
+| all issues | 22 | 7 | 65 | 51 | 36 | 14 | 18 | 75 | 288 |
 
 ## User reports
 
@@ -129,7 +129,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | B081 | hl.dll | `CCoFRandomTimedSpawner::CheckIfDead` (effects.cpp) | In the `iuser4` branch the delay from `iuser1` is overwritten by the final `SetNextThink( 0.25 )` (no `return`). | Random timed spawner in iuser4 mode. | the missing return (DeCoF original_bugs.md) | gameplay | check | Add the return; check spawn timing on speedrun routes. | open |
 | B082 | hl.dll | `CBasePlayer::PostThink` (player.cpp) | In multiplayer, `pev->frags = m_iFlashlightFlags;` overwrites the score with the flashlight flags, which ScoreInfo then sends. | Multiplayer scoreboard shows flashlight flags as the score. | the store (DeCoF original_bugs.md) | gameplay | no | Remove the store. | open |
 | B083 | hl.dll | `CBasePlayer::PostThink` (player.cpp) | The punch logic tests `frags != 4` but sets `frags = 10`, and tests `!= 5` but sets `11` (1.55 set 4 and 5; the tests were not updated). | Punch logic. | the constants (DeCoF original_bugs.md) | gameplay | check | Find what the frags states mean, then make the tests and stores agree. | open |
-| B084 | hl.dll | `CBasePlayer::PostThink` (player.cpp) | The first CDualWeapon block uses `pDualWeapon` without a null check (the second checks it); dead leftovers `dx`/`dy`, an unused `pCameraTarget`, and `pev->flags \|= FL_ONGROUND` in a branch that already requires it. | Dual weapon state without a dual weapon. | DeCoF source, as written (DeCoF original_bugs.md) | crash | no | Add the null check. | open |
+| B084 | hl.dll | `CBasePlayer::PostThink` (player.cpp) | The first CDualWeapon block uses `pDualWeapon` without a null check (the second checks it); dead leftovers `dx`/`dy`, an unused `pCameraTarget`, and `pev->flags \|= FL_ONGROUND` in a branch that already requires it. | Dual weapon state without a dual weapon. | DeCoF source, as written (DeCoF original_bugs.md). GetClassPtr never returns NULL for a valid pev (it creates the private data when there is none, cbase.h), and m_pActiveItem->pev is already used on the line before, so the missing test cannot crash. | latent | no | Leave: the test would change nothing, and the leftovers do nothing. | keep |
 | B085 | hl.dll | `GetEyePosition` (animation.cpp) | `vecEyePosition = pstudiohdr->eyeposition;` assigns the pointer parameter (Vector converts to float*) instead of copying the eye position, so the caller's vector is never written. | Monster eye position is never set from the model. | the assignment (DeCoF original_bugs.md) | gameplay | check | Copy the eye position; check what the callers use it for. | open |
 | B086 | hl.dll | Save/Restore of CCheckBrush, CFuncValve, CCoFLadderManagerUse, CStatueUse, CCoFCoopAllPlayersButton, CAnimatedCameraModel, CPasswordNote, CCofInterDoorOnOff, CCoFMDLCutscene | `IMPLEMENT_SAVERESTORE( CClass, CBaseEntity )` although the classes derive from CBaseToggle, CBaseAnimating or CBaseMonster: the fields of the base classes in between are not saved (confirmed in the 1.55 debug build). | Save and load near these entities: their base class state is lost. | the macro base (DeCoF original_bugs.md) | save | no | Use the real base class. Fields are matched by name, so old saves load and keep the defaults. | open |
 | B087 | hl.dll | CMp5 (guess_CoF_MP5.cpp) | Dry fire in iron sights sends sequence 20, which v_mp5.mdl lacks (0 to 19); Precache and Deploy use the TMP player model; Reload and Spawn keep TMP values (3 s reloads, ammo "mp5" with 300 default); WeaponIdle sends no idle animation in iron sights; CMP5ModeSaveRestoreMP5::ObjectCaps calls m_pMoveWith->ObjectCaps() and drops the result. | MP5 in iron sights and on reload. | DeCoF source, as written (DeCoF original_bugs.md) | gameplay | no | Give the MP5 its own values; check where the MP5 is available. | open |
