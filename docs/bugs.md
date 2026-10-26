@@ -26,7 +26,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 
 | Binary | crash | save | gameplay | performance | visual | audio | cosmetic | latent | total |
 |---|---|---|---|---|---|---|---|---|---|
-| hl.dll | 10 | 3 | 54 | 10 | 9 | 10 | 3 | 32 | 131 |
+| hl.dll | 10 | 3 | 53 | 10 | 9 | 10 | 4 | 32 | 131 |
 | client.dll | 3 | 0 | 8 | 26 | 21 | 3 | 11 | 18 | 90 |
 | hw.dll | 1 | 2 | 6 | 22 | 5 | 3 | 4 | 30 | 73 |
 | GameUI.dll | 0 | 0 | 0 | 1 | 0 | 0 | 4 | 5 | 10 |
@@ -34,7 +34,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | cof.exe | 2 | 0 | 0 | 0 | 2 | 0 | 0 | 2 | 6 |
 | CoFLaunchApp.exe | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 0 | 4 |
 | unknown | 2 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 3 |
-| all issues | 17 | 5 | 64 | 51 | 36 | 14 | 19 | 82 | 288 |
+| all issues | 17 | 5 | 63 | 51 | 36 | 14 | 20 | 82 | 288 |
 
 ## User reports
 
@@ -127,7 +127,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | B079 | hl.dll | `CCoFPlayerCheck::Use` (effects.cpp) | Case 3 tests `player1trigger` but fires `player3trigger`. | Co-op player check for player 3. | the field name (DeCoF original_bugs.md) | gameplay | no | Test player3trigger. | open |
 | B080 | hl.dll | `CCoFStats::Use` (effects.cpp) | Normal mode: a score of 9 to 12 gives grade 0. Doctor mode with unlocks: `unlockflags = 0` wipes the earlier flags before setting 0x1000000. | End grade with a score of 9 to 12; doctor mode unlocks. | the grade table and the store (DeCoF original_bugs.md) | cosmetic | no | Fix the grade table and keep the earlier unlock flags. Done for the grade: 9 to 16 points now give D (the client showed grade 0 as F). The doctor mode unlockflags = 0 is left: it only changes which unlocks the end screen lists, the stored unlocks are never cleared (SetEndingOrUnlockables only sets bits), and listing only the doctor unlock may be intended. | test |
 | B081 | hl.dll | `CCoFRandomTimedSpawner::CheckIfDead` (effects.cpp) | In the `iuser4` branch the delay from `iuser1` is overwritten by the final `SetNextThink( 0.25 )` (no `return`). | Random timed spawner in iuser4 mode. | the missing return (DeCoF original_bugs.md) | gameplay | check | Add the return; check spawn timing on speedrun routes. | open |
-| B082 | hl.dll | `CBasePlayer::PostThink` (player.cpp) | In multiplayer, `pev->frags = m_iFlashlightFlags;` overwrites the score with the flashlight flags, which ScoreInfo then sends. | Multiplayer scoreboard shows flashlight flags as the score. | the store (DeCoF original_bugs.md) | gameplay | no | Remove the store. | open |
+| B082 | hl.dll | `CBasePlayer::PostThink` (player.cpp) | In multiplayer, `pev->frags = m_iFlashlightFlags;` overwrites the score with the flashlight flags, which ScoreInfo then sends. | Multiplayer scoreboard shows flashlight flags as the score. | the store (DeCoF original_bugs.md) | cosmetic | no | Leave: the store is a deliberate channel. The client reads g_PlayerExtraInfo[i].frags as the flashlight flags to draw the other players' flashlights (cl_dll/gl_studiomodel.cpp line 656), so removing it would break co-op flashlights; only the scoreboard number is odd. A separate message could carry the flags later. | keep |
 | B083 | hl.dll | `CBasePlayer::PostThink` (player.cpp) | The punch logic tests `frags != 4` but sets `frags = 10`, and tests `!= 5` but sets `11` (1.55 set 4 and 5; the tests were not updated). | Punch logic. | the constants (DeCoF original_bugs.md) | gameplay | check | Find what the frags states mean, then make the tests and stores agree. | open |
 | B084 | hl.dll | `CBasePlayer::PostThink` (player.cpp) | The first CDualWeapon block uses `pDualWeapon` without a null check (the second checks it); dead leftovers `dx`/`dy`, an unused `pCameraTarget`, and `pev->flags \|= FL_ONGROUND` in a branch that already requires it. | Dual weapon state without a dual weapon. | DeCoF source, as written (DeCoF original_bugs.md). GetClassPtr never returns NULL for a valid pev (it creates the private data when there is none, cbase.h), and m_pActiveItem->pev is already used on the line before, so the missing test cannot crash. | latent | no | Leave: the test would change nothing, and the leftovers do nothing. | keep |
 | B085 | hl.dll | `GetEyePosition` (animation.cpp) | `vecEyePosition = pstudiohdr->eyeposition;` assigns the pointer parameter (Vector converts to float*) instead of copying the eye position, so the caller's vector is never written. | Monster eye position is never set from the model. | the assignment (DeCoF original_bugs.md) | gameplay | check | Copy the eye position; check what the callers use it for. | open |
