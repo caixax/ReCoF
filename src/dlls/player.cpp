@@ -2393,6 +2393,16 @@ void CBasePlayer::MultiplayerPlayerDeathThink( void )
 
 		ToFirstPerson();
 
+		// ReCoF (B100): a camera that ended while this player was down only restored the living players,
+		// so the revived player kept the camera view, no damage and no control
+		if ( m_hCurrentCamera == NULL )
+		{
+			SET_VIEW( edict(), edict() );
+			pev->flags &= ~FL_NOTARGET;
+			pev->takedamage = DAMAGE_AIM;
+			EnableControl( TRUE );
+		}
+
 		pev->fuser3 = 0;
 
 		UTIL_ProMessage( this, " ", 4, false );
