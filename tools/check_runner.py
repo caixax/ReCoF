@@ -14,12 +14,16 @@ Checks:
     and at Host_ValidSave itself.
 
 The baseline maps are the link maps of the unchanged source (Sprint 0 build).
+ReCoF builds client.dll with a newer compiler, so its four LiveSplit values
+move; a script reads them through the g_RcAutosplit block instead
+(docs/speedrun.md), and while the new map has that block, a moved client.dll
+value is reported as BLOCK, not as a failure. hw.dll keeps every address.
 LiveSplit and BunnymodXT results decide the exit code (1 when anything moved
 or changed). RebuiltSimon results are warnings: its code addresses and patch
 site move with almost any code fix, and ReCoF offers its features natively
 instead. Only the address of each variable is checked, not the layout inside
-it: never add or reorder members of a struct the autosplitter reads into
-(CHud gHUD, client_state_t cl, server_t sv and the others listed above).
+it: never add or reorder members of a hw.dll struct the autosplitter reads
+into (client_state_t cl, server_t sv and the others listed above).
 """
 import bisect
 import os
@@ -121,6 +125,7 @@ def main():
             print("missing map for %s (%s or %s)" % (dll, old, new))
             return 2
         maps[dll] = (read_map(old), read_map(new))
+    block = [s for s in maps["client.dll"][1] if s[1] == "?g_RcAutosplit@@3URcAutosplit_t@@A"]
     for dll, off, tool, what in ADDRESSES:
         old, new = maps[dll]
         s = containing(old, off)
@@ -130,8 +135,9 @@ def main():
             bad += tool != "RebuiltSimon"
             continue
         moved = n[0] + (off - s[0])
-        state = "OK     " if moved == off else ("WARN   " if tool == "RebuiltSimon" else "MOVED  ")
-        bad += moved != off and tool != "RebuiltSimon"
+        via_block = block and dll == "client.dll" and tool == "LiveSplit"
+        state = "OK     " if moved == off else ("WARN   " if tool == "RebuiltSimon" else "BLOCK  " if via_block else "MOVED  ")
+        bad += moved != off and tool != "RebuiltSimon" and not via_block
         print("%s %-10s +0x%-8X %-12s %-40s %s+0x%X%s" % (state, dll, off, tool, what, s[1], off - s[0], "" if moved == off else " now at +0x%X" % moved))
     pes = {}
     for dll in NEW_MAPS:
@@ -151,7 +157,9 @@ def main():
           "" if ok else ": first match %s, Host_ValidSave %s" % (hex(hits[0]) if hits else "none", hex(hv[0][0]) if hv else "?")))
     if ok and not same:
         print("        hw.dll Host_ValidSave start differs from retail, check the whole function")
-    for dll in ("hw.dll", "client.dll"):
+    if block:
+        print("BLOCK   client.dll g_RcAutosplit at +0x%X: scripts find the client.dll values by its tag" % block[0][0])
+    for dll in ("hw.dll",) if block else ("hw.dll", "client.dll"):
         old_pe, new_pe = pes[dll]
         room = []
         for i, s in enumerate(new_pe.sections[:-1]):

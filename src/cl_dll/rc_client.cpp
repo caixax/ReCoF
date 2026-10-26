@@ -1,9 +1,8 @@
 // ReCoF client additions
 //
-// Every variable ReCoF adds to client.dll lives in this file, which is linked after all retail objects
-// (tools/units.json, the client link order), so its data comes after theirs and no address the LiveSplit
-// autosplitter reads moves (docs/speedrun.md). Keep the globals here uninitialized: initialized data would
-// land in .data, in front of the retail uninitialized globals, and move them.
+// The client features ReCoF adds. client.dll is built with a newer compiler than retail
+// (docs/toolchains.md), so none of its addresses match retail; the LiveSplit autosplitter finds the
+// values it reads through g_RcAutosplit below (docs/speedrun.md).
 
 #include "hud.h"
 #include "cl_util.h"

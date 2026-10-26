@@ -829,7 +829,7 @@
           "functions_file": "tools/units/hl_dlls_guess_CoF_MP5ModeSaveRestore.txt"
         }
       ],
-      "toolchain": "msvc1427",
+      "toolchain": "msvc1444",
       "link": {
         "out": "hl.dll",
         "retail": "versions/1.6a/cryoffear/cl_dlls/hl.dll",
@@ -1128,7 +1128,7 @@
         "refs/irrklang-1.6.0/include",
         "refs/id3lib-3.8.3/include"
       ],
-      "toolchain": "msvc1427",
+      "toolchain": "msvc1444",
       "units": [
         {
           "name": "cl_dll/parsemsg",

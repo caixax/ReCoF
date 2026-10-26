@@ -21,6 +21,12 @@ for the hw.dll objects of the VC6 processor pack), used for build/base and
 build/link_obj alike, while the DLL keeps linking with its own toolchain.
 A unit whose source ends in .asm (MASM syntax) is assembled with the ml.exe
 of its toolchain and "asflags" (default /nologo /c /Cp /coff /Zm).
+
+ReCoF builds hl.dll and client.dll with msvc1444 (VS 2022), so their code no
+longer matches retail. --retail-cc compiles (and links) them with the retail
+msvc1427 instead, which makes check and report match retail again, for
+example to merge a DeCoF correction: python tools/build.py --retail-cc check
+hl/dlls/player
 """
 import csv
 import json
@@ -33,6 +39,7 @@ import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import msvc  # noqa: E402
+import msvc1444  # noqa: E402
 import msvc6  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -60,7 +67,8 @@ def obj_path(kind, full):
     return os.path.join(ROOT, "build", kind, *full.split("/")) + ".obj"
 
 
-TOOLCHAINS = {"msvc1427": msvc, "vc6": msvc6.RTM, "vc6pp": msvc6.PP}
+# msvc1444: ReCoF builds hl.dll and client.dll with VS 2022 (tools/msvc1444.py)
+TOOLCHAINS = {"msvc1427": msvc, "msvc1444": msvc1444, "vc6": msvc6.RTM, "vc6pp": msvc6.PP}
 
 
 def toolchain_name(d, u=None):
@@ -68,6 +76,8 @@ def toolchain_name(d, u=None):
     launcher) or vc6pp (VC6 SP6 with the processor pack). A unit's own
     "toolchain" replaces the DLL's for its compile only."""
     name = (u or {}).get("toolchain", d.get("toolchain", "msvc1427"))
+    if RETAIL_CC and name == "msvc1444":
+        name = "msvc1427"
     if name not in TOOLCHAINS:
         sys.exit("unknown toolchain %r (known: %s)" % (name, ", ".join(sorted(TOOLCHAINS))))
     return name
@@ -91,8 +101,8 @@ def ml_path(d, u=None):
     """ml.exe of the unit's toolchain: ML 6.15.8803 of the Processor Pack in
     vc6pp, ML 14.27.29112 in msvc1427. VC6 RTM has no assembler."""
     name = toolchain_name(d, u)
-    if name == "msvc1427":
-        path = os.path.join(msvc.TOOLS_DIR, "ml.exe")
+    if name in ("msvc1427", "msvc1444"):
+        path = os.path.join(TOOLCHAINS[name].TOOLS_DIR, "ml.exe")
     else:
         path = os.path.join(TOOLCHAINS[name].root, "BIN", "ML.EXE")
     if not os.path.exists(path):
@@ -125,7 +135,7 @@ def build_base(units, kind="base", extra=()):
         else:
             # a unit may replace the dll's flags, defines or include paths
             # (third-party code built its own way, such as bzip2 in hw.dll)
-            cmd = [tc.cl_path()] + u.get("cflags", d["cflags"]) + list(extra)
+            cmd = [tc.cl_path()] + u.get("cflags", d["cflags"]) + getattr(tc, "CFLAGS", []) + list(extra)
             cmd += ["/D" + x for x in u.get("defines", d["defines"])]
             cmd += ["/I" + os.path.join(ROOT, x) for x in u.get("includes", d["includes"])]
         cmd += ["/Fo" + out, os.path.join(ROOT, u["source"])]
@@ -623,13 +633,17 @@ def decomp(units):
 
 
 SHOW_ALL = False
+RETAIL_CC = False
 
 
 def main():
-    global SHOW_ALL
+    global SHOW_ALL, RETAIL_CC
     if "--all" in sys.argv:
         SHOW_ALL = True
         sys.argv.remove("--all")
+    if "--retail-cc" in sys.argv:
+        RETAIL_CC = True
+        sys.argv.remove("--retail-cc")
     if len(sys.argv) < 2:
         sys.exit(__doc__)
     cmd, sel = sys.argv[1], sys.argv[2:]

@@ -13,14 +13,14 @@ ReCoF fixes the bugs of **Cry of Fear** (Steam release, version string `1.6a`) a
 - **Speedrun techniques stay.** Movement tech, skips and exploits that runners use are not removed unless they crash the game or corrupt saves. When a fix changes something runners rely on, the original behavior stays available behind a cvar.
 - **New cvars and commands use the prefix `rc_`.**
 - **Retail saves keep loading.** A fix that has to change a save table versions it and still reads the old format.
-- **Every change is measured against the baseline.** Before any fix, a ReCoF build is identical to DeCoF's except for build stamps and the name of the build folder, so each fix can be checked to change only the functions it means to change.
+- **Every change is measured against the baseline.** Before any fix, a ReCoF build is identical to DeCoF's except for build stamps and the name of the build folder, so each fix can be checked to change only the functions it means to change. hl.dll and client.dll are built with a current compiler since Sprint 5, so for them `python tools/build.py --retail-cc check <unit>` does that check with the retail compiler (docs/toolchains.md).
 
 ## Building
 
 The tools and steps are the same as DeCoF's: see "Building it yourself" in the [DeCoF README](https://github.com/caixax/DeCoF#building-it-yourself) and [docs/tooling.md](docs/tooling.md).
 
 1. Copy your Cry of Fear game folder, the one that holds `cof.exe`, to `versions/1.6a`. The scripts only read it.
-2. Install the compilers listed in the DeCoF README. The default locations are under `I:\Tools`; the paths are set at the top of `tools/msvc.py`, `tools/msvc6.py` and `tools/coflaunchapp/build.py`.
+2. Install the compilers listed in the DeCoF README, and the Visual Studio 2022 Build Tools (C++ workload, MSVC 14.44, Windows 11 SDK 10.0.26100) for hl.dll and client.dll. The default locations are under `I:\Tools` and the Visual Studio default; the paths are set at the top of `tools/msvc.py`, `tools/msvc1444.py`, `tools/msvc6.py` and `tools/coflaunchapp/build.py`.
 3. Put the third-party headers into `refs/`: `halflife`, `a3d-sdk`, `bzip2-1.0.2-dl`, `dxheaders`, `irrklang-1.6.0` and `id3lib-3.8.3`, from the sources in the DeCoF README.
 4. Build:
 
