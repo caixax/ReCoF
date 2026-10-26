@@ -1310,6 +1310,10 @@ int CHudAmmo::Draw(float flTime)
 				break;
 			}
 
+			// ReCoF (B175): retail set the alpha only in the left magazine block, so with no left magazines
+			// the right numbers were scaled by whatever the stack slot held
+			a = (int) max( MIN_ALPHA, m_fFade );
+
 			if ( GetMags_guess( g_iDualWeapon1_guess ) )
 			{
 				int xCross = xLeft + iWidth * 1.1;
@@ -1322,7 +1326,6 @@ int CHudAmmo::Draw(float flTime)
 				}
 
 				iWidth = gHUD.GetSpriteRect( m_HUD_mag_cross_guess ).right - gHUD.GetSpriteRect( m_HUD_mag_cross_guess ).left;
-				a = (int) max( MIN_ALPHA, m_fFade );
 
 				if (m_fFade > 0)
 					m_fFade -= (gHUD.m_flTimeDelta * 20);
