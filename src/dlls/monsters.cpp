@@ -26,6 +26,7 @@
 #include "nodes.h"
 #include "monsters.h"
 #include "animation.h"
+#include "studio.h"
 #include "saverestore.h"
 #include "weapons.h"
 #include "scripted.h"
@@ -33,6 +34,7 @@
 #include "decals.h"
 #include "soundent.h"
 #include "gamerules.h"
+#include "game.h"
 #include "player.h" // buz
 #include <cmath>
 
@@ -2925,9 +2927,23 @@ void CBaseMonster :: SetEyePosition ( void )
 	Vector  vecEyePosition;
 	void	*pmodel = GET_MODEL_PTR( ENT(pev) );
 
-	GetEyePosition( pmodel, vecEyePosition );
+	// ReCoF (B085): GetEyePosition never writes its result (it assigns the pointer parameter), so retail
+	// copied an uninitialized vector into view_ofs, the point every monster sees from. Use the model's eye
+	// when it has a height (most Cry of Fear models store it as 0 55 0, on the wrong axis) and otherwise keep
+	// the view_ofs the monster's Spawn set just before MonsterInit. rc_retail_gameplay 1 keeps retail
+	if ( !rc_retail_gameplay.value )
+	{
+		studiohdr_t *pstudiohdr = (studiohdr_t *)pmodel;
 
-	pev->view_ofs = vecEyePosition;
+		if ( pstudiohdr && pstudiohdr->eyeposition[2] > 0 )
+			pev->view_ofs = pstudiohdr->eyeposition;
+	}
+	else
+	{
+		GetEyePosition( pmodel, vecEyePosition );
+
+		pev->view_ofs = vecEyePosition;
+	}
 
 	if ( pev->view_ofs == g_vecZero )
 	{
