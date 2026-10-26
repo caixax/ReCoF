@@ -22,7 +22,7 @@ The sources are the speedrun.com guides, forums, rules and resources for Cry of 
 
 These tools work on the retail binaries by address or by byte pattern. Any ReCoF build that moves what they look for breaks them, sometimes by crashing the game instead of failing cleanly.
 
-- **LiveSplit autosplitter and load remover** (by DrLa, listed for "Cry of Fear" and "Cry of Fear Category Extensions"). It reads fixed offsets in the process `cof`: hw.dll +0x11119E4 pause state, +0x10D279C loading state, +0xF1AA15 map name, +0x820495 menu map, +0x377BD8 co-op start, +0x116BED0 health, +0x9FDC30 can move, +0x1F39F0 alive, +0x1F39C8 demo; client.dll +0x18ED64 cutscene state, +0x1BE920 in-game time, +0x5440C8 music, +0x18A3E0 save state; crashhandler.dll +0x5600C crash state. Source: https://raw.githubusercontent.com/IlyaTsyganov/Livesplit.CryofFear/main/cryoffear.asl
+- **LiveSplit autosplitter and load remover** (by DrLa, listed for "Cry of Fear" and "Cry of Fear Category Extensions"). It reads fixed offsets in the process `cof`: hw.dll +0x11119E4 pause state, +0x10D279C loading state, +0xF1AA15 map name, +0x820495 menu map, +0x72F11B ambient, +0x377BD8 co-op start, +0x116BED0 health, +0x9FDC30 can move, +0x1F39F0 alive, +0x1F39C8 demo; client.dll +0x18ED64 cutscene state, +0x1BE920 in-game time, +0x5440C8 music, +0x18A3E0 save state; crashhandler.dll +0x5600C crash state. Source: https://raw.githubusercontent.com/IlyaTsyganov/Livesplit.CryofFear/main/cryoffear.asl
 - **BunnymodXT** finds `Host_ValidSave` by the byte pattern `55 8B EC 83 3D ? ? ? ? ? 74 ? 33 C0 E9` to detect the Steam version, and crashes the whole game when the pattern is missing. Source: the comment in RebuiltSimon's Host_ValidSave hook (`I:\COFPP\cof-rs`).
 - **RebuiltSimon** writes 19 NOPs at hl.dll +0xEB203 (the noclip reset in `CBasePlayer::PostThink`), stores into `CBasePlayer` at +0x2038, +0x21E8, +0x21F0 and +0x24F8, and uses hw.dll offsets 0x813C8, 0x8123B, 0x812B8, 0x7E0544 and 0x11115AC. Runners use its commands `rs_info`, `rs_hud`, `rs_bhop_cap`, `rs_disable_stamina`, `rs_disable_duck_time`, `rs_autojump`, `rs_ducktap_priority` and `+rs_ducktap`; `+rs_left`, `+rs_right` with `rs_yawspeed` and `rs_cof_save_prevention` are banned. Sources: `I:\COFPP\cof-rs`, https://www.speedrun.com/cof/guides
 - **CoF Linux Patcher** replaces cof.exe and patches hw.dll, client.dll and opengl32.dll at fixed offsets for Proton. Source: https://github.com/hinqiwame/cof-linux-patcher
@@ -34,6 +34,52 @@ These tools work on the retail binaries by address or by byte pattern. Any ReCoF
 - **`Host_ValidSave`.** Keep it byte-identical. New save logic goes into a separate function that it, or its callers, call.
 - **Code patched by tools.** RebuiltSimon's NOP patch and member offsets only fit retail. ReCoF should offer its runner features natively (bhop cap, ducktap, infinite stamina, noclip and god with sv_cheats, raw input) and report its own version, so tools can tell ReCoF apart from retail and refuse to patch it.
 - **Linux.** The Linux patcher will not apply to rebuilt binaries. The opengl32.dll fix in bugs.md removes the main reason Proton needs it.
+
+## ReCoF autosplitter block
+
+ReCoF builds keep the four client.dll values the LiveSplit script reads in places that can move from one ReCoF build to the next. client.dll therefore holds a block found by its tag, not by its address (`g_RcAutosplit` in `src/cl_dll/rc_client.cpp`, filled when the client starts). hw.dll keeps all its retail addresses, so the script's hw.dll lines stay as they are.
+
+| Offset | Field | What it points to |
+|---|---|---|
+| 0 | tag | the 16 bytes `ReCoF_AUTOSPLIT` and a zero byte |
+| 16 | version | 1 (an int) |
+| 20 | cutscene | 4 bytes, retail client.dll +0x18ED64 (`gHUD.m_BlackBar_guess.m_iOn_guess`, nonzero while the cutscene bars show) |
+| 24 | igt | 4 bytes, retail client.dll +0x1BE920 (`decaltextures[0]` + 8, nonzero once a map's decals are loaded) |
+| 28 | music | 40 bytes, retail client.dll +0x5440C8 (`READ_STRING`'s buffer + 0x58) |
+| 32 | savestate | 4 bytes, retail client.dll +0x18A3E0 (`gHUD.m_flSaveHackTime_guess`, nonzero while a tape recorder save is pending) |
+
+The fields at 20 to 32 are 32-bit pointers to the bytes, which stay at the same place for the life of the process. The script below adds ReCoF support to the existing `cryoffear.asl` without changing its retail behavior: it looks for the tag in client.dll a few times after the game starts, and when it finds one it reads the four values through the block instead of the fixed addresses. The original script has no license, so ReCoF ships only this addition.
+
+```csharp
+// in init { }, before the existing lines
+vars.recofBlock = IntPtr.Zero;
+vars.recofTries = 0;
+vars.recofNextScan = 0;
+
+// a new update block (or the start of an existing one)
+update
+{
+    if (vars.recofBlock == IntPtr.Zero && vars.recofTries < 20 && Environment.TickCount > vars.recofNextScan)
+    {
+        vars.recofTries++;
+        vars.recofNextScan = Environment.TickCount + 1000;
+        var client = modules.FirstOrDefault(m => m.ModuleName.ToLower() == "client.dll");
+        if (client != null)
+        {
+            var scanner = new SignatureScanner(game, client.BaseAddress, client.ModuleMemorySize);
+            vars.recofBlock = scanner.Scan(new SigScanTarget(0, "52 65 43 6F 46 5F 41 55 54 4F 53 50 4C 49 54 00 01 00 00 00"));
+        }
+    }
+    if (vars.recofBlock != IntPtr.Zero)
+    {
+        IntPtr b = vars.recofBlock;
+        current.cutscenestate = game.ReadValue<float>((IntPtr)game.ReadValue<int>(b + 20));
+        current.igt = game.ReadValue<float>((IntPtr)game.ReadValue<int>(b + 24));
+        current.music = game.ReadString((IntPtr)game.ReadValue<int>(b + 28), 40);
+        current.savestate = game.ReadValue<float>((IntPtr)game.ReadValue<int>(b + 32));
+    }
+}
+```
 
 ## ReCoF cvars
 

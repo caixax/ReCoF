@@ -42,6 +42,27 @@ static WNDPROC		s_pfnRawOldProc;	// raw input: the engine's window procedure
 static int			s_bRawFailed;		// raw input: the window or the registration failed
 static int			s_iRawDX, s_iRawDY;	// raw input: mouse counts since the last mouse move
 
+//-----------------------------------------------------------------------------
+// Where this build keeps the values the LiveSplit autosplitter reads from client.dll, so a script can
+// find them by the tag instead of by address (docs/speedrun.md, "ReCoF autosplitter block"). Each
+// pointer gives the bytes retail has at the listed address; hw.dll keeps its retail addresses.
+//-----------------------------------------------------------------------------
+struct decaltexture_s;
+extern decaltexture_s decaltextures[];	// gl_decals.cpp
+char *READ_STRING( void );				// parsemsg.cpp
+
+struct RcAutosplit_t
+{
+	char	magic[16];	// "ReCoF_AUTOSPLIT", written at start-up (the whole tag is in no other place)
+	int		version;	// 1
+	void	*cutscene;	// 4 bytes, retail +0x18ED64: gHUD.m_BlackBar_guess.m_iOn_guess
+	void	*igt;		// 4 bytes, retail +0x1BE920: decaltextures[0] + 8 (0 until a map's decals load)
+	void	*music;		// 40 bytes, retail +0x5440C8: READ_STRING's buffer + 0x58
+	void	*savestate;	// 4 bytes, retail +0x18A3E0: gHUD.m_flSaveHackTime_guess
+};
+
+RcAutosplit_t g_RcAutosplit;
+
 static void IN_RcDucktapDown( void ) { KeyDown( &in_rcducktap ); }
 static void IN_RcDucktapUp( void ) { KeyUp( &in_rcducktap ); }
 
@@ -50,6 +71,14 @@ static void IN_RcDucktapUp( void ) { KeyUp( &in_rcducktap ); }
 //-----------------------------------------------------------------------------
 void RcClient_Init( void )
 {
+	g_RcAutosplit.version = 1;
+	g_RcAutosplit.cutscene = &gHUD.m_BlackBar_guess.m_iOn_guess;
+	g_RcAutosplit.igt = (char *)decaltextures + 8;
+	g_RcAutosplit.music = READ_STRING() + 0x58;	// no message is being read here, so this only returns the buffer
+	g_RcAutosplit.savestate = &gHUD.m_flSaveHackTime_guess;
+	strcpy( g_RcAutosplit.magic, "ReCoF_AUTO" );
+	strcat( g_RcAutosplit.magic, "SPLIT" );
+
 	gEngfuncs.pfnAddCommand( "+rc_ducktap", IN_RcDucktapDown );
 	gEngfuncs.pfnAddCommand( "-rc_ducktap", IN_RcDucktapUp );
 

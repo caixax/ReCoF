@@ -40,6 +40,7 @@ ADDRESSES = [
     ("hw.dll", 0x10D279C, "LiveSplit", "loading state"),
     ("hw.dll", 0xF1AA15, "LiveSplit", "map name"),
     ("hw.dll", 0x820495, "LiveSplit", "menu map"),
+    ("hw.dll", 0x72F11B, "LiveSplit", "ambient"),
     ("hw.dll", 0x377BD8, "LiveSplit", "co-op start"),
     ("hw.dll", 0x116BED0, "LiveSplit", "health"),
     ("hw.dll", 0x9FDC30, "LiveSplit", "can move"),
