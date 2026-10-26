@@ -14873,7 +14873,15 @@ void CBasePlayer::StopWheelchairMode( void )
 	if ( !m_pWheelchair )
 		return;
 
-	GetClassPtr( (CWheelchair *)m_pWheelchair->pev )->Disembark();
+	CWheelchair *pChair = GetClassPtr( (CWheelchair *)m_pWheelchair->pev );
+	pChair->Disembark();
+
+	// ReCoF (B123): Disembark re-arms the chair's Use with the player standing in it, so a USE press right
+	// after the final fight in c_ending4b mounted it again, froze the player and hid the ending cameras
+	// (the map has no second stop). After a scripted stop the chair stays unusable.
+	if ( !m_pWheelchair )
+		pChair->SetUse( NULL );
+
 	g_engfuncs.pfnSetPhysicsKeyValue( edict(), "chr", "1" );
 }
 
