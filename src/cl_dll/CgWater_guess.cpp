@@ -17,6 +17,7 @@
 extern engine_studio_api_t IEngineStudio;
 extern int current_ext_texture_id;
 extern GLint g_iWaterOldTexture_guess;
+extern cvar_t *cl_waterspeed_x, *cl_waterspeed_y;	// input.cpp
 
 int iUnknown1054506C_guess;	// V_CalcNormalRefdef stores pparams->waterlevel here, 3 is under water
 CCgWater_guess g_CgWater_guess;
@@ -231,6 +232,33 @@ void CCgWater_guess::Render_guess( void )
 	if ( !m_bEnabled_guess )
 		return;
 
+	// ReCoF (B194): without a water entity the pass only copies the screen three times and puts it back
+	// through a full screen Cg pass. Skip it then, and leave the GL state as the pass leaves it
+	int i;
+	cl_entity_t *ent;
+
+	for ( i = 0; i < 1024; i++ )
+	{
+		ent = gEngfuncs.GetEntityByIndex( i );
+
+		if ( ent && ent->curstate.skin == CONTENTS_WATER )
+			break;
+	}
+
+	if ( i == 1024 )
+	{
+		glActiveTextureARB( GL_TEXTURE0_ARB );
+		glEnable( GL_TEXTURE_2D );
+		glColor4f( 1, 1, 1, 1 );
+		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+		glDisable( GL_BLEND );
+		glDepthMask( GL_FALSE );
+		glEnable( GL_DEPTH_TEST );
+		glEnable( GL_CULL_FACE );
+		glMatrixMode( GL_MODELVIEW );
+		return;
+	}
+
 	glGetIntegerv( GL_TEXTURE_BINDING_2D, &g_iWaterOldTexture_guess );
 
 	glDisable( GL_BLEND );
@@ -247,9 +275,6 @@ void CCgWater_guess::Render_guess( void )
 	glBindTexture( GL_TEXTURE_2D, m_iNoiseTexture_guess );
 	glColor4f( 1, 1, 1, 1 );
 
-	int i;
-	cl_entity_t *ent;
-
 	for ( i = 0; i < 1024; i++ )
 	{
 		ent = gEngfuncs.GetEntityByIndex( i );
@@ -262,9 +287,9 @@ void CCgWater_guess::Render_guess( void )
 		float maxs0 = ent->curstate.maxs[0];
 		float mins0 = ent->curstate.mins[0];
 
-		float s = gEngfuncs.pfnGetCvarFloat( "cl_waterspeed_x" );
+		float s = cl_waterspeed_x->value;	// ReCoF (B194): retail looked both cvars up by name for every water entity
 		s = gEngfuncs.GetClientTime() / s;
-		float t = gEngfuncs.pfnGetCvarFloat( "cl_waterspeed_y" );
+		float t = cl_waterspeed_y->value;
 		t = cos( gEngfuncs.GetClientTime() ) / t;
 
 		vec3_t mins = ent->curstate.mins;
