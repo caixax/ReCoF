@@ -133,6 +133,7 @@ void CKeyitemModel::Spawn( void )
 		ALERT( at_error, "CoF: Key with no item .txt at %f %f %f!\n", pev->origin.x, pev->origin.y, pev->origin.z );
 		pev->armorvalue = 0;
 		UTIL_Remove( this );
+		return;	// ReCoF (B059): retail went on to look up and set a model for the removed key
 	}
 
 	pev->renderfx = 99;
