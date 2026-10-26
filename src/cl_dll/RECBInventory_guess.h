@@ -38,7 +38,7 @@ public:
 	int		m_iSelected_guess;				// 0xf0, slot of the item menu (1 to 6)
 	int		m_iSelectionAlpha_guess;		// 0xf4, alpha of the red border of m_pSelection_guess
 	Panel	*m_pSelection_guess;			// 0xf8, red border around the slot picked for combine or dual wield
-	int		m_iUnusedFC_guess;				// 0xfc, not referenced by any code
+	LineBorder	*m_pSelectionBorder;		// 0xfc, ReCoF (B151): unused in retail, now the one border of m_pSelection_guess
 	ColorButton	*m_pMenuButtons_guess[7];	// 0x100, item menu, commands 50 to 56
 	int		m_iUnused11C_guess;				// 0x11c, not referenced by any code
 	CImageLabel	*m_pItemImages_guess[10];	// 0x120, pictures of the 6 items, the 3 quick slots ([6], [7], [9]) and the hovered item ([8])

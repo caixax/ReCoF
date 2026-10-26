@@ -265,7 +265,8 @@ CRECBInventory::CRECBInventory( int iTrans, int iRemoveMe, int x, int y, int wid
 	m_pSelection_guess->setParent( m_pInventory_guess );
 	m_pSelection_guess->setBgColor( 0, 0, 0, 255 );
 	m_pSelection_guess->setVisible( false );
-	m_pSelection_guess->setBorder( new LineBorder( Color( 255, 0, 0, 255 ) ) );
+	m_pSelectionBorder = new LineBorder( Color( 255, 0, 0, 255 ) );
+	m_pSelection_guess->setBorder( m_pSelectionBorder );
 	m_pSelection_guess->setPaintBorderEnabled( true );
 
 	CSchemeManager *pSchemes = gViewPort->GetSchemeManager();
@@ -761,6 +762,7 @@ void CRECBInventory::SelectItem_guess( int slot )
 					sprintf( szCommand, "inventorycombine %i %i %s\n", m_iCombine_guess, slot, gHUD.CheckItem( "combined_result", gHUD.GetSlotItem_guess( m_iCombine_guess ) ) );
 					gEngfuncs.pfnServerCmd( szCommand );
 					m_iDualWield_guess = 0;
+					m_iCombine_guess = 0;	// ReCoF (B151): retail left the combine slot armed after a combine
 					g_bInventoryFadeOut_guess = false;
 					m_pSelection_guess->setVisible( false );
 					return;
@@ -1052,7 +1054,9 @@ void CRECBInventory::solve()
 				}
 			}
 
-			m_pSelection_guess->setBorder( new LineBorder( Color( 255, 0, 0, m_iSelectionAlpha_guess ) ) );
+			// ReCoF (B151): retail made a new LineBorder every frame and never freed the old one
+			m_pSelectionBorder->setLineColor( 255, 0, 0, m_iSelectionAlpha_guess );
+			m_pSelection_guess->setBorder( m_pSelectionBorder );
 		}
 
 		if ( iWheelchair_guess && isVisible() )
