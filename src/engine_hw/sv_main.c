@@ -7695,6 +7695,11 @@ void SV_CheckCmdTimes( void )
 	static double	lastreset = 0;
 	float			dif;
 
+	// ReCoF (B248): this speedhack check also ran in single player, where after every map load the client is
+	// ahead of the server clock by more than clockwindow, so movement was dropped for half a second
+	if ( svs.maxclients <= 1 )
+		return;
+
 	if ( realtime - lastreset < 1.0 )
 		return;
 
