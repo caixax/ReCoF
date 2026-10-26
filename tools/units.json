@@ -4507,7 +4507,8 @@
           "/incremental:no",
           "/debug",
           "/pdb:build/link/launcher/launcher.pdb",
-          "/base:0x1400000"
+          "/base:0x1400000",
+          "/largeaddressaware"
         ],
         "libs": [
           "wsock32.lib",
