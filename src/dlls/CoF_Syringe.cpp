@@ -311,14 +311,15 @@ void CSyringe::SecondaryAttack( void )
 
 	pHealVictim = NULL;
 
+	// ReCoF (B033): retail built vecEnd from v_forward before UTIL_MakeVectors, so it aimed along a stale direction
+	UTIL_MakeVectors( m_pPlayer->pev->v_angle );
+
 	entvars_t *pevStart = m_pPlayer->pev;
 	Vector vecStart = pevStart->origin + m_pPlayer->pev->view_ofs;
 	entvars_t *pevEnd = m_pPlayer->pev;
 	Vector vecEnd = pevEnd->origin + m_pPlayer->pev->view_ofs + gpGlobals->v_forward * 48;
 
 	TraceResult tr;
-	UTIL_MakeVectors( m_pPlayer->pev->angles );
-	UTIL_MakeVectors( m_pPlayer->pev->v_angle );
 	UTIL_TraceLine( vecStart, vecEnd, dont_ignore_monsters, ENT( m_pPlayer->pev ), &tr );
 
 	CBaseEntity *pHitEntity = NULL;
@@ -334,9 +335,9 @@ void CSyringe::SecondaryAttack( void )
 				TraceResult trace;
 				UTIL_TraceModel( vecStart, vecEnd, head_hull, ENT( pCast->pev ), &trace );
 
-				if ( trace.pHit )
+				if ( trace.pHit && trace.flFraction < 1.0 )
 				{
-					CBaseEntity *pEntity = CBaseEntity::Instance( tr.pHit );
+					CBaseEntity *pEntity = CBaseEntity::Instance( trace.pHit );	// ReCoF (B033): retail used the outer trace here
 
 					if ( pEntity )
 						pHitEntity = pEntity;
