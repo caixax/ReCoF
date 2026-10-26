@@ -124,7 +124,7 @@ void CStatuePuzzleComplete::Spawn( void )
 
 void CStatuePuzzleComplete::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	if ( pActivator->IsPlayer() )
+	if ( pActivator && pActivator->IsPlayer() )	// ReCoF (B066): CheckStatuePuzzle passes NULL when no player is found
 	{
 		// close the statue screen
 		MESSAGE_BEGIN( MSG_ONE, gmsgStatue, NULL, pActivator->pev );
