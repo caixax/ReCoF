@@ -64,6 +64,8 @@ cvar_t	rc_retail_gameplay = {"rc_retail_gameplay","0", FCVAR_SERVER };
 cvar_t	rc_bhopcap = {"rc_bhopcap","1", FCVAR_SERVER };
 // ReCoF: 1 brings back the Half-Life ducktap (retail and default: 0); sent to client prediction as physinfo "dkt"
 cvar_t	rc_ducktap = {"rc_ducktap","0", FCVAR_SERVER };
+// ReCoF: 1 gives every player infinite stamina (retail and default: 0), the flag retail kept but never set
+cvar_t	rc_infinite_stamina = {"rc_infinite_stamina","0", FCVAR_SERVER };
 cvar_t	cof_walksteptime = {"cof_walksteptime","410", FCVAR_SERVER };
 cvar_t	cof_runsteptime = {"cof_runsteptime","375", FCVAR_SERVER };
 cvar_t	cof_sprintsteptime = {"cof_sprintsteptime","300", FCVAR_SERVER };
@@ -540,6 +542,7 @@ void GameDLLInit( void )
 	CVAR_REGISTER (&rc_retail_gameplay);
 	CVAR_REGISTER (&rc_bhopcap);
 	CVAR_REGISTER (&rc_ducktap);
+	CVAR_REGISTER (&rc_infinite_stamina);
 	CVAR_REGISTER (&cof_walksteptime);
 	CVAR_REGISTER (&cof_runsteptime);
 	CVAR_REGISTER (&cof_sprintsteptime);

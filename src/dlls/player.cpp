@@ -3959,6 +3959,7 @@ void CBasePlayer::PreThink(void)
 {
 	RcSetPhysicsKey( edict(), "nbh", rc_bhopcap.value ? "0" : "1" );	// ReCoF (B131)
 	RcSetPhysicsKey( edict(), "dkt", rc_ducktap.value ? "1" : "0" );	// ReCoF (B132)
+	m_bInfiniteStamina = rc_infinite_stamina.value != 0;	// ReCoF (B094): retail tested this flag but nothing set it
 
 	if ( m_bHoldingBreath )
 	{
@@ -12662,7 +12663,8 @@ void CBasePlayer::MeleeHitThinkSledgeHammer( void )
 
 	ViewPunch( -4, 1, 8 );
 
-	m_fStamina -= 8;
+	if ( !m_bInfiniteStamina )	// ReCoF (B094): retail took the swing cost even with infinite stamina
+		m_fStamina -= 8;
 
 	if ( tr.flFraction >= 1.0 )
 	{
