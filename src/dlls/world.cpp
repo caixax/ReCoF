@@ -795,7 +795,10 @@ void CWorld :: Precache( void )
 	else
 	{
 		if ( g_pLevelChange )
+		{
 			delete g_pLevelChange;
+			g_pLevelChange = NULL;	// ReCoF (B097): retail kept the freed pointer, which the next co-op map used
+		}
 	}
 
 	//!!!UNDONE why is there so much Spawn code in the Precache function? I'll just keep it here 
