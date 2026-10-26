@@ -8,16 +8,17 @@ Usage:
    they go into the game folder (hw.dll at the top, cryoffear/cl_dlls/... under
    it), plus sw.dll as a copy of hw.dll as in retail, the files of
    tools/dist_extra (Play ReCoF.bat, recof-cvars.json) and README-ReCoF-TEST.txt.
-   CoFLaunchApp.exe is left out: it embeds art and sound taken from the retail
-   executable.
+   pack-recof refuses CoFLaunchApp.exe, so the launcher set has none.
 2. Runs `cargo xtask pack-recof` of the ReCoF-Launcher repository on that
    folder. It writes build/release/v<version>/upload/recof-<version>.zip,
    recof-manifest.json and recof-manifest.json.sig, signed with the launcher's
    key (keys/<id>.secret.key there, or RECOF_LAUNCHER_SIGNING_KEY), and checks
    the manifest against the rules the launcher applies. The format is
    described in that repository's docs/releases.md.
+3. Writes build/release/v<version>/upload/ReCoF-v<version>.zip, the whole set
+   for installing by hand: the staged files, sw.dll and CoFLaunchApp.exe.
 
-The three files then go to the GitHub release v<version> of caixax/ReCoF
+The four files then go to the GitHub release v<version> of caixax/ReCoF
 (command printed at the end). The release body is the changelog the launcher
 shows before it updates. A beta (the default channel here) is a GitHub
 prerelease: launchers on the stable channel do not see it.
@@ -28,10 +29,12 @@ import os
 import shutil
 import subprocess
 import sys
+import zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BIN = os.path.join(ROOT, "build", "bin")
 EXTRA = os.path.join(ROOT, "tools", "dist_extra")
+COFLAUNCHAPP = os.path.join(ROOT, "build", "coflaunchapp", "CoFLaunchApp.exe")
 
 # (path in the game folder, file in build/bin, what it is)
 FILES = [
@@ -167,14 +170,25 @@ def main():
     if subprocess.call(cmd, cwd=args.launcher) != 0:
         sys.exit("pack-recof failed")
 
+    # the whole set for installing by hand, settings launcher included
+    if not os.path.isfile(COFLAUNCHAPP):
+        sys.exit("not built yet: %s (run tools/coflaunchapp/build.py)" % COFLAUNCHAPP)
+    full = os.path.join(upload, "ReCoF-v%s.zip" % version)
+    with zipfile.ZipFile(full, "w", zipfile.ZIP_DEFLATED) as z:
+        for dirpath, _dirs, names in os.walk(stage):
+            for name in sorted(names):
+                p = os.path.join(dirpath, name)
+                z.write(p, os.path.relpath(p, stage).replace("\\", "/"))
+        z.write(COFLAUNCHAPP, "CoFLaunchApp.exe")
+
     print("\nupload these to the GitHub release v%s of caixax/ReCoF:" % version)
     for name in sorted(os.listdir(upload)):
         p = os.path.join(upload, name)
         if os.path.isfile(p):
             print("  %-26s %9d  %s" % (name, os.path.getsize(p), sha256(p)[:16]))
-    print('\n  gh release upload v%s -R caixax/ReCoF --clobber "%s" "%s" "%s"' % (
+    print('\n  gh release upload v%s -R caixax/ReCoF --clobber "%s" "%s" "%s" "%s"' % (
         version, os.path.join(upload, "recof-%s.zip" % version), os.path.join(upload, "recof-manifest.json"),
-        os.path.join(upload, "recof-manifest.json.sig")))
+        os.path.join(upload, "recof-manifest.json.sig"), full))
 
 
 if __name__ == "__main__":
