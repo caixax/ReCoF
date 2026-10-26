@@ -2859,7 +2859,10 @@ float CBaseMonster::ChangeYaw ( int yawSpeed )
 	ideal = pev->ideal_yaw;
 	if (current != ideal)
 	{
-		speed = (float)yawSpeed * gpGlobals->frametime * 10;
+		// ReCoF (B117): this runs once per 0.1 s monster think, so scaling it by the frame time made monsters
+		// turn faster below 100 fps and much slower above it; use the frame time of the 100 fps cap the game
+		// was tuned at, so every frame rate turns like retail at 100 fps. rc_retail_gameplay 1 keeps retail
+		speed = (float)yawSpeed * ( rc_retail_gameplay.value ? gpGlobals->frametime : 0.01f ) * 10;
 		move = ideal - current;
 
 		if (ideal > current)
