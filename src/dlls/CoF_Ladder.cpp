@@ -471,6 +471,14 @@ void CCoFLadderManager::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 	if ( !pev->model )
 		return;
 
+	// ReCoF (B098): retail cast any activator to a player, and a second climber took over the ladder
+	// while the first one was still frozen in the climb camera
+	if ( !pActivator->IsPlayer() )
+		return;
+
+	if ( m_pPlayer && m_pPlayer->pDeathScene && m_pPlayer->IsAlive() )
+		return;
+
 	CBasePlayer *pPlayer = GetClassPtr( (CBasePlayer *)pActivator->pev );
 
 	if ( pPlayer )
