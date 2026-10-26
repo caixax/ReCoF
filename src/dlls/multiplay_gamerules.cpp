@@ -1388,10 +1388,10 @@ void CHalfLifeMultiplay :: ClientDisconnected( edict_t *pClient )
 
 			if ( !someonealive )
 			{
-				CBaseEntity *pSurvivalEntity = NULL;
-
-				while ( pSurvivalEntity = UTIL_FindEntityByClassname( pSurvivalEntity, "cof_survivalmode" ) )
-					survivalmode = true;
+				// ReCoF (B015): retail searched until the pointer was NULL, so the survival branch never ran
+				// and the last disconnect always gave game over; end survival mode as CBasePlayer::Killed does
+				CBaseEntity *pSurvivalEntity = UTIL_FindEntityByClassname( NULL, "cof_survivalmode" );
+				survivalmode = pSurvivalEntity != NULL;
 
 				for ( i = 1; i <= gpGlobals->maxClients; i++ )
 				{
