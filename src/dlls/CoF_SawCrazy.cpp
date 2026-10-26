@@ -22,6 +22,7 @@
 #include	"monsters.h"
 #include	"schedule.h"
 #include	"player.h"
+#include	"game.h"
 
 
 //=========================================================
@@ -288,7 +289,11 @@ void CSawCrazy :: MonsterThink( void )
 		}
 
 		// CoF: this sets the idle sound timer; fuser2 is never advanced, so the saw hits on every think
-		pev->fuser1 = gpGlobals->time + 0.25;
+		// ReCoF (B047): advance the hit timer instead, so the idle sounds play again; rc_retail_gameplay 1 keeps retail
+		if ( rc_retail_gameplay.value )
+			pev->fuser1 = gpGlobals->time + 0.25;
+		else
+			pev->fuser2 = gpGlobals->time + 0.25;
 	}
 
 	if ( pev->fuser1 < gpGlobals->time )
