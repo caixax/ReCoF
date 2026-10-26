@@ -693,6 +693,8 @@ BOOL CHalfLifeMultiplay::ClientCommand( CBasePlayer *pPlayer, const char *pcmd )
 						}
 						else
 							g_pGameRules->m_iVotesAgainstKick++;
+
+						break;	// ReCoF (B014): retail stored the vote in every free slot, counting it up to 32 times
 					}
 				}
 			}
