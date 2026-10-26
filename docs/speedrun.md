@@ -34,3 +34,7 @@ These tools work on the retail binaries by address or by byte pattern. Any ReCoF
 - **`Host_ValidSave`.** Keep it byte-identical. New save logic goes into a separate function that it, or its callers, call.
 - **Code patched by tools.** RebuiltSimon's NOP patch and member offsets only fit retail. ReCoF should offer its runner features natively (bhop cap, ducktap, infinite stamina, noclip and god with sv_cheats, raw input) and report its own version, so tools can tell ReCoF apart from retail and refuse to patch it.
 - **Linux.** The Linux patcher will not apply to rebuilt binaries. The opengl32.dll fix in bugs.md removes the main reason Proton needs it.
+
+## ReCoF cvars
+
+- **`rc_retail_gameplay`** (server, default 0). ReCoF fixes balance bugs by default: damage, health, AI and collision behave as the developers wrote them to. Set it to 1 to get the retail behavior of every such fix back at once. It covers: B047 (saw crazy hit timer).

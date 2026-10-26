@@ -38,6 +38,8 @@ extern cvar_t	defaultteam;
 extern cvar_t	allowmonsters;
 
 // Engine Cvars
+extern cvar_t	rc_retail_gameplay;	// ReCoF: 1 restores the retail behavior of the balance fixes
+
 extern cvar_t	*g_psv_gravity;
 extern cvar_t	*g_psv_aim;
 extern cvar_t	*g_footsteps;
