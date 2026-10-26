@@ -187,6 +187,7 @@ int hudServerCmd( char *pszCmdString )
 		g_bSaveAllowed_guess = true;
 		Cmd_TokenizeString( pszCmdString );
 		Host_Savegame_f();
+		g_bSaveAllowed_guess = false;	// ReCoF (B242): a refused save left the flag set, unlocking console saves
 		return 0;
 	}
 
@@ -213,6 +214,7 @@ int hudServerCmdUnreliable( char *pszCmdString )
 		g_bSaveAllowed_guess = true;
 		Cmd_TokenizeString( pszCmdString );
 		Host_Savegame_f();
+		g_bSaveAllowed_guess = false;	// ReCoF (B242): a refused save left the flag set, unlocking console saves
 		return 0;
 	}
 
