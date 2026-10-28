@@ -536,6 +536,8 @@ V_CalcRefdef
 extern void RenderFog( void ); //LRC
 extern int g_DrawHeadShied; // buz
 extern int HeadShieldThink( void ); // buz
+extern int g_HeadShieldState;			// ReCoF (B199): StudioModelRenderer.cpp
+#define SHIELD_ON	0
 
 // cof
 extern "C" int iStepPunch_guess;		// pm_shared.c
@@ -675,6 +677,11 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 		( pparams->nextView == 0 && HeadShieldThink() && !(pparams->viewentity > pparams->maxclients) ) )
 	{
 		pparams->nextView = 1;
+
+		// ReCoF (B199): a gas mask that is on (night vision) draws nothing in the head shield pass
+		// (StudioDrawHeadShield returns at once), so do not make the engine render a second view for it
+		if ( g_iHeadShieldType_guess == 10 && g_HeadShieldState == SHIELD_ON )
+			pparams->nextView = 0;
 	}
 
 //	gEngfuncs.Con_Printf("cross angle: %f, %f, %f\n", pparams->crosshairangle[0], pparams->crosshairangle[1], pparams->crosshairangle[2]);
