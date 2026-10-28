@@ -256,6 +256,7 @@ IN_Shutdown
 void IN_Shutdown (void)
 {
 	IN_DeactivateMouse ();
+	RcRawMouseShutdown();	// ReCoF (B299): before the engine unloads client.dll
 }
 
 /*

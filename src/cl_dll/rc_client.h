@@ -30,5 +30,6 @@ void RcViewmodelFovEnd( int on );
 int RcRawInputOn( void );
 void RcRawMouseReset( void );
 void RcRawMouse( int *mx, int *my );
+void RcRawMouseShutdown( void );
 
 #endif // RC_CLIENT_H

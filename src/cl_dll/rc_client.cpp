@@ -602,3 +602,26 @@ void RcRawMouse( int *mx, int *my )
 	*my = s_iRawDY;
 	s_iRawDX = s_iRawDY = 0;
 }
+
+// called from IN_Shutdown (B299). The engine unloads client.dll before it destroys the game window, and
+// destroying the window still runs its procedure: left in front of the engine's, this one crashed the
+// game on quit (Windows logs the fault in client.dll_unloaded), and a video mode restart goes the same way
+void RcRawMouseShutdown( void )
+{
+	RAWINPUTDEVICE rid;
+
+	if ( !s_hRawWnd )
+		return;
+
+	// another program that chained its procedure in front of this one would be cut off: leave it then
+	if ( GetWindowLongPtrA( s_hRawWnd, GWLP_WNDPROC ) == (LONG_PTR)RcRawWndProc )
+		SetWindowLongPtrA( s_hRawWnd, GWLP_WNDPROC, (LONG_PTR)s_pfnRawOldProc );
+
+	rid.usUsagePage = 1;	// generic desktop
+	rid.usUsage = 2;		// mouse
+	rid.dwFlags = RIDEV_REMOVE;
+	rid.hwndTarget = NULL;
+	RegisterRawInputDevices( &rid, 1, sizeof( rid ) );
+
+	s_hRawWnd = NULL;
+}
