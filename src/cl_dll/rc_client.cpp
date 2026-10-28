@@ -47,6 +47,8 @@ static cvar_t		*rc_rawinput;
 static HWND			s_hRawWnd;			// raw input: the game window, once hooked
 static WNDPROC		s_pfnRawOldProc;	// raw input: the engine's window procedure
 static int			s_bRawFailed;		// raw input: the window or the registration failed
+static int			s_bRawTaken;		// raw input: the game window has the raw mouse
+static int			s_bRawRInput;		// raw input: RInput.dll is loaded and has the raw mouse
 static int			s_iRawDX, s_iRawDY;	// raw input: mouse counts since the last mouse move
 static cvar_t		*rc_viewmodel_fov;
 static cvar_t		*rc_viewmodel_ofs_forward;
@@ -551,6 +553,19 @@ static LRESULT CALLBACK RcRawWndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 	return CallWindowProcA( s_pfnRawOldProc, hWnd, msg, wParam, lParam );
 }
 
+// gives the raw mouse of the process to hWnd; NULL with RIDEV_REMOVE gives it up
+static BOOL RcRawRegister( HWND hWnd, DWORD dwFlags )
+{
+	RAWINPUTDEVICE rid;
+
+	rid.usUsagePage = 1;	// generic desktop
+	rid.usUsage = 2;		// mouse
+	rid.dwFlags = dwFlags;
+	rid.hwndTarget = hWnd;
+
+	return RegisterRawInputDevices( &rid, 1, sizeof( rid ) );
+}
+
 int RcRawInputOn( void )
 {
 	return rc_rawinput && rc_rawinput->value && !s_bRawFailed;
@@ -568,6 +583,21 @@ void RcRawMouse( int *mx, int *my )
 	if ( !RcRawInputOn() )
 		return;
 
+	// B300: Windows gives the raw mouse of a process to one window, and RInput takes it for its own.
+	// RInput hands its raw counts out through GetCursorPos, so *mx and *my already hold them: leave the
+	// mouse to it, and take it back if it goes
+	if ( GetModuleHandleA( "RInput.dll" ) )
+	{
+		if ( !s_bRawRInput )
+			gEngfuncs.Con_Printf( "RInput is loaded: rc_rawinput leaves the mouse to it\n" );
+
+		s_bRawRInput = 1;
+		s_bRawTaken = 0;
+		return;
+	}
+
+	s_bRawRInput = 0;
+
 	if ( !s_hRawWnd )
 	{
 		// the engine's window class (sys_sdlwind.cpp); skip another game's window
@@ -580,13 +610,7 @@ void RcRawMouse( int *mx, int *my )
 				break;
 		}
 
-		RAWINPUTDEVICE rid;
-		rid.usUsagePage = 1;	// generic desktop
-		rid.usUsage = 2;		// mouse
-		rid.dwFlags = 0;
-		rid.hwndTarget = hWnd;
-
-		if ( !hWnd || !RegisterRawInputDevices( &rid, 1, sizeof( rid ) ) )
+		if ( !hWnd )
 		{
 			s_bRawFailed = 1;	// keep the cursor movement
 			return;
@@ -594,6 +618,17 @@ void RcRawMouse( int *mx, int *my )
 
 		s_pfnRawOldProc = (WNDPROC)SetWindowLongPtrA( hWnd, GWLP_WNDPROC, (LONG_PTR)RcRawWndProc );
 		s_hRawWnd = hWnd;
+	}
+
+	if ( !s_bRawTaken )
+	{
+		if ( !RcRawRegister( s_hRawWnd, 0 ) )
+		{
+			s_bRawFailed = 1;	// keep the cursor movement
+			return;
+		}
+
+		s_bRawTaken = 1;
 		s_iRawDX = s_iRawDY = 0;
 		return;
 	}
@@ -608,8 +643,6 @@ void RcRawMouse( int *mx, int *my )
 // game on quit (Windows logs the fault in client.dll_unloaded), and a video mode restart goes the same way
 void RcRawMouseShutdown( void )
 {
-	RAWINPUTDEVICE rid;
-
 	if ( !s_hRawWnd )
 		return;
 
@@ -617,11 +650,9 @@ void RcRawMouseShutdown( void )
 	if ( GetWindowLongPtrA( s_hRawWnd, GWLP_WNDPROC ) == (LONG_PTR)RcRawWndProc )
 		SetWindowLongPtrA( s_hRawWnd, GWLP_WNDPROC, (LONG_PTR)s_pfnRawOldProc );
 
-	rid.usUsagePage = 1;	// generic desktop
-	rid.usUsage = 2;		// mouse
-	rid.dwFlags = RIDEV_REMOVE;
-	rid.hwndTarget = NULL;
-	RegisterRawInputDevices( &rid, 1, sizeof( rid ) );
+	if ( s_bRawTaken )
+		RcRawRegister( NULL, RIDEV_REMOVE );	// not while RInput has the raw mouse (B300)
 
 	s_hRawWnd = NULL;
+	s_bRawTaken = 0;
 }
