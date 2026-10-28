@@ -5547,7 +5547,10 @@ void CBasePlayer::PostThink()
 			gDualWeapon.WeaponThink( this );
 		}
 
-		if ( pev->vuser1.x )
+		// ReCoF (B289): doctor mode put the mask back on after every level change and load, also when the
+		// player had taken it off; m_iHeadShieldOn is saved, so only a mask that was on is put back on (a
+		// pending switch, 100 or 101, finishes below). rc_retail_gameplay 1 keeps retail
+		if ( pev->vuser1.x && ( rc_retail_gameplay.value || m_iHeadShieldOn == 1 ) )
 		{
 			MESSAGE_BEGIN( MSG_ONE, gmsgHeadShield, NULL, pev );
 				WRITE_BYTE( 1 );
