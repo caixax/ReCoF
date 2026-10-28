@@ -3280,6 +3280,11 @@ void CBasePlayer::WaterMove()
 // TRUE if the player is attached to a ladder
 BOOL CBasePlayer::IsOnLadder( void )
 {
+	// ReCoF (rc_hlmovement): Half-Life keeps the weapon up and working on a ladder; Cry of Fear lowers it there and
+	// blocks attacks, use, weapon changes and the inventory, which all ask this
+	if ( RcHLMovementOn( edict() ) )
+		return FALSE;
+
 	return ( pev->movetype == MOVETYPE_FLY );
 }
 
