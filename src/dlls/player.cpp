@@ -6940,7 +6940,10 @@ void CBasePlayer::PostThink()
 
 			if ( flFallDamage > 0 )
 			{
-				TripOver();
+				// ReCoF (rc_hlmovement): Half-Life only takes the damage, without the fall over, the 0.8 s
+				// freeze, the halved speed and the view kick
+				if ( !RcHLMovementOn( edict() ) )
+					TripOver();
 				TakeDamage(VARS(eoNullEntity), VARS(eoNullEntity), flFallDamage, DMG_FALL );
 				pev->punchangle.x = 0;
 			}
