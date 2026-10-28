@@ -57,12 +57,19 @@ public:
 //-----------------------------------------------------------------------------
 class CMultiplayerAdvancedPage : public vgui2::PropertyPage, public CMultiplayerAdvanced
 {
+	DECLARE_CLASS_SIMPLE( CMultiplayerAdvancedPage, vgui2::PropertyPage );
+
 public:
 	CMultiplayerAdvancedPage( vgui2::Panel *parent );
 	~CMultiplayerAdvancedPage();
 
 	virtual void OnResetData();
 	virtual void OnApplyChanges();
+
+private:
+	// ReCoF (B297): a changed control turns on the Apply button
+	MESSAGE_FUNC( OnControlTextChanged, "TextChanged" );
+	MESSAGE_FUNC( OnControlChecked, "CheckButtonChecked" );
 };
 
 #endif // MULTIPLAYERADVANCEDDIALOG_H

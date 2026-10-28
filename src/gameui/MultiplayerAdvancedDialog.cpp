@@ -21,6 +21,7 @@
 #include <vgui_controls/Controls.h>
 #include <vgui_controls/Label.h>
 #include <vgui_controls/TextEntry.h>
+#include <vgui/KeyValues.h>
 
 using namespace vgui2;
 
@@ -42,6 +43,15 @@ CMultiplayerAdvancedPage::CMultiplayerAdvancedPage( vgui2::Panel *parent ) : Pro
 	CreateControls();
 
 	LoadControlSettings( "Resource\\MultiplayerAdvancedPage.res" );
+
+	// ReCoF (B297): each control sits inside an mpcontrol_t, a plain Panel that passes no message
+	// on, so no change reached the page and Apply never turned on. The page listens to the
+	// controls itself, from here on, once they hold their first values
+	for ( mpcontrol_t *p = m_pList; p; p = p->next )
+	{
+		if ( p->pControl )
+			p->pControl->AddActionSignalTarget( this );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -130,6 +140,22 @@ void CMultiplayerAdvancedPage::OnResetData()
 void CMultiplayerAdvancedPage::OnApplyChanges()
 {
 	SaveValues();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: ReCoF (B297): a list or a text box changed, turn on the Apply button
+//-----------------------------------------------------------------------------
+void CMultiplayerAdvancedPage::OnControlTextChanged()
+{
+	PostActionSignal( new KeyValues( "ApplyButtonEnable" ) );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: ReCoF (B297): a check box changed, turn on the Apply button
+//-----------------------------------------------------------------------------
+void CMultiplayerAdvancedPage::OnControlChecked()
+{
+	PostActionSignal( new KeyValues( "ApplyButtonEnable" ) );
 }
 
 //-----------------------------------------------------------------------------
