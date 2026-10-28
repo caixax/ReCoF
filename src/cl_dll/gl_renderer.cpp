@@ -97,6 +97,8 @@ extern	entity_t		*cl_visedicts[MAX_VISEDICTS];
 
 FrustumCheck viewFrustum;
 
+model_t *g_RcWorldModel = NULL;	// ReCoF (B295)
+
 
 // surface rendering
 void PrepareFirstPass();
@@ -552,8 +554,7 @@ void RecursiveDrawWorld (mnode_t *node)
 	c = node->numsurfaces;
 	if (c)
 	{
-		model_t *world = gEngfuncs.GetEntityByIndex(0)->model;
-		surf = world->surfaces + node->firstsurface;
+		surf = g_RcWorldModel->surfaces + node->firstsurface;	// ReCoF (B295)
 
 		if (dot < 0 -BACKFACE_EPSILON)
 			side = SURF_PLANEBACK;
@@ -672,6 +673,7 @@ void DrawBump()
 	// Current visframe number can be taken from leaf, where our eyes in.
 	// obvious, eh?
 	model_t *world = gEngfuncs.GetEntityByIndex(0)->model;
+	g_RcWorldModel = world;	// ReCoF (B295): both BSP walks read it from here
 	mleaf_t *leaf = Mod_PointInLeaf ( saved_view_orig, world );
 	curvisframe = leaf->visframe;
 	

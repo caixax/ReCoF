@@ -84,6 +84,10 @@ void DrawPolyFromArray (msurface_t *s);
 void DrawPolyFromArray (glpoly_t *p);
 
 
+// ReCoF (B295): the world model of the frame, so the two BSP walks do not ask the engine for it
+// at every node that holds surfaces. DrawBump sets it before anything reads it.
+extern model_t *g_RcWorldModel;
+
 extern vec3_t vec_to_eyes;
 
 extern vec3_t sky_origin;

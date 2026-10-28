@@ -817,8 +817,7 @@ void RecursiveDrawWorldLight (mnode_t *node)
 	int c = node->numsurfaces;
 	if (c)
 	{
-		model_t *world = gEngfuncs.GetEntityByIndex(0)->model;
-		msurface_t *surf = world->surfaces + node->firstsurface;
+		msurface_t *surf = g_RcWorldModel->surfaces + node->firstsurface;	// ReCoF (B295)
 
 		if (dot < 0 -BACKFACE_EPSILON)
 			side = SURF_PLANEBACK;
@@ -909,8 +908,7 @@ void DrawDynamicLights()
 		RcTexMatrixDirty();	// ReCoF (B292): the light setup moved the active unit and the matrices
 
 		// Draw world
-		model_t* world = gEngfuncs.GetEntityByIndex(0)->model;
-		RecursiveDrawWorldLight (world->nodes);
+		RecursiveDrawWorldLight (g_RcWorldModel->nodes);	// ReCoF (B295)
 
 		// Draw static entites
 		if (cv_entdynamiclight->value)
