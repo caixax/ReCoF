@@ -3095,8 +3095,10 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 	int					i;
 
 	// don't send if flagged for NODRAW and it's not the host getting the message
+	// ReCoF (rc_hlmovement): except a ladder box (CRcHLLadder), which client prediction climbs; the client
+	// engine does not draw EF_NODRAW entities
 	if ( ( ent->v.effects == EF_NODRAW ) &&
-		 ( ent != host ) )
+		 ( ent != host ) && ent->v.skin != CONTENTS_LADDER )
 		return 0;
 
 	// Ignore ents without valid / visible models

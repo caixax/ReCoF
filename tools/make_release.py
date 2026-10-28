@@ -84,9 +84,9 @@ NOTES
 
 NEW CONSOLE OPTIONS (default in brackets)
   rc_retail_gameplay [0]   1 = retail behavior of every balance fix
-  rc_hlmovement [0]        1 = Half-Life 1 movement as in WON (no stamina or sprint);
-                           turning it on sets rc_bhopcap 0, rc_ducktap 1 and
-                           rc_autojump 1, turning it off sets them back
+  rc_hlmovement [0]        1 = Half-Life 1 movement as in WON (no stamina or sprint,
+                           Half-Life ladders); turning it on sets rc_bhopcap 0,
+                           rc_ducktap 1 and rc_autojump 1, turning it off sets them back
   rc_bhopcap [1]           0 = no bunny hop speed cap
   rc_ducktap [0]           1 = Half-Life ducktap
   rc_infinite_stamina [0]  1 = stamina never runs out

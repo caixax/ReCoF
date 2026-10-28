@@ -31,6 +31,100 @@ extern int gmsgCameraZoom;
 
 bool wasqueuedtoreduceorigin;
 
+// ReCoF (rc_hlmovement): the movement mode as pm_shared sees it (the physinfo key, not the cvar)
+static bool RcHLMovementOn( edict_t *pEdict )
+{
+	return atoi( g_engfuncs.pfnGetPhysicsKeyValue( pEdict, "hlm" ) ) != 0;
+}
+
+//=========================================================
+// rc_hl_ladder - ReCoF (rc_hlmovement): in Half-Life movement a cof_ladder_manager is climbed like a
+// Half-Life ladder, without the camera animation. The manager adds this box over the ladder face, from its
+// bottom floor up to its top floor (RcSetupHLLadder), and pm_shared climbs it while physinfo "hlm" is set
+// (PM_InRcLadder). SOLID_NOT with skin CONTENTS_LADDER and a model makes the engine hand it to the movement
+// code as a ladder; its shape is in origin, angles and controller (see PM_IsRcLadder). It draws nothing
+// (EF_NODRAW), and AddToFullPack sends it all the same for client prediction
+//=========================================================
+class CRcHLLadder : public CBaseEntity
+{
+public:
+	virtual int ObjectCaps( void ) { return CBaseEntity::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+	virtual int Save( CSave &save );
+	virtual int Restore( CRestore &restore );
+	static TYPEDESCRIPTION m_SaveData[];
+	void EXPORT WatchThink( void );
+	BOOL Holds( CBaseEntity *pPlayer );
+
+	EHANDLE m_hManager;
+	EHANDLE m_hUse[2];		// the manager's use brushes
+	BOOL m_bClimbing;		// the player was on this ladder at the last think
+	float m_flClimbFrom;	// with the feet at this height when getting on
+};
+
+TYPEDESCRIPTION CRcHLLadder::m_SaveData[] =
+{
+	DEFINE_FIELD( CRcHLLadder, m_hManager, FIELD_EHANDLE ),
+	DEFINE_ARRAY( CRcHLLadder, m_hUse, FIELD_EHANDLE, 2 ),
+	DEFINE_FIELD( CRcHLLadder, m_bClimbing, FIELD_BOOLEAN ),
+	DEFINE_FIELD( CRcHLLadder, m_flClimbFrom, FIELD_FLOAT ),
+};
+
+IMPLEMENT_SAVERESTORE( CRcHLLadder, CBaseEntity );
+
+LINK_ENTITY_TO_CLASS( rc_hl_ladder, CRcHLLadder );
+
+// the test of PM_InRcLadder
+BOOL CRcHLLadder::Holds( CBaseEntity *pPlayer )
+{
+	Vector vecDelta = pPlayer->pev->origin - pev->origin;
+	Vector vecForward, vecRight;
+	float flHalfHeight = pev->controller[2] | ( pev->controller[3] << 8 );
+
+	UTIL_MakeVectorsPrivate( pev->angles, vecForward, vecRight, NULL );
+
+	return fabs( DotProduct( vecDelta, vecForward ) ) < pev->controller[0] + pPlayer->pev->maxs.x
+		&& fabs( DotProduct( vecDelta, vecRight ) ) < pev->controller[1] + pPlayer->pev->maxs.y
+		&& vecDelta.z + pPlayer->pev->maxs.z > -flHalfHeight && vecDelta.z + pPlayer->pev->mins.z < flHalfHeight;
+}
+
+void CRcHLLadder::WatchThink( void )
+{
+	// a map closes a ladder by removing its use brushes (c_down kills the top one); the box goes with them
+	if ( !m_hUse[0] && !m_hUse[1] )
+	{
+		UTIL_Remove( this );
+		return;
+	}
+
+	SetNextThink( 0.1 );
+
+	// the manager fires its target at the end of every climb (c_lobby's scare): fire it when the player gets
+	// off this ladder 48 or more units above or below where they got on
+	CBaseEntity *pManager = m_hManager;
+	CBaseEntity *pPlayer = UTIL_PlayerByIndex( 1 );
+
+	if ( !pManager || FStringNull( pManager->pev->target ) || !pPlayer )
+		return;
+
+	float flFeet = pPlayer->pev->origin.z + pPlayer->pev->mins.z;
+
+	if ( pPlayer->pev->movetype == MOVETYPE_FLY && Holds( pPlayer ) )
+	{
+		if ( !m_bClimbing )
+		{
+			m_bClimbing = TRUE;
+			m_flClimbFrom = flFeet;
+		}
+	}
+	else if ( m_bClimbing )
+	{
+		m_bClimbing = FALSE;
+
+		if ( fabs( flFeet - m_flClimbFrom ) >= 48 )
+			FireTargets( STRING( pManager->pev->target ), pPlayer, pPlayer, USE_TOGGLE, 0 );
+	}
+}
+
 class CCoFLadderManager : public CPointEntity
 {
 	virtual void Spawn( void );
@@ -66,6 +160,10 @@ class CCoFLadderManager : public CPointEntity
 	bool m_bGotOnButNotDescended;
 	int m_iNumAnimations;
 	int m_iCurrentAnimation;
+public:
+	void RcSetupHLLadder( void );
+	EHANDLE m_hRcLadder;		// ReCoF (rc_hlmovement): the Half-Life ladder (CRcHLLadder), when the ladder has one
+	BOOL m_bRcLadderChecked;	// ReCoF (rc_hlmovement): RcSetupHLLadder ran
 };
 
 TYPEDESCRIPTION CCoFLadderManager::m_SaveData[] =
@@ -93,6 +191,8 @@ TYPEDESCRIPTION CCoFLadderManager::m_SaveData[] =
 	DEFINE_FIELD( CCoFLadderManager, m_eBottomEnt, FIELD_EHANDLE ),
 	DEFINE_FIELD( CCoFLadderManager, m_sTopEnt, FIELD_STRING ),
 	DEFINE_FIELD( CCoFLadderManager, m_sBottomEnt, FIELD_STRING ),
+	DEFINE_FIELD( CCoFLadderManager, m_hRcLadder, FIELD_EHANDLE ),
+	DEFINE_FIELD( CCoFLadderManager, m_bRcLadderChecked, FIELD_BOOLEAN ),
 };
 
 IMPLEMENT_SAVERESTORE( CCoFLadderManager, CPointEntity );
@@ -476,6 +576,10 @@ void CCoFLadderManager::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 	if ( !pActivator->IsPlayer() )
 		return;
 
+	// ReCoF (rc_hlmovement): in Half-Life movement a ladder with a Half-Life ladder is climbed without the animation
+	if ( m_hRcLadder && RcHLMovementOn( pActivator->edict() ) )
+		return;
+
 	if ( m_pPlayer && m_pPlayer->pDeathScene && m_pPlayer->IsAlive() )
 		return;
 
@@ -768,6 +872,161 @@ void CCoFLadderManager::StartPreviousAnimation( void )
 }
 
 LINK_ENTITY_TO_CLASS( cof_ladder_manager, CCoFLadderManager );
+
+// ReCoF (rc_hlmovement): the height of the floor under a standing player's origin
+static float RcFloorBelow( const Vector &vecOrigin, edict_t *pentIgnore )
+{
+	TraceResult tr;
+
+	UTIL_TraceHull( vecOrigin, vecOrigin - Vector( 0, 0, 64 ), ignore_monsters, human_hull, pentIgnore, &tr );
+
+	return tr.vecEndPos.z - 36;
+}
+
+// ReCoF (rc_hlmovement): give this ladder its Half-Life ladder (CRcHLLadder) when a standing player fits up
+// the ladder face to a little above the top floor and from there to the top teleport target, the way the
+// animation takes the player. The use brushes stand on the face: they give its depth and width
+void CCoFLadderManager::RcSetupHLLadder( void )
+{
+	m_bRcLadderChecked = TRUE;
+
+	if ( !pev->model || !pev->targetname )
+		return;
+
+	Vector vecForward, vecRight;
+
+	UTIL_MakeVectorsPrivate( Vector( 0, pev->angles.y, 0 ), vecForward, vecRight, NULL );
+
+	CBaseEntity *pUse[2] = { NULL, NULL };
+	float flNear = 99999, flFar = -99999, flLeft = 99999, flRight = -99999, flUseTop = -99999;
+	CBaseEntity *pEnt = NULL;
+
+	while ( ( pEnt = UTIL_FindEntityByString( pEnt, "target", STRING( pev->targetname ) ) ) != NULL )
+	{
+		if ( !FClassnameIs( pEnt->pev, "cof_ladder_manager_use" ) )
+			continue;
+
+		if ( !pUse[0] )
+			pUse[0] = pEnt;
+		else if ( !pUse[1] )
+			pUse[1] = pEnt;
+
+		for ( int i = 0; i < 8; i++ )
+		{
+			Vector vecCorner = pEnt->pev->origin - pev->origin;
+
+			vecCorner.x += ( i & 1 ) ? pEnt->pev->maxs.x : pEnt->pev->mins.x;
+			vecCorner.y += ( i & 2 ) ? pEnt->pev->maxs.y : pEnt->pev->mins.y;
+			vecCorner.z += ( i & 4 ) ? pEnt->pev->maxs.z : pEnt->pev->mins.z;
+
+			flNear = min( flNear, DotProduct( vecCorner, vecForward ) );
+			flFar = max( flFar, DotProduct( vecCorner, vecForward ) );
+			flLeft = min( flLeft, DotProduct( vecCorner, vecRight ) );
+			flRight = max( flRight, DotProduct( vecCorner, vecRight ) );
+		}
+
+		flUseTop = max( flUseTop, pEnt->pev->origin.z + pEnt->pev->maxs.z );
+	}
+
+	if ( !pUse[0] )
+	{
+		ALERT( at_console, "ReCoF: ladder %s keeps the climb animation in Half-Life movement: no use brush\n", STRING( pev->targetname ) );
+		return;
+	}
+
+	// the floors at both ends: the manager stands on the bottom one (a ladder that ends above the floor keeps
+	// its drop), the top teleport target on the top one; without a target the top use brush ends 2 above it
+	CBaseEntity *pTop = m_sTopEnt ? UTIL_FindEntityByTargetname( NULL, STRING( m_sTopEnt ) ) : NULL;
+	float flBottom = pev->origin.z;
+	float flTop = pTop ? RcFloorBelow( pTop->pev->origin + Vector( 0, 0, 37 ), edict() ) : flUseTop - 2;
+
+	// the player climbs centred on the use brushes, 1 unit before the face, and the climb carries them about
+	// 25 above the top floor, over its edge
+	float flSide = ( flLeft + flRight ) / 2;
+	float flDepth = flNear - 17;
+	Vector vecColumn = pev->origin + vecForward * flDepth + vecRight * flSide;
+	Vector vecOver = Vector( vecColumn.x, vecColumn.y, flTop + 18 + 37 );
+	TraceResult tr;
+
+	UTIL_TraceHull( Vector( vecColumn.x, vecColumn.y, flBottom + 37 ), vecOver, ignore_monsters, human_hull, edict(), &tr );
+
+	if ( !tr.fStartSolid && !tr.fAllSolid && tr.flFraction == 1.0 && pTop )
+		UTIL_TraceHull( vecOver, Vector( pTop->pev->origin.x, pTop->pev->origin.y, vecOver.z ), ignore_monsters, human_hull, edict(), &tr );
+
+	if ( tr.fStartSolid || tr.fAllSolid || tr.flFraction < 1.0 )
+	{
+		ALERT( at_console, "ReCoF: ladder %s keeps the climb animation in Half-Life movement: blocked at %.0f %.0f %.0f\n", STRING( pev->targetname ), tr.vecEndPos.x, tr.vecEndPos.y, tr.vecEndPos.z );
+		return;
+	}
+
+	// the box: from 8 units past the climber's column to the back of the use brushes, as wide as they are, and
+	// from the bottom floor to the top floor (the half height rounds down, so it never ends above the floor):
+	// the climber leaves it as the feet pass the top floor, as on a Half-Life ladder
+	int iHalfDepth = (int)ceil( ( flFar - ( flDepth + 8 ) ) / 2 );
+	int iHalfWidth = (int)ceil( ( flRight - flLeft ) / 2 );
+	int iHalfHeight = (int)( ( flTop - flBottom ) / 2 );
+
+	if ( iHalfDepth < 1 || iHalfDepth > 255 || iHalfWidth < 1 || iHalfWidth > 255 || iHalfHeight < 16 )
+	{
+		ALERT( at_console, "ReCoF: ladder %s keeps the climb animation in Half-Life movement: size %d %d %d\n", STRING( pev->targetname ), iHalfDepth, iHalfWidth, iHalfHeight );
+		return;
+	}
+
+	// pm_shared finds the column again 8 units before the near side (PM_RcLadderHold); the centre is in whole
+	// units, which reach the client exactly
+	Vector vecCentre = pev->origin + vecForward * ( flDepth + 8 + iHalfDepth ) + vecRight * flSide;
+	vecCentre.x = floor( vecCentre.x + 0.5 );
+	vecCentre.y = floor( vecCentre.y + 0.5 );
+	vecCentre.z = floor( flBottom ) + iHalfHeight;
+
+	Vector vecExtent;
+	vecExtent.x = fabs( vecForward.x ) * iHalfDepth + fabs( vecRight.x ) * iHalfWidth;
+	vecExtent.y = fabs( vecForward.y ) * iHalfDepth + fabs( vecRight.y ) * iHalfWidth;
+	vecExtent.z = iHalfHeight;
+
+	CRcHLLadder *pLadder = (CRcHLLadder *)CBaseEntity::Create( "rc_hl_ladder", vecCentre, Vector( 0, pev->angles.y, 0 ) );
+
+	if ( !pLadder )
+		return;
+
+	pLadder->pev->solid = SOLID_NOT;
+	pLadder->pev->movetype = MOVETYPE_NONE;
+	pLadder->pev->skin = CONTENTS_LADDER;
+	pLadder->pev->effects = EF_NODRAW;
+	pLadder->pev->controller[0] = iHalfDepth;
+	pLadder->pev->controller[1] = iHalfWidth;
+	pLadder->pev->controller[2] = iHalfHeight & 255;
+	pLadder->pev->controller[3] = iHalfHeight >> 8;
+
+	SET_MODEL( pLadder->edict(), STRING( pev->model ) );
+	UTIL_SetSize( pLadder->pev, -vecExtent, vecExtent );
+	UTIL_SetOrigin( pLadder, vecCentre );
+
+	pLadder->m_hManager = this;
+	pLadder->m_hUse[0] = pUse[0];
+	pLadder->m_hUse[1] = pUse[1];
+	pLadder->SetThink( &CRcHLLadder::WatchThink );
+	pLadder->SetNextThink( 0.1 );
+
+	m_hRcLadder = pLadder;
+
+	ALERT( at_console, "ReCoF: ladder %s climbs as a Half-Life ladder in Half-Life movement, %.0f to %.0f\n", STRING( pev->targetname ), flBottom, vecCentre.z + iHalfHeight );
+}
+
+// ReCoF (rc_hlmovement): called by the player in Half-Life movement; sets up the ladders of the level that were
+// not looked at yet (a new level, a retail save, or a save from before Half-Life movement was on)
+void RcSetupHLLadders( void )
+{
+	CBaseEntity *pEnt = NULL;
+
+	while ( ( pEnt = UTIL_FindEntityByClassname( pEnt, "cof_ladder_manager" ) ) != NULL )
+	{
+		CCoFLadderManager *pManager = (CCoFLadderManager *)pEnt;
+
+		if ( !pManager->m_bRcLadderChecked )
+			pManager->RcSetupHLLadder();
+	}
+}
 
 
 class CCoFLadderManagerUse : public CBaseToggle

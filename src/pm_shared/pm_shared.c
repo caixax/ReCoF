@@ -91,6 +91,73 @@ static float PM_TimeToDuck( void )
 {
 	return PM_HLMovement() ? HL_TIME_TO_DUCK : TIME_TO_DUCK;
 }
+
+// ReCoF (rc_hlmovement): Cry of Fear climbs its own ladders with a camera animation (cof_ladder_manager) and
+// has no ladder brush there, so in Half-Life movement hl.dll gives each one an rc_hl_ladder: a box over the
+// ladder face that the Half-Life ladder code climbs. It has no brush model to trace, so its shape travels in
+// physent fields both sides fill: origin is the centre, angles[1] the yaw the climber faces, controller[0] and
+// [1] the half depth and half width, controller[2] and [3] the half height (low and high byte)
+static int PM_IsRcLadder( physent_t *pe )
+{
+	return pe->skin == CONTENTS_LADDER && ( !pe->model || (modtype_t)pmove->PM_GetModelType( pe->model ) == mod_studio );
+}
+
+static void PM_RcLadderAxes( physent_t *pe, vec3_t forward, vec3_t right )
+{
+	vec3_t angles;
+
+	VectorClear( angles );
+	angles[1] = pe->angles[1];	// yaw
+	AngleVectors( angles, forward, right, NULL );
+}
+
+// does the player's hull overlap the box (CRcHLLadder::Holds on the server is the same test)
+static int PM_InRcLadder( physent_t *pe )
+{
+	vec3_t forward, right, delta;
+	float halfheight = pe->controller[2] | ( pe->controller[3] << 8 );
+
+	PM_RcLadderAxes( pe, forward, right );
+	VectorSubtract( pmove->origin, pe->origin, delta );
+
+	if ( fabs( DotProduct( delta, forward ) ) >= pe->controller[0] + pmove->player_maxs[pmove->usehull][0] )
+		return 0;
+
+	if ( fabs( DotProduct( delta, right ) ) >= pe->controller[1] + pmove->player_maxs[pmove->usehull][1] )
+		return 0;
+
+	return delta[2] + pmove->player_maxs[pmove->usehull][2] > -halfheight && delta[2] + pmove->player_mins[pmove->usehull][2] < halfheight;
+}
+
+// the shaft of a Cry of Fear ladder is often only just wide enough for the player, so off the floor the climber is
+// held on the column the animation climbed: in the middle of the box's width, 8 units before its near side. Their
+// speed across the face and away from it steers them there, at most at the climb speed
+static void PM_RcLadderHold( physent_t *pe )
+{
+	vec3_t forward, right, column, delta;
+	float move;
+
+	if ( pmove->frametime <= 0 )
+		return;
+
+	PM_RcLadderAxes( pe, forward, right );
+	VectorMA( pe->origin, -( pe->controller[0] + 8 ), forward, column );
+	VectorSubtract( column, pmove->origin, delta );
+
+	move = DotProduct( delta, forward ) / pmove->frametime;
+	if ( move > HL_MAX_CLIMB_SPEED )
+		move = HL_MAX_CLIMB_SPEED;
+	else if ( move < -HL_MAX_CLIMB_SPEED )
+		move = -HL_MAX_CLIMB_SPEED;
+	VectorMA( pmove->velocity, move - DotProduct( pmove->velocity, forward ), forward, pmove->velocity );
+
+	move = DotProduct( delta, right ) / pmove->frametime;
+	if ( move > HL_MAX_CLIMB_SPEED )
+		move = HL_MAX_CLIMB_SPEED;
+	else if ( move < -HL_MAX_CLIMB_SPEED )
+		move = -HL_MAX_CLIMB_SPEED;
+	VectorMA( pmove->velocity, move - DotProduct( pmove->velocity, right ), right, pmove->velocity );
+}
 #define STUCK_MOVEUP 1
 #define STUCK_MOVEDOWN -1
 #define VEC_HULL_MIN		-36
@@ -2627,11 +2694,23 @@ void PM_LadderMove( physent_t *pLadder )
 	if ( pmove->movetype == MOVETYPE_NOCLIP )
 		return;
 
-	pmove->PM_GetModelBounds( pLadder->model, modelmins, modelmaxs );
+	// ReCoF (rc_hlmovement): a Cry of Fear ladder box (PM_IsRcLadder) has no model; its face looks at the climber
+	if ( PM_IsRcLadder( pLadder ) )
+	{
+		vec3_t right;
 
-	VectorAdd( modelmins, modelmaxs, ladderCenter );
-	VectorScale( ladderCenter, 0.5, ladderCenter );
-	VectorAdd( ladderCenter, pLadder->origin, ladderCenter ); //LRC- allow for ladders moving around
+		memset( &trace, 0, sizeof( trace ) );
+		PM_RcLadderAxes( pLadder, trace.plane.normal, right );
+		VectorScale( trace.plane.normal, -1, trace.plane.normal );
+	}
+	else
+	{
+		pmove->PM_GetModelBounds( pLadder->model, modelmins, modelmaxs );
+
+		VectorAdd( modelmins, modelmaxs, ladderCenter );
+		VectorScale( ladderCenter, 0.5, ladderCenter );
+		VectorAdd( ladderCenter, pLadder->origin, ladderCenter ); //LRC- allow for ladders moving around
+	}
 
 	pmove->movetype = MOVETYPE_FLY;
 
@@ -2646,7 +2725,8 @@ void PM_LadderMove( physent_t *pLadder )
 		onFloor = false;
 
 	pmove->gravity = 0;
-	pmove->PM_TraceModel( pLadder, pmove->origin, ladderCenter, &trace );
+	if ( !PM_IsRcLadder( pLadder ) )
+		pmove->PM_TraceModel( pLadder, pmove->origin, ladderCenter, &trace );
 	if ( trace.fraction != 1.0 )
 	{
 		float forward = 0, right = 0;
@@ -2730,6 +2810,10 @@ void PM_LadderMove( physent_t *pLadder )
 			{
 				VectorClear( pmove->velocity );
 			}
+
+			// ReCoF (rc_hlmovement): a Cry of Fear ladder holds the climber on its column
+			if ( PM_IsRcLadder( pLadder ) && !onFloor )
+				PM_RcLadderHold( pLadder );
 		}
 	}
 }
@@ -2746,6 +2830,15 @@ physent_t *PM_Ladder( void )
 	{
 		pe = &pmove->moveents[i];
 		
+		// ReCoF (rc_hlmovement): a Cry of Fear ladder box, climbed in Half-Life movement only
+		if ( PM_IsRcLadder( pe ) )
+		{
+			if ( PM_HLMovement() && PM_InRcLadder( pe ) )
+				return pe;
+
+			continue;
+		}
+
 		if ( pe->model && (modtype_t)pmove->PM_GetModelType( pe->model ) == mod_brush && pe->skin == CONTENTS_LADDER && pe->iuser1 != 1 )
 		{
 

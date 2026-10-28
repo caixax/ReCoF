@@ -23,7 +23,7 @@
       "default": "0",
       "group": "Movement",
       "label_en": "Half-Life 1 movement",
-      "desc_en": "Half-Life 1 physics as in the WON version: run speed 320, no sprint, dodge or stamina cost for jumps, no movement camera punches or fall over. Also turns the bunny hop cap off and ducktap and autojump on. A separate speedrun category."
+      "desc_en": "Half-Life 1 physics as in the WON version: run speed 320, no sprint, dodge or stamina cost for jumps, no movement camera punches or fall over, and the ladders are climbed as Half-Life ladders. Also turns the bunny hop cap off and ducktap and autojump on. A separate speedrun category."
     },
     {
       "name": "rc_bhopcap",

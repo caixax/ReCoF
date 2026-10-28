@@ -41,6 +41,8 @@ static bool RcHLMovementOn( edict_t *pEdict )
 	return atoi( g_engfuncs.pfnGetPhysicsKeyValue( pEdict, "hlm" ) ) != 0;
 }
 
+extern void RcSetupHLLadders( void );	// ReCoF (rc_hlmovement): CoF_Ladder.cpp
+
 #include "hltv.h"
 #include "effects.h" //LRC
 #include "movewith.h" //LRC
@@ -3981,6 +3983,15 @@ void CBasePlayer::PreThink(void)
 	// ReCoF (rc_hlmovement): the sprint key does nothing in Half-Life movement
 	if ( RcHLMovementOn( edict() ) )
 		pev->button &= ~IN_RUN;
+
+	// ReCoF (rc_hlmovement): Half-Life ladders for the Cry of Fear ladders of this level, twice a second (the
+	// level time starts again at every level, hence the second test)
+	static float s_flRcLadderScan = 0;
+	if ( RcHLMovementOn( edict() ) && ( gpGlobals->time >= s_flRcLadderScan || gpGlobals->time < s_flRcLadderScan - 1 ) )
+	{
+		s_flRcLadderScan = gpGlobals->time + 0.5;
+		RcSetupHLLadders();
+	}
 
 	RcSetPhysicsKey( edict(), "nbh", rc_bhopcap.value ? "0" : "1" );	// ReCoF (B131)
 	RcSetPhysicsKey( edict(), "dkt", rc_ducktap.value ? "1" : "0" );	// ReCoF (B132)
