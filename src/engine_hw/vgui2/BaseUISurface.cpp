@@ -73,6 +73,9 @@ extern "C" __declspec( dllimport ) const char *ISteamApps_GetCurrentGameLanguage
 extern cl_enginefunc_t gEngfuncs;
 extern cvar_t vgui_emulatemouse;
 
+bool VGuiWrap_GetWindowCursorPos( int &x, int &y );	// ReCoF (B298): vgui_intwrap.cpp
+void VGuiWrap_SetWindowCursorPos( int x, int y );
+
 static KeyCode s_pVirtualKeyToVGUI[256];
 
 static HCURSOR staticDefaultCursor[20];
@@ -339,6 +342,34 @@ void BaseUISurface::SetScreenBounds( int x, int y, int wide, int tall )
 	m_iSurfaceBounds[1] = y;
 	m_iSurfaceBounds[2] = wide;
 	m_iSurfaceBounds[3] = tall;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: ReCoF (B298): the cursor position for vgui2's input (GetCursorPosition, which the sliders
+//			drag with), from the game window's mouse messages as for VGUI1 (vgui_intwrap.cpp
+//			CDummyApp::getCursorPos). Without these functions vgui2 read GetCursorPos, which RInput
+//			replaces with raw mouse counts
+//-----------------------------------------------------------------------------
+void BaseUISurface::SurfaceGetCursorPos( int &x, int &y )
+{
+	if ( VGuiWrap_GetWindowCursorPos( x, y ) )
+		return;
+
+	// no mouse message yet: what vgui2 did without these functions
+	POINT pnt;
+	::GetCursorPos( &pnt );
+	x = pnt.x - m_iSurfaceBounds[0];
+	y = pnt.y - m_iSurfaceBounds[1];
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: ReCoF (B298): moves the cursor as vgui2 did without these functions, and keeps the position
+//			for SurfaceGetCursorPos right until the mouse message of the move comes in
+//-----------------------------------------------------------------------------
+void BaseUISurface::SurfaceSetCursorPos( int x, int y )
+{
+	::SetCursorPos( x + m_iSurfaceBounds[0], y + m_iSurfaceBounds[1] );
+	VGuiWrap_SetWindowCursorPos( x, y );
 }
 
 //-----------------------------------------------------------------------------

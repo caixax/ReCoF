@@ -93,6 +93,7 @@ EngineSurfaceWrap::EngineSurfaceWrap( Panel *embeddedPanel, IEngineSurface *engi
 	staticFontInfoVGUI = NULL;
 	staticFontInfoVGUIDar.setCount( 0 );
 	_cursorLocked = false;
+	_windowCursorValid = false;
 	staticContextCount++;
 
 	FileInputStream *fis = new FileInputStream( "cryoffear/gfx/vgui/mouse.tga", false );
@@ -231,6 +232,30 @@ EngineSurfaceWrap::~EngineSurfaceWrap()
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: ReCoF (B298): the cursor position the game window last reported, in client coordinates;
+//			false until the first mouse message
+//-----------------------------------------------------------------------------
+bool EngineSurfaceWrap::getWindowCursorPos( int &x, int &y )
+{
+	if ( !_windowCursorValid )
+		return false;
+
+	x = _windowCursorX;
+	y = _windowCursorY;
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: ReCoF (B298): a new cursor position, from a mouse message or from moving the cursor
+//-----------------------------------------------------------------------------
+void EngineSurfaceWrap::setWindowCursorPos( int x, int y )
+{
+	_windowCursorX = x;
+	_windowCursorY = y;
+	_windowCursorValid = true;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: passes a window message on to the VGUI1 app
 //-----------------------------------------------------------------------------
 void EngineSurfaceWrap::AppHandler( void *hwnd, unsigned int msg, unsigned int wparam, long lparam )
@@ -246,6 +271,7 @@ void EngineSurfaceWrap::AppHandler( void *hwnd, unsigned int msg, unsigned int w
 		surface->getPanel()->requestFocus();
 		break;
 	case WM_MOUSEMOVE:
+		setWindowCursorPos( (short)LOWORD( lparam ), (short)HIWORD( lparam ) );	// ReCoF (B298)
 		app->internalCursorMoved( (short)LOWORD( lparam ), (short)HIWORD( lparam ), surface );
 		break;
 	case WM_LBUTTONDOWN:

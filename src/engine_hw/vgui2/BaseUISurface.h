@@ -157,9 +157,10 @@ public:
 	virtual void GetProportionalBase( int &width, int &height ) { width = 640; height = 480; }
 	virtual void CalculateMouseVisible();
 	virtual bool NeedKBInput();
-	virtual bool HasCursorPosFunctions() { return false; }
-	virtual void SurfaceGetCursorPos( int &x, int &y ) {}
-	virtual void SurfaceSetCursorPos( int x, int y ) {}
+	// ReCoF (B298): retail had no cursor functions (false and two empty bodies), so vgui2 read GetCursorPos
+	virtual bool HasCursorPosFunctions() { return true; }
+	virtual void SurfaceGetCursorPos( int &x, int &y );
+	virtual void SurfaceSetCursorPos( int x, int y );
 
 	virtual bool VGUI2MouseControl() { return m_bVGUI2MouseControl; }
 	virtual void SetVGUI2MouseControl( bool state ) { m_bVGUI2MouseControl = state; }

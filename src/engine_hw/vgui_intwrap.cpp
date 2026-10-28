@@ -41,6 +41,10 @@ public:
 	{
 	}
 
+	// ReCoF (B298)
+	virtual void getCursorPos( int &x, int &y );
+	virtual void setCursorPos( int x, int y );
+
 protected:
 	virtual void platTick( void )
 	{
@@ -51,6 +55,53 @@ cvar_t vgui_emulatemouse = { "vgui_emulatemouse", "0" };
 
 static Panel *staticPanel;
 static EngineSurfaceWrap *staticEngineSurface;
+
+//-----------------------------------------------------------------------------
+// Purpose: ReCoF (B298): the cursor position from the game window's mouse messages. App took it from
+//			GetCursorPos, and on every tick it gives the mouse to the panel under that position.
+//			RInput and the tools like it replace GetCursorPos with the raw mouse counts the aim is read
+//			from, which never follow the cursor on screen, so the inventory, the padlock, the keypad and
+//			the other menus answered to a cursor somewhere else
+//-----------------------------------------------------------------------------
+void CDummyApp::getCursorPos( int &x, int &y )
+{
+	if ( staticPanel && staticEngineSurface && staticEngineSurface->getWindowCursorPos( x, y ) )
+	{
+		staticPanel->localToScreen( x, y );	// as App::internalCursorMoved does with the same position
+		return;
+	}
+
+	App::getCursorPos( x, y );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: ReCoF (B298): moves the cursor as App did, and keeps the position getCursorPos returns right
+//			until the mouse message of the move comes in
+//-----------------------------------------------------------------------------
+void CDummyApp::setCursorPos( int x, int y )
+{
+	App::setCursorPos( x, y );
+
+	if ( staticPanel && staticEngineSurface )
+	{
+		staticPanel->screenToLocal( x, y );
+		staticEngineSurface->setWindowCursorPos( x, y );
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: ReCoF (B298): the same position for the VGUI2 surface (BaseUISurface::SurfaceGetCursorPos)
+//-----------------------------------------------------------------------------
+bool VGuiWrap_GetWindowCursorPos( int &x, int &y )
+{
+	return staticEngineSurface && staticEngineSurface->getWindowCursorPos( x, y );
+}
+
+void VGuiWrap_SetWindowCursorPos( int x, int y )
+{
+	if ( staticEngineSurface )
+		staticEngineSurface->setWindowCursorPos( x, y );
+}
 
 void VGuiWrap_SetRootPanelSize( void )
 {

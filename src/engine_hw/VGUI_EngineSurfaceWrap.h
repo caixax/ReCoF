@@ -37,6 +37,10 @@ public:
 
 	virtual void AppHandler( void *hwnd, unsigned int msg, unsigned int wparam, long lparam );
 	virtual void setCursor( vgui::Cursor *cursor );
+
+	// ReCoF (B298): where the game window last put the cursor, in client coordinates
+	bool getWindowCursorPos( int &x, int &y );
+	void setWindowCursorPos( int x, int y );
 	virtual void lockCursor();
 	virtual void unlockCursor();
 
@@ -78,6 +82,9 @@ private:
 	vgui::BitmapTGA *_emulatedMouseImage;
 	IEngineSurface *_engineSurface;
 	bool _cursorLocked;
+	int _windowCursorX;			// ReCoF (B298): from the last WM_MOUSEMOVE
+	int _windowCursorY;
+	bool _windowCursorValid;
 };
 
 #endif // VGUI_ENGINESURFACEWRAP_H
