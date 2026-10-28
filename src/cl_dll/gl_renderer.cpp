@@ -77,6 +77,7 @@ cvar_t *cv_reducedlightcolour2_guess;
 cvar_t *cv_reducedlightcolour3_guess;
 cvar_t *cv_fullbrighttextures_guess;
 cvar_t *rc_modelarrays;	// ReCoF (B287): studio model strips through vertex arrays
+cvar_t *rc_dlightcull;	// ReCoF (B291): skip dynamic lights that cannot reach the screen
 
 int		norm_cubemap_id = 0;
 int		default_normalmap_id = 0;
@@ -1317,6 +1318,7 @@ void RendererInit()
 	cv_reducedlightcolour3_guess = gEngfuncs.pfnRegisterVariable( "cof_reducedlightcolour3","0.26", 0 );
 	cv_fullbrighttextures_guess = gEngfuncs.pfnRegisterVariable( "cof_fullbrighttextures","0.5", 0 );
 	rc_modelarrays = gEngfuncs.pfnRegisterVariable( "rc_modelarrays", "1", FCVAR_ARCHIVE );	// ReCoF (B287)
+	rc_dlightcull = gEngfuncs.pfnRegisterVariable( "rc_dlightcull", "1", FCVAR_ARCHIVE );	// ReCoF (B291)
 
 	gEngfuncs.pfnAddCommand ("dumptextures", DumpTextures);
 	gEngfuncs.pfnAddCommand ("dumplevel", DumpLevel);

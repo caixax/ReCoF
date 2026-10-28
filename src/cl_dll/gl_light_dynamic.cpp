@@ -46,6 +46,8 @@ static glpoly_t *chain; // for two-pass light rendering
 static int twopass = FALSE;
 static int texid; // current spot light texture id
 
+static int RcLightReachesView( DynamicLight *dl );	// ReCoF (B291), defined with HasDynamicLights
+
 extern cvar_t *cv_dyntwopass; // debug - force lights to draw in two pass
 
 
@@ -868,6 +870,9 @@ void DrawDynamicLights()
 		if (dl->die < time || !dl->radius)
 			continue;
 
+		if (!RcLightReachesView( dl ))	// ReCoF (B291): it cannot reach the screen
+			continue;
+
 		RcProf_Count( RCC_DLIGHTS );	// ReCoF
 		current_light = dl;
 		current_light_origin = current_light->origin;
@@ -1038,13 +1043,36 @@ void ResetDynamicLights()
 // Should return TRUE if we're going to draw some dynamic lighting in this frame -
 // renderer will separate lightmaps and material textures drawing
 //=====================================
+// ReCoF (B291): whether a live light can reach anything the player sees. A light whose sphere lies
+// outside the view frustum cannot light a visible surface, and it cannot light a visible model
+// either, because a model it reaches is inside the sphere and so inside the frustum with it. Retail
+// asked only whether a light was alive anywhere on the map, and one such light was enough to push
+// every normal surface of the first pass into the two pass path. The same test gates the light's own
+// world pass, so the flag and the drawing never disagree. rc_dlightcull 0 gives the retail answer.
+extern cvar_t *rc_dlightcull;	// gl_renderer.cpp
+
+static int RcLightReachesView( DynamicLight *dl )
+{
+	if (!rc_dlightcull || !rc_dlightcull->value)
+		return TRUE;
+
+	vec3_t mins, maxs;
+	for (int i = 0; i < 3; i++)
+	{
+		mins[i] = dl->origin[i] - dl->radius;
+		maxs[i] = dl->origin[i] + dl->radius;
+	}
+
+	return viewFrustum.R_CullBox( mins, maxs ) ? FALSE : TRUE;
+}
+
 int HasDynamicLights()
 {
 	float time = gEngfuncs.GetClientTime();
 	DynamicLight *dl = cl_dlights;
 	for (int i=0 ; i<MAX_DLIGHTS ; i++, dl++)
 	{
-		if (dl->die >= time && dl->radius)
+		if (dl->die >= time && dl->radius && RcLightReachesView( dl ))	// ReCoF (B291)
 			return TRUE;
 	}
 

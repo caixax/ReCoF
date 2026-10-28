@@ -106,6 +106,14 @@
       "desc_en": "Sends each model strip to the driver in one call. The picture is the same; off is the retail path, for comparison."
     },
     {
+      "name": "rc_dlightcull",
+      "type": "bool",
+      "default": "1",
+      "group": "Performance",
+      "label_en": "Skip lights off screen",
+      "desc_en": "A dynamic light that cannot reach anything on screen is not drawn and no longer makes the world draw twice. The picture is the same; off is the retail behaviour, for comparison."
+    },
+    {
       "name": "rc_prof",
       "type": "int",
       "default": "0",

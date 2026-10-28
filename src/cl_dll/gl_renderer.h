@@ -84,6 +84,8 @@ void DrawPolyFromArray (msurface_t *s);
 void DrawPolyFromArray (glpoly_t *p);
 
 
+extern FrustumCheck viewFrustum;	// ReCoF (B291): the frustum of the view, set in PrepareRenderer
+
 // ReCoF (B295): the world model of the frame, so the two BSP walks do not ask the engine for it
 // at every node that holds surfaces. DrawBump sets it before anything reads it.
 extern model_t *g_RcWorldModel;

@@ -96,6 +96,7 @@ NEW CONSOLE OPTIONS (default in brackets)
   rc_prof [0]              1 = frame time per renderer phase, 2 = plus GPU
   rc_prof_dump             prints the rc_prof numbers to the console
   rc_modelarrays [1]       0 = retail model drawing, for comparison
+  rc_dlightcull [1]        0 = retail, draw lights that cannot reach the screen
   rc_crosshair [1]         0 = no red crosshair (the ammo display stays)
   rc_cross [0]             1 = custom crosshair as BunnymodXT's bxt_cross, set by
                            rc_cross_color, _alpha, _thickness, _size, _gap,
