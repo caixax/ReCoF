@@ -75,6 +75,7 @@ enum {
 void SetTexEnvs(int env0, int env1 = ENVSTATE_OFF, int env2 = ENVSTATE_OFF, int env3 = ENVSTATE_OFF);
 void Bind2DTexture(GLenum texture, GLuint id);
 void ResetCache();
+void RcTexMatrixDirty();	// ReCoF (B292): forget the cached texture matrices
 
 
 // polygon rendering

@@ -869,6 +869,7 @@ public:
 		if (gl.IsGLAllowed() && gl.ARB_multitexture_supported)
 		{
 			gl.glPushAttrib(GL_ALL_ATTRIB_BITS);
+			RcTexMatrixDirty();	// ReCoF (B292): this saver pushes the texture matrices itself
 
 			do_this = TRUE;
 			gl.glGetIntegerv(GL_ACTIVE_TEXTURE_ARB, &activeTU);
@@ -932,6 +933,7 @@ public:
 		if (do_this)
 		{
 			gl.glPopAttrib();
+			RcTexMatrixDirty();	// ReCoF (B292): this saver pops the texture matrices itself
 
 			gl.glActiveTextureARB( GL_TEXTURE0_ARB );
 			if (TU1tex2dEnable) gl.glEnable(GL_TEXTURE_2D);

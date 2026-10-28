@@ -302,6 +302,46 @@ texture_t *R_TextureAnimation (texture_t *base)
 }
 
 //===============
+// Texture matrix cache (ReCoF, B292)
+//
+// The texture matrix of a unit was reloaded for every surface although it almost never changes:
+// the first pass loaded the identity into unit 2 for each bumped surface and the second pass loaded
+// the same detail scale for each surface of a texture chain. texmatrix says what each unit holds, so
+// SetTextureMatrix can skip the call, and texmatrixsel says which unit is selected with the matrix
+// mode already on GL_TEXTURE, so SetupTexMatrix issues the glLoadMatrixf alone while the light pass
+// stays on one unit. Code that moves the active unit or loads a texture matrix without these helpers
+// calls RcTexMatrixDirty, and ResetCache forgets everything.
+//===============
+static struct
+{
+	int		known;
+	int		xscale;
+	int		yscale;
+} texmatrix[4];
+
+static int texmatrixsel = -1;	// unit selected with the matrix mode on GL_TEXTURE, -1 when not known
+
+void RcTexMatrixDirty()
+{
+	for (int i = 0; i < 4; i++)
+		texmatrix[i].known = FALSE;
+
+	texmatrixsel = -1;
+}
+
+// selects the texture matrix of a unit, without repeating the two calls in front of the load
+static void RcTexMatrixSelect(int unit)
+{
+	if (texmatrixsel == unit)
+		return;
+
+	gl.glActiveTextureARB(unit + GL_TEXTURE0_ARB);
+	gl.glMatrixMode(GL_TEXTURE);
+	texmatrixsel = unit;
+}
+
+
+//===============
 // 2D texture binding cache
 //===============
 static GLuint currentbinds[16];
@@ -314,6 +354,7 @@ void Bind2DTexture(GLenum texture, GLuint id)
 		gl.glActiveTextureARB( texture );
 		gl.glBindTexture(GL_TEXTURE_2D, id);
 		currentbinds[idx] = id;
+		texmatrixsel = -1;	// ReCoF (B292): the active unit moved
 	}
 }
 
@@ -433,6 +474,8 @@ void SetTexEnv_Internal(int env)
 	
 void SetTexEnvs(int env0, int env1, int env2, int env3)
 {
+	texmatrixsel = -1;	// ReCoF (B292): the branches below move the active unit
+
 	if (envstates[0] != env0) {
 		gl.glActiveTextureARB( GL_TEXTURE0_ARB );
 		SetTexEnv_Internal(env0);
@@ -513,6 +556,8 @@ void ResetCache()
 		envstates[i] = ENVSTATE_NOSTATE;
 		texpointer[i] = TC_NOSTATE;
 	}
+
+	RcTexMatrixDirty();	// ReCoF (B292)
 }
 
 
@@ -521,6 +566,11 @@ void ResetCache()
 //
 void SetTextureMatrix(int unit, int xscale, int yscale)
 {
+	// ReCoF (B292): the same matrix is asked for again and again, so load it only when it changed
+	int cached = (unit >= 0 && unit < 4);
+	if (cached && texmatrix[unit].known && texmatrix[unit].xscale == xscale && texmatrix[unit].yscale == yscale)
+		return;
+
 	gl.glActiveTextureARB(unit + GL_TEXTURE0_ARB);
 	gl.glMatrixMode(GL_TEXTURE);
 	gl.glLoadIdentity();
@@ -528,6 +578,14 @@ void SetTextureMatrix(int unit, int xscale, int yscale)
 		gl.glScalef(xscale, yscale, 1.0);
 	
 	gl.glMatrixMode(GL_MODELVIEW);
+
+	texmatrixsel = -1;	// ReCoF (B292): the mode went back to GL_MODELVIEW
+	if (cached)
+	{
+		texmatrix[unit].known = TRUE;
+		texmatrix[unit].xscale = xscale;
+		texmatrix[unit].yscale = yscale;
+	}
 }
 
 ExtTextureData* GetExtTexData (texture_t *tex)
@@ -1038,9 +1096,9 @@ void SetupTexMatrix_Reflected( msurface_t *s, const vec3_t &vec )
 	m[3] = m[7] = m[11] = 0;
 	m[15] = 1;
 
-	gl.glActiveTextureARB(GL_TEXTURE0_ARB);
-	gl.glMatrixMode(GL_TEXTURE);
+	RcTexMatrixSelect(0);	// ReCoF (B292): the unit and the matrix mode do not change per surface
 	gl.glLoadMatrixf(m);
+	texmatrix[0].known = FALSE;
 }
 
 void SetupTexMatrix( msurface_t *s, const vec3_t &vec )
@@ -1064,9 +1122,9 @@ void SetupTexMatrix( msurface_t *s, const vec3_t &vec )
 	m[3] = m[7] = m[11] = 0;
 	m[15] = 1;
 
-	gl.glActiveTextureARB(GL_TEXTURE0_ARB);
-	gl.glMatrixMode(GL_TEXTURE);
+	RcTexMatrixSelect(0);	// ReCoF (B292): the unit and the matrix mode do not change per surface
 	gl.glLoadMatrixf(m);
+	texmatrix[0].known = FALSE;
 }
 
 //
@@ -1253,6 +1311,7 @@ void RenderSpecular()
 	gl.glMatrixMode(GL_TEXTURE);
 	gl.glLoadIdentity();
 	gl.glMatrixMode(GL_MODELVIEW);
+	RcTexMatrixDirty();	// ReCoF (B292): loaded without the helper
 
 	gl.glDisable(GL_BLEND);
 	gl.glDepthMask(GL_TRUE);

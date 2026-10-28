@@ -139,6 +139,7 @@ void DisableProjection()
 	gl.glMatrixMode(GL_TEXTURE);
 	gl.glLoadIdentity();
 	gl.glMatrixMode(GL_MODELVIEW);
+	RcTexMatrixDirty();	// ReCoF (B292): loaded without the helper
 	gl.glDisable(GL_TEXTURE_GEN_S);
 	gl.glDisable(GL_TEXTURE_GEN_T);
 	gl.glDisable(GL_TEXTURE_GEN_R);
@@ -396,6 +397,7 @@ void FinishSpotLight()
 	gl.glMatrixMode(GL_TEXTURE);
 	gl.glLoadIdentity();
 	gl.glMatrixMode(GL_MODELVIEW);
+	RcTexMatrixDirty();	// ReCoF (B292): loaded without the helper
 
 	if (twopass)
 	{
@@ -453,6 +455,7 @@ void FinishPointLight()
 	gl.glMatrixMode(GL_TEXTURE);
 	gl.glLoadIdentity();
 	gl.glMatrixMode(GL_MODELVIEW);
+	RcTexMatrixDirty();	// ReCoF (B292): loaded without the helper
 
 	if (twopass)
 	{
@@ -902,6 +905,8 @@ void DrawDynamicLights()
 			if (!SetupPointLight())
 				continue;
 		}
+
+		RcTexMatrixDirty();	// ReCoF (B292): the light setup moved the active unit and the matrices
 
 		// Draw world
 		model_t* world = gEngfuncs.GetEntityByIndex(0)->model;
