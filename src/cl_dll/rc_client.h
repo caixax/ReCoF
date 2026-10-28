@@ -12,7 +12,7 @@ void RcClient_CreateMove( struct usercmd_s *cmd );
 // rc_hlmovement: 1 when the server runs Half-Life 1 movement (physinfo "hlm", the key pm_shared reads)
 int RcHLMovement( void );
 
-// the movement mode tag and the speedometer (called from CHud::Redraw)
+// the custom crosshair, the movement mode tag and the speedometer (called from CHud::Redraw)
 void RcClient_Redraw( float flTime, int intermission );
 
 // rc_crosshair: 0 hides the Cry of Fear crosshair (asked by CHudAmmo::Draw)

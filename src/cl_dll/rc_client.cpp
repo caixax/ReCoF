@@ -14,6 +14,8 @@
 #include "rc_client.h"
 #include "rc_prof.h"
 #include "glmanager.h"
+#include "vgui_TeamFortressViewport.h"
+#include "Scope_guess.h"
 
 #include <stdio.h>
 #include <windows.h>
@@ -52,6 +54,20 @@ static cvar_t		*rc_viewmodel_ofs_right;
 static cvar_t		*rc_viewmodel_ofs_up;
 static float		s_flViewmodelOfsScale = 1;	// viewmodel offsets: eased to 0 in iron sights
 static cvar_t		*rc_crosshair;
+static cvar_t		*rc_cross;
+static cvar_t		*rc_cross_color;
+static cvar_t		*rc_cross_alpha;
+static cvar_t		*rc_cross_thickness;
+static cvar_t		*rc_cross_size;
+static cvar_t		*rc_cross_gap;
+static cvar_t		*rc_cross_outline;
+static cvar_t		*rc_cross_circle_radius;
+static cvar_t		*rc_cross_dot_color;
+static cvar_t		*rc_cross_dot_size;
+static cvar_t		*rc_cross_top_line;
+static cvar_t		*rc_cross_bottom_line;
+static cvar_t		*rc_cross_left_line;
+static cvar_t		*rc_cross_right_line;
 
 //-----------------------------------------------------------------------------
 // Where this build keeps the values the LiveSplit autosplitter reads from client.dll, so a script can
@@ -112,6 +128,20 @@ void RcClient_Init( void )
 	rc_viewmodel_ofs_up = gEngfuncs.pfnRegisterVariable( "rc_viewmodel_ofs_up", "0", FCVAR_ARCHIVE );
 
 	rc_crosshair = gEngfuncs.pfnRegisterVariable( "rc_crosshair", "1", FCVAR_ARCHIVE );
+	rc_cross = gEngfuncs.pfnRegisterVariable( "rc_cross", "0", FCVAR_ARCHIVE );
+	rc_cross_color = gEngfuncs.pfnRegisterVariable( "rc_cross_color", "0 255 0", FCVAR_ARCHIVE );
+	rc_cross_alpha = gEngfuncs.pfnRegisterVariable( "rc_cross_alpha", "255", FCVAR_ARCHIVE );
+	rc_cross_thickness = gEngfuncs.pfnRegisterVariable( "rc_cross_thickness", "2", FCVAR_ARCHIVE );
+	rc_cross_size = gEngfuncs.pfnRegisterVariable( "rc_cross_size", "10", FCVAR_ARCHIVE );
+	rc_cross_gap = gEngfuncs.pfnRegisterVariable( "rc_cross_gap", "3", FCVAR_ARCHIVE );
+	rc_cross_outline = gEngfuncs.pfnRegisterVariable( "rc_cross_outline", "0", FCVAR_ARCHIVE );
+	rc_cross_circle_radius = gEngfuncs.pfnRegisterVariable( "rc_cross_circle_radius", "0", FCVAR_ARCHIVE );
+	rc_cross_dot_color = gEngfuncs.pfnRegisterVariable( "rc_cross_dot_color", "", FCVAR_ARCHIVE );
+	rc_cross_dot_size = gEngfuncs.pfnRegisterVariable( "rc_cross_dot_size", "0", FCVAR_ARCHIVE );
+	rc_cross_top_line = gEngfuncs.pfnRegisterVariable( "rc_cross_top_line", "1", FCVAR_ARCHIVE );
+	rc_cross_bottom_line = gEngfuncs.pfnRegisterVariable( "rc_cross_bottom_line", "1", FCVAR_ARCHIVE );
+	rc_cross_left_line = gEngfuncs.pfnRegisterVariable( "rc_cross_left_line", "1", FCVAR_ARCHIVE );
+	rc_cross_right_line = gEngfuncs.pfnRegisterVariable( "rc_cross_right_line", "1", FCVAR_ARCHIVE );
 
 	RcProf_Init();
 }
@@ -187,12 +217,181 @@ static void RcDrawCentered( int x, int y, const char *text, const float *color )
 }
 
 //-----------------------------------------------------------------------------
-// called from CHud::Redraw: the movement mode tag and the speedometer
+// rc_cross: a crosshair set up by console variables, as BunnymodXT's bxt_cross: four lines around a gap, a dot
+// and a circle, each with an optional black outline. It is drawn with alpha blending in OpenGL, since FillRGBA
+// adds its color and cannot draw dark ones. It shows with or without a weapon and hides where the Cry of Fear
+// crosshair does: with the HUD, in cutscenes, in iron sights and in a scope
+//-----------------------------------------------------------------------------
+static void RcCrossColor( const char *text, int *color )
+{
+	int r, g, b;
+
+	if ( sscanf( text, "%d %d %d", &r, &g, &b ) == 3 )
+	{
+		color[0] = r;
+		color[1] = g;
+		color[2] = b;
+	}
+}
+
+static void RcCrossRect( float x0, float y0, float x1, float y1, float grow )
+{
+	gl.glVertex3f( x0 - grow, y0 - grow, 0 );
+	gl.glVertex3f( x1 + grow, y0 - grow, 0 );
+	gl.glVertex3f( x1 + grow, y1 + grow, 0 );
+	gl.glVertex3f( x0 - grow, y1 + grow, 0 );
+}
+
+static void RcCrossRing( float cx, float cy, float inner, float outer )
+{
+	int segments = (int)( outer * 1.5 );
+
+	if ( segments < 16 )
+		segments = 16;
+	else if ( segments > 180 )
+		segments = 180;
+
+	if ( inner < 0 )
+		inner = 0;
+
+	gl.glBegin( GL_TRIANGLE_STRIP );
+
+	for ( int i = 0; i <= segments; i++ )
+	{
+		float a = i * 2 * M_PI / segments;
+
+		gl.glVertex3f( cx + cos( a ) * outer, cy + sin( a ) * outer, 0 );
+		gl.glVertex3f( cx + cos( a ) * inner, cy + sin( a ) * inner, 0 );
+	}
+
+	gl.glEnd();
+}
+
+static void RcDrawCross( void )
+{
+	if ( !rc_cross->value || !gl.IsGLAllowed() || !gHUD.m_pCvarDraw->value )
+		return;
+
+	if ( gHUD.m_fPlayerDead || ( gHUD.m_iHideHUDDisplay & ( HIDEHUD_WEAPONS | HIDEHUD_ALL | HIDEHUD_HEALTH ) ) || g_iVisibleMouse )
+		return;
+
+	// a cutscene, the view on another entity, iron sights or a scope
+	if ( gHUD.m_BlackBar_guess.m_iOn_guess || IsViewEntityActive_guess() || gHUD.m_bIronSights_guess ||
+		( gViewPort && gViewPort->m_pScope_guess && gViewPort->m_pScope_guess->m_iScope_guess ) )
+		return;
+
+	int color[3] = { 0, 255, 0 };
+	RcCrossColor( rc_cross_color->string, color );
+
+	int dot[3] = { color[0], color[1], color[2] };
+	RcCrossColor( rc_cross_dot_color->string, dot );
+
+	int alpha = (int)rc_cross_alpha->value;
+	alpha = alpha < 0 ? 0 : ( alpha > 255 ? 255 : alpha );
+
+	float cx = ScreenWidth / 2;
+	float cy = ScreenHeight / 2;
+	float half = rc_cross_thickness->value / 2;
+	float size = rc_cross_size->value;
+	float gap = rc_cross_gap->value;
+	float outline = rc_cross_outline->value > 0 ? rc_cross_outline->value : 0;
+	float dothalf = rc_cross_dot_size->value / 2;
+	float radius = rc_cross_circle_radius->value;
+
+	// the lines, top, bottom, left and right
+	float lines[4][4];
+	int count = 0;
+
+	if ( half > 0 && size > 0 )
+	{
+		if ( rc_cross_top_line->value )
+		{
+			lines[count][0] = cx - half; lines[count][1] = cy - gap - size; lines[count][2] = cx + half; lines[count][3] = cy - gap;
+			count++;
+		}
+
+		if ( rc_cross_bottom_line->value )
+		{
+			lines[count][0] = cx - half; lines[count][1] = cy + gap; lines[count][2] = cx + half; lines[count][3] = cy + gap + size;
+			count++;
+		}
+
+		if ( rc_cross_left_line->value )
+		{
+			lines[count][0] = cx - gap - size; lines[count][1] = cy - half; lines[count][2] = cx - gap; lines[count][3] = cy + half;
+			count++;
+		}
+
+		if ( rc_cross_right_line->value )
+		{
+			lines[count][0] = cx + gap; lines[count][1] = cy - half; lines[count][2] = cx + gap + size; lines[count][3] = cy + half;
+			count++;
+		}
+	}
+
+	GLboolean bAlphaTest = gl.glIsEnabled( GL_ALPHA_TEST );
+
+	gl.glDisable( GL_TEXTURE_2D );
+	gl.glDisable( GL_ALPHA_TEST );
+	gl.glEnable( GL_BLEND );
+	gl.glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+	gl.glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+	// the outlines first, under everything
+	if ( outline > 0 )
+	{
+		gl.glColor4ub( 0, 0, 0, alpha );
+
+		if ( radius > 0 && half > 0 )
+			RcCrossRing( cx, cy, radius - half - outline, radius + half + outline );
+
+		gl.glBegin( GL_QUADS );
+
+		for ( int i = 0; i < count; i++ )
+			RcCrossRect( lines[i][0], lines[i][1], lines[i][2], lines[i][3], outline );
+
+		if ( dothalf > 0 )
+			RcCrossRect( cx - dothalf, cy - dothalf, cx + dothalf, cy + dothalf, outline );
+
+		gl.glEnd();
+	}
+
+	gl.glColor4ub( color[0], color[1], color[2], alpha );
+
+	if ( radius > 0 && half > 0 )
+		RcCrossRing( cx, cy, radius - half, radius + half );
+
+	gl.glBegin( GL_QUADS );
+
+	for ( int i = 0; i < count; i++ )
+		RcCrossRect( lines[i][0], lines[i][1], lines[i][2], lines[i][3], 0 );
+
+	if ( dothalf > 0 )
+	{
+		gl.glColor4ub( dot[0], dot[1], dot[2], alpha );
+		RcCrossRect( cx - dothalf, cy - dothalf, cx + dothalf, cy + dothalf, 0 );
+	}
+
+	gl.glEnd();
+
+	// what FillRGBA leaves behind
+	gl.glColor4ub( 255, 255, 255, 255 );
+	gl.glEnable( GL_TEXTURE_2D );
+	gl.glDisable( GL_BLEND );
+
+	if ( bAlphaTest )
+		gl.glEnable( GL_ALPHA_TEST );
+}
+
+//-----------------------------------------------------------------------------
+// called from CHud::Redraw: the custom crosshair, the movement mode tag and the speedometer
 //-----------------------------------------------------------------------------
 void RcClient_Redraw( float flTime, int intermission )
 {
 	if ( intermission || !rc_speedometer )
 		return;
+
+	RcDrawCross();
 
 	// the tag keeps runs in Half-Life movement visible
 	if ( RcHLMovement() )

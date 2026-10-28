@@ -124,6 +124,92 @@
       "desc_en": "Off hides the red crosshair and keeps the ammo display."
     },
     {
+      "name": "rc_cross",
+      "type": "bool",
+      "default": "0",
+      "group": "Crosshair",
+      "label_en": "Custom crosshair",
+      "desc_en": "A crosshair set up by these options, as BunnymodXT's bxt_cross. Shows with or without a weapon."
+    },
+    {
+      "name": "rc_cross_color",
+      "type": "text",
+      "default": "0 255 0",
+      "group": "Crosshair",
+      "label_en": "Custom crosshair color",
+      "desc_en": "Red, green and blue, 0 to 255 each."
+    },
+    {
+      "name": "rc_cross_alpha",
+      "type": "int",
+      "default": "255",
+      "min": 0,
+      "max": 255,
+      "group": "Crosshair",
+      "label_en": "Custom crosshair opacity",
+      "desc_en": "0 is invisible, 255 solid."
+    },
+    {
+      "name": "rc_cross_size",
+      "type": "int",
+      "default": "10",
+      "min": 0,
+      "max": 200,
+      "group": "Crosshair",
+      "label_en": "Custom crosshair line length",
+      "desc_en": "In pixels."
+    },
+    {
+      "name": "rc_cross_gap",
+      "type": "int",
+      "default": "3",
+      "min": 0,
+      "max": 100,
+      "group": "Crosshair",
+      "label_en": "Custom crosshair gap",
+      "desc_en": "From the middle of the screen to each line, in pixels."
+    },
+    {
+      "name": "rc_cross_thickness",
+      "type": "int",
+      "default": "2",
+      "min": 0,
+      "max": 50,
+      "group": "Crosshair",
+      "label_en": "Custom crosshair thickness",
+      "desc_en": "Of the lines and the circle, in pixels."
+    },
+    {
+      "name": "rc_cross_outline",
+      "type": "int",
+      "default": "0",
+      "min": 0,
+      "max": 20,
+      "group": "Crosshair",
+      "label_en": "Custom crosshair outline",
+      "desc_en": "A black border of this width, in pixels. 0 has none."
+    },
+    {
+      "name": "rc_cross_dot_size",
+      "type": "int",
+      "default": "0",
+      "min": 0,
+      "max": 50,
+      "group": "Crosshair",
+      "label_en": "Custom crosshair dot",
+      "desc_en": "A square dot in the middle, in pixels. 0 has none."
+    },
+    {
+      "name": "rc_cross_circle_radius",
+      "type": "int",
+      "default": "0",
+      "min": 0,
+      "max": 200,
+      "group": "Crosshair",
+      "label_en": "Custom crosshair circle",
+      "desc_en": "A circle of this radius, in pixels. 0 has none."
+    },
+    {
       "name": "rc_viewmodel_fov",
       "type": "int",
       "default": "0",

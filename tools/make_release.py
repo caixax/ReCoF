@@ -97,6 +97,10 @@ NEW CONSOLE OPTIONS (default in brackets)
   rc_prof_dump             prints the rc_prof numbers to the console
   rc_modelarrays [1]       0 = retail model drawing, for comparison
   rc_crosshair [1]         0 = no red crosshair (the ammo display stays)
+  rc_cross [0]             1 = custom crosshair as BunnymodXT's bxt_cross, set by
+                           rc_cross_color, _alpha, _thickness, _size, _gap,
+                           _outline, _circle_radius, _dot_color, _dot_size,
+                           _top_line, _bottom_line, _left_line, _right_line
   rc_viewmodel_fov [0]     field of view of the weapon model (0 = the view's)
   rc_viewmodel_ofs_forward, rc_viewmodel_ofs_right, rc_viewmodel_ofs_up [0]
                            move the weapon model, in units
