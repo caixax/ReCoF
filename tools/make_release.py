@@ -93,7 +93,9 @@ NEW CONSOLE OPTIONS (default in brackets)
   rc_infinite_stamina [0]  1 = stamina never runs out
   +rc_ducktap, rc_autojump [0], rc_ducktap_priority [1], rc_jump_priority [0]
   rc_speedometer [0] (and rc_speedometer_jump, _3d, _pos, _color)
-  rc_rawinput [1]          raw mouse input, no Windows acceleration
+  rc_rawinput [2]          raw mouse input, no Windows acceleration: 2 = read on a
+                           thread of its own as RInput does, 1 = read on the game
+                           window, 0 = retail
   rc_prof [0]              1 = frame time per renderer phase, 2 = plus GPU
   rc_prof_dump             prints the rc_prof numbers to the console
   rc_modelarrays [1]       0 = retail model drawing, for comparison

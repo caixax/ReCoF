@@ -44,12 +44,15 @@ static int			s_bDucktapReleased;	// +rc_ducktap released duck on the frame befor
 static vec3_t		s_vecLastVelocity;	// speedometer: the velocity of the frame before
 static int			s_iJumpSpeed;		// speedometer: the speed at the last takeoff
 static cvar_t		*rc_rawinput;
-static HWND			s_hRawWnd;			// raw input: the game window, once hooked
-static WNDPROC		s_pfnRawOldProc;	// raw input: the engine's window procedure
-static int			s_bRawFailed;		// raw input: the window or the registration failed
-static int			s_bRawTaken;		// raw input: the game window has the raw mouse
+static HWND			s_hRawWnd;			// raw input 1: the game window, once hooked
+static WNDPROC		s_pfnRawOldProc;	// raw input 1: the engine's window procedure
+static HANDLE		s_hRawThread;		// raw input 2: the input thread
+static DWORD		s_dwRawThreadId;
+static HWND volatile	s_hRawThreadWnd;	// raw input 2: the thread's window, once it has the raw mouse
+static int			s_iRawMode;			// raw input: the mode whose window was given the raw mouse, 0 for none
+static int			s_bRawFailed;		// raw input: a window, the thread or the registration failed
 static int			s_bRawRInput;		// raw input: RInput.dll is loaded and has the raw mouse
-static int			s_iRawDX, s_iRawDY;	// raw input: mouse counts since the last mouse move
+static volatile LONG	s_lRawDX, s_lRawDY;	// raw input: mouse counts since the last mouse move
 static cvar_t		*rc_viewmodel_fov;
 static cvar_t		*rc_viewmodel_ofs_forward;
 static cvar_t		*rc_viewmodel_ofs_right;
@@ -122,7 +125,7 @@ void RcClient_Init( void )
 	rc_speedometer_pos = gEngfuncs.pfnRegisterVariable( "rc_speedometer_pos", ".5 .9", FCVAR_ARCHIVE );
 	rc_speedometer_color = gEngfuncs.pfnRegisterVariable( "rc_speedometer_color", "255 255 255", FCVAR_ARCHIVE );
 
-	rc_rawinput = gEngfuncs.pfnRegisterVariable( "rc_rawinput", "1", FCVAR_ARCHIVE );
+	rc_rawinput = gEngfuncs.pfnRegisterVariable( "rc_rawinput", "2", FCVAR_ARCHIVE );
 
 	rc_viewmodel_fov = gEngfuncs.pfnRegisterVariable( "rc_viewmodel_fov", "0", FCVAR_ARCHIVE );
 	rc_viewmodel_ofs_forward = gEngfuncs.pfnRegisterVariable( "rc_viewmodel_ofs_forward", "0", FCVAR_ARCHIVE );
@@ -532,23 +535,41 @@ void RcViewmodelFovEnd( int on )
 
 //-----------------------------------------------------------------------------
 // B184 rc_rawinput: raw mouse counts (WM_INPUT) instead of the cursor movement, which Windows accelerates
-// and which the game forced to "enhance pointer precision". The game window's procedure belongs to the
-// engine, so the client chains its own in front of it the first time the mouse moves in game.
+// and which the game forced to "enhance pointer precision".
+// 1 reads them on the game window. Its procedure belongs to the engine, so the client chains its own in
+// front of it the first time the mouse moves in game, and the counts come in when the engine reads its
+// window messages, once a frame.
+// 2 reads them the way RInput does: a thread of its own, with a window of its own, adds up each count as
+// it arrives, and the mouse move takes everything that came in up to that moment.
 //-----------------------------------------------------------------------------
+#define RC_RAW_TAKE		( WM_APP + 1 )	// rc_rawinput 2: the input thread takes the raw mouse
+
+extern "C" IMAGE_DOS_HEADER __ImageBase;	// client.dll's module handle, for the window class
+
+static const char	s_szRawClass[] = "ReCoF raw input";
+
+// adds up the counts of one WM_INPUT
+static void RcRawAdd( LPARAM lParam )
+{
+	RAWINPUT ri;
+	UINT size = sizeof( ri );
+
+	if ( g_iVisibleMouse )
+		return;	// a menu has the cursor; these counts would turn the view once it closes
+
+	if ( GetRawInputData( (HRAWINPUT)lParam, RID_INPUT, &ri, &size, sizeof( RAWINPUTHEADER ) ) != (UINT)-1 &&
+		 ri.header.dwType == RIM_TYPEMOUSE && !( ri.data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE ) )
+	{
+		InterlockedExchangeAdd( &s_lRawDX, ri.data.mouse.lLastX );
+		InterlockedExchangeAdd( &s_lRawDY, ri.data.mouse.lLastY );
+	}
+}
+
+// rc_rawinput 1: in front of the engine's procedure of the game window
 static LRESULT CALLBACK RcRawWndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
-	if ( msg == WM_INPUT && !g_iVisibleMouse )
-	{
-		RAWINPUT ri;
-		UINT size = sizeof( ri );
-
-		if ( GetRawInputData( (HRAWINPUT)lParam, RID_INPUT, &ri, &size, sizeof( RAWINPUTHEADER ) ) != (UINT)-1 &&
-			 ri.header.dwType == RIM_TYPEMOUSE && !( ri.data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE ) )
-		{
-			s_iRawDX += ri.data.mouse.lLastX;
-			s_iRawDY += ri.data.mouse.lLastY;
-		}
-	}
+	if ( msg == WM_INPUT )
+		RcRawAdd( lParam );
 
 	return CallWindowProcA( s_pfnRawOldProc, hWnd, msg, wParam, lParam );
 }
@@ -566,37 +587,91 @@ static BOOL RcRawRegister( HWND hWnd, DWORD dwFlags )
 	return RegisterRawInputDevices( &rid, 1, sizeof( rid ) );
 }
 
-int RcRawInputOn( void )
+// rc_rawinput 2: the window of the input thread, a message-only window that is never shown
+static LRESULT CALLBACK RcRawThreadWndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
-	return rc_rawinput && rc_rawinput->value && !s_bRawFailed;
-}
-
-// called from IN_ActivateMouse: drop what came in while the console or a menu had the mouse
-void RcRawMouseReset( void )
-{
-	s_iRawDX = s_iRawDY = 0;
-}
-
-// called from IN_MouseMove: replaces *mx and *my with the raw counts since the last call
-void RcRawMouse( int *mx, int *my )
-{
-	if ( !RcRawInputOn() )
-		return;
-
-	// B300: Windows gives the raw mouse of a process to one window, and RInput takes it for its own.
-	// RInput hands its raw counts out through GetCursorPos, so *mx and *my already hold them: leave the
-	// mouse to it, and take it back if it goes
-	if ( GetModuleHandleA( "RInput.dll" ) )
+	if ( msg == WM_INPUT )
 	{
-		if ( !s_bRawRInput )
-			gEngfuncs.Con_Printf( "RInput is loaded: rc_rawinput leaves the mouse to it\n" );
+		RcRawAdd( lParam );	// DefWindowProc below frees the input
+	}
+	else if ( msg == RC_RAW_TAKE )
+	{
+		// RIDEV_INPUTSINK, as a message-only window is never in the foreground. What comes in while the
+		// game is in the background is dropped when the game gets the mouse back (RcRawMouseReset)
+		if ( !RcRawRegister( hWnd, RIDEV_INPUTSINK ) )
+			s_bRawFailed = 1;	// keep the cursor movement
 
-		s_bRawRInput = 1;
-		s_bRawTaken = 0;
-		return;
+		return 0;
 	}
 
-	s_bRawRInput = 0;
+	return DefWindowProcA( hWnd, msg, wParam, lParam );
+}
+
+// rc_rawinput 2: the input thread
+static DWORD WINAPI RcRawThread( LPVOID pParam )
+{
+	HWND hWnd;
+	MSG msg;
+
+	hWnd = CreateWindowExA( 0, s_szRawClass, NULL, 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, (HINSTANCE)&__ImageBase, NULL );
+	if ( !hWnd )
+	{
+		s_bRawFailed = 1;	// keep the cursor movement
+		return 0;
+	}
+
+	// a count taken late turns the view one frame later, so this thread goes before the game's
+	SetThreadPriority( GetCurrentThread(), THREAD_PRIORITY_HIGHEST );
+
+	RcRawThreadWndProc( hWnd, RC_RAW_TAKE, 0, 0 );
+	s_hRawThreadWnd = hWnd;
+
+	while ( GetMessageA( &msg, NULL, 0, 0 ) > 0 )
+		DispatchMessageA( &msg );
+
+	s_hRawThreadWnd = NULL;
+	DestroyWindow( hWnd );
+	return 0;
+}
+
+// gives the raw mouse to the window of rc_rawinput 1 or 2; the counts start over
+static void RcRawTake( int mode )
+{
+	InterlockedExchange( &s_lRawDX, 0 );
+	InterlockedExchange( &s_lRawDY, 0 );
+	s_iRawMode = mode;
+
+	if ( mode == 2 )
+	{
+		if ( s_hRawThread )
+		{
+			// back from the game window or from RInput; a thread that has no window yet takes it itself
+			if ( s_hRawThreadWnd )
+				PostMessageA( s_hRawThreadWnd, RC_RAW_TAKE, 0, 0 );
+			return;
+		}
+
+		WNDCLASSA wc;
+		memset( &wc, 0, sizeof( wc ) );
+		wc.lpfnWndProc = RcRawThreadWndProc;
+		wc.hInstance = (HINSTANCE)&__ImageBase;
+		wc.lpszClassName = s_szRawClass;
+
+		if ( !RegisterClassA( &wc ) )
+		{
+			UnregisterClassA( s_szRawClass, wc.hInstance );	// left by a client.dll whose thread did not stop
+			if ( !RegisterClassA( &wc ) )
+			{
+				s_bRawFailed = 1;	// keep the cursor movement
+				return;
+			}
+		}
+
+		s_hRawThread = CreateThread( NULL, 0, RcRawThread, NULL, 0, &s_dwRawThreadId );
+		if ( !s_hRawThread )
+			s_bRawFailed = 1;
+		return;
+	}
 
 	if ( !s_hRawWnd )
 	{
@@ -620,39 +695,89 @@ void RcRawMouse( int *mx, int *my )
 		s_hRawWnd = hWnd;
 	}
 
-	if ( !s_bRawTaken )
-	{
-		if ( !RcRawRegister( s_hRawWnd, 0 ) )
-		{
-			s_bRawFailed = 1;	// keep the cursor movement
-			return;
-		}
+	if ( !RcRawRegister( s_hRawWnd, 0 ) )
+		s_bRawFailed = 1;	// keep the cursor movement
+}
 
-		s_bRawTaken = 1;
-		s_iRawDX = s_iRawDY = 0;
+int RcRawInputOn( void )
+{
+	return rc_rawinput && rc_rawinput->value && !s_bRawFailed;
+}
+
+// called from IN_ActivateMouse: drop what came in while the console or a menu had the mouse
+void RcRawMouseReset( void )
+{
+	InterlockedExchange( &s_lRawDX, 0 );
+	InterlockedExchange( &s_lRawDY, 0 );
+}
+
+// called from IN_MouseMove: replaces *mx and *my with the raw counts since the last call
+void RcRawMouse( int *mx, int *my )
+{
+	int mode;
+
+	if ( !RcRawInputOn() )
+		return;
+
+	// B300: Windows gives the raw mouse of a process to one window, and RInput takes it for its own.
+	// RInput hands its raw counts out through GetCursorPos, so *mx and *my already hold them: leave the
+	// mouse to it, and take it back if it goes
+	if ( GetModuleHandleA( "RInput.dll" ) )
+	{
+		if ( !s_bRawRInput )
+			gEngfuncs.Con_Printf( "RInput is loaded: rc_rawinput leaves the mouse to it\n" );
+
+		s_bRawRInput = 1;
+		s_iRawMode = 0;
 		return;
 	}
 
-	*mx = s_iRawDX;
-	*my = s_iRawDY;
-	s_iRawDX = s_iRawDY = 0;
+	s_bRawRInput = 0;
+	mode = ( rc_rawinput->value >= 2 ) ? 2 : 1;
+
+	if ( s_iRawMode != mode )
+	{
+		RcRawTake( mode );
+		return;	// the cursor movement this once
+	}
+
+	if ( mode == 2 && !s_hRawThreadWnd )
+		return;	// the thread does not have the raw mouse yet
+
+	*mx = InterlockedExchange( &s_lRawDX, 0 );
+	*my = InterlockedExchange( &s_lRawDY, 0 );
 }
 
-// called from IN_Shutdown (B299). The engine unloads client.dll before it destroys the game window, and
-// destroying the window still runs its procedure: left in front of the engine's, this one crashed the
-// game on quit (Windows logs the fault in client.dll_unloaded), and a video mode restart goes the same way
+// called from IN_Shutdown (B299). The engine unloads client.dll right after, so nothing of it may run on
+// the input thread or stay in the game window's procedure: the engine destroys the window after the
+// unload, and destroying it still runs its procedure. Left in front of the engine's, RcRawWndProc crashed
+// the game on quit (Windows logs the fault in client.dll_unloaded), and a video mode restart goes the
+// same way
 void RcRawMouseShutdown( void )
 {
-	if ( !s_hRawWnd )
-		return;
+	int i;
+
+	if ( s_hRawThread )
+	{
+		// WM_QUIT needs the thread's message queue, which it has once it made its window
+		for ( i = 0; i < 40 && WaitForSingleObject( s_hRawThread, 0 ) == WAIT_TIMEOUT; i++ )
+		{
+			PostThreadMessageA( s_dwRawThreadId, WM_QUIT, 0, 0 );
+			WaitForSingleObject( s_hRawThread, 50 );
+		}
+
+		CloseHandle( s_hRawThread );
+		s_hRawThread = NULL;
+		UnregisterClassA( s_szRawClass, (HINSTANCE)&__ImageBase );
+	}
 
 	// another program that chained its procedure in front of this one would be cut off: leave it then
-	if ( GetWindowLongPtrA( s_hRawWnd, GWLP_WNDPROC ) == (LONG_PTR)RcRawWndProc )
+	if ( s_hRawWnd && GetWindowLongPtrA( s_hRawWnd, GWLP_WNDPROC ) == (LONG_PTR)RcRawWndProc )
 		SetWindowLongPtrA( s_hRawWnd, GWLP_WNDPROC, (LONG_PTR)s_pfnRawOldProc );
 
-	if ( s_bRawTaken )
+	if ( s_iRawMode )
 		RcRawRegister( NULL, RIDEV_REMOVE );	// not while RInput has the raw mouse (B300)
 
 	s_hRawWnd = NULL;
-	s_bRawTaken = 0;
+	s_iRawMode = 0;
 }

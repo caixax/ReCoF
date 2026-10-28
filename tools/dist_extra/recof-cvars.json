@@ -91,11 +91,13 @@
     },
     {
       "name": "rc_rawinput",
-      "type": "bool",
-      "default": "1",
+      "type": "int",
+      "default": "2",
+      "min": 0,
+      "max": 2,
       "group": "Input",
       "label_en": "Raw mouse input",
-      "desc_en": "Reads the mouse directly, without Windows acceleration. Off gives the retail mouse."
+      "desc_en": "Reads the mouse directly, without Windows acceleration. 2 reads it as RInput does, on a thread of its own; 1 reads it on the game window; 0 is the retail mouse."
     },
     {
       "name": "rc_modelarrays",
