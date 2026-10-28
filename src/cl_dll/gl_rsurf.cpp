@@ -928,21 +928,24 @@ void RenderSecondPass()
 		if (s)
 		{
 			Bind2DTexture( GL_TEXTURE0_ARB, tex[i]->gl_texturenum );
+
+			// ReCoF (B293): this state belongs to the texture, not to the surface, so it is set once
+			// for the whole chain instead of once per surface
+			ExtTextureData *pExtData = GetExtTexData (tex[i]);
+			if (pExtData && pExtData->gl_detailtex_id && cv_detailtex->value)
+			{
+				// has detail texture
+				SetTexEnvs(ENVSTATE_REPLACE, ENVSTATE_MUL_X2);
+				SetTextureMatrix( 1, pExtData->detail_xscale, pExtData->detail_yscale );
+				Bind2DTexture( GL_TEXTURE1_ARB, pExtData->gl_detailtex_id );
+			}
+			else
+			{
+				SetTexEnvs(ENVSTATE_REPLACE);
+			}
+
 			while(s)
 			{
-				ExtTextureData *pExtData = GetExtTexData (tex[i]);
-				if (pExtData && pExtData->gl_detailtex_id && cv_detailtex->value)
-				{
-					// has detail texture
-					SetTexEnvs(ENVSTATE_REPLACE, ENVSTATE_MUL_X2);
-					SetTextureMatrix( 1, pExtData->detail_xscale, pExtData->detail_yscale );
-					Bind2DTexture( GL_TEXTURE1_ARB, pExtData->gl_detailtex_id );
-				}
-				else
-				{
-					SetTexEnvs(ENVSTATE_REPLACE);
-				}
-
 				DrawPolyFromArray(s);
 				msurface_t *next = s->texturechain;
 				if (s->flags & SURF_SPECULAR)
