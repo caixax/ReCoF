@@ -2966,15 +2966,18 @@ void CBaseMonster :: SetEyePosition ( void )
 	void	*pmodel = GET_MODEL_PTR( ENT(pev) );
 
 	// ReCoF (B085): GetEyePosition never writes its result (it assigns the pointer parameter), so retail
-	// copied an uninitialized vector into view_ofs, the point every monster sees from. Use the model's eye
-	// when it has a height (most Cry of Fear models store it as 0 55 0, on the wrong axis) and otherwise keep
-	// the view_ofs the monster's Spawn set just before MonsterInit. rc_retail_gameplay 1 keeps retail
+	// copied an uninitialized vector into view_ofs, the point every monster sees from. Use the height of the
+	// model's eye when it has one (0 0 55 in most Cry of Fear models) and otherwise keep the view_ofs the
+	// monster's Spawn set just before MonsterInit. Only the height: view_ofs does not turn with the monster,
+	// and the krypande models put the eye 50 units forward (50 0 20), which left the crawler's eye 50 units
+	// along the world X axis, often inside a wall, so it never saw the player (B290). rc_retail_gameplay 1
+	// keeps retail
 	if ( !rc_retail_gameplay.value )
 	{
 		studiohdr_t *pstudiohdr = (studiohdr_t *)pmodel;
 
 		if ( pstudiohdr && pstudiohdr->eyeposition[2] > 0 )
-			pev->view_ofs = pstudiohdr->eyeposition;
+			pev->view_ofs = Vector( 0, 0, pstudiohdr->eyeposition[2] );
 	}
 	else
 	{
