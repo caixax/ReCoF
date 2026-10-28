@@ -36,6 +36,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BIN = os.path.join(ROOT, "build", "bin")
 EXTRA = os.path.join(ROOT, "tools", "dist_extra")
 COFLAUNCHAPP = os.path.join(ROOT, "build", "coflaunchapp", "CoFLaunchApp.exe")
+RC_VERSION = os.path.join(ROOT, "src", "cl_dll", "rc_version.h")
 
 # (path in the game folder, file in build/bin, what it is)
 FILES = [
@@ -154,6 +155,15 @@ def main():
         sys.exit("not built yet: %s (run the build.py links first)" % ", ".join(missing))
     if not os.path.isfile(COFLAUNCHAPP):
         sys.exit("not built yet: %s (run tools/coflaunchapp/build.py)" % COFLAUNCHAPP)
+
+    # the main menu shows the version client.dll was built with
+    with open(RC_VERSION, encoding="ascii") as f:
+        source_version = f.read().split('RECOF_VERSION\t"', 1)[1].split('"', 1)[0]
+    if source_version != version:
+        sys.exit("src/cl_dll/rc_version.h says %s: set it to %s, then relink client.dll" % (source_version, version))
+    with open(os.path.join(BIN, "client.dll"), "rb") as f:
+        if ("ReCoF-v%s\0" % version).encode("ascii") not in f.read():
+            sys.exit("client.dll does not show ReCoF-v%s in the menu yet: relink it (build.py link client)" % version)
 
     staged = []
     for rel, src, what in FILES:

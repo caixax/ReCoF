@@ -15,6 +15,7 @@
 #include "VGUIExtraMenu_guess.h"
 #include "Language_guess.h"
 #include "Difficulty_guess.h"
+#include "rc_version.h"
 #include "..\game_shared\vgui_loadtga.h"
 #include <windows.h>
 #include <sys/types.h>
@@ -424,7 +425,7 @@ void CGameMenu::ActionSignal( int cmd )
 
 const char *GetVersion_guess()
 {
-	return "1.6a";
+	return "ReCoF-v" RECOF_VERSION;	// ReCoF: retail showed "1.6a"
 }
 
 void CGameMenu::Initialize()

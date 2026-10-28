@@ -46,7 +46,7 @@ protected:
 	virtual void solve();
 
 public:
-	Label	*m_pVersionLabel_guess;			// 0xbc, "1.6a" in the top left corner
+	Label	*m_pVersionLabel_guess;			// 0xbc, the version in the top left corner ("1.6a" in retail)
 	bool	m_bUnknownC0_guess;				// 0xc0, only cleared
 	campaign_t_guess	m_Campaigns_guess[MAX_CAMPAIGNS_guess + 1];	// 0xc1
 	ColorButton	*m_pCampaignButton_guess[MAX_CAMPAIGNS_guess];	// 0xc284
