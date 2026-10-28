@@ -13,9 +13,14 @@
 #include "pm_defs.h"
 #include "rc_client.h"
 #include "rc_prof.h"
+#include "glmanager.h"
 
 #include <stdio.h>
 #include <windows.h>
+
+#ifndef M_PI
+#define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h
+#endif
 
 extern "C" playermove_t *pmove;		// pm_shared.c: the move client prediction ran last
 
@@ -41,6 +46,11 @@ static HWND			s_hRawWnd;			// raw input: the game window, once hooked
 static WNDPROC		s_pfnRawOldProc;	// raw input: the engine's window procedure
 static int			s_bRawFailed;		// raw input: the window or the registration failed
 static int			s_iRawDX, s_iRawDY;	// raw input: mouse counts since the last mouse move
+static cvar_t		*rc_viewmodel_fov;
+static cvar_t		*rc_viewmodel_ofs_forward;
+static cvar_t		*rc_viewmodel_ofs_right;
+static cvar_t		*rc_viewmodel_ofs_up;
+static float		s_flViewmodelOfsScale = 1;	// viewmodel offsets: eased to 0 in iron sights
 
 //-----------------------------------------------------------------------------
 // Where this build keeps the values the LiveSplit autosplitter reads from client.dll, so a script can
@@ -94,6 +104,11 @@ void RcClient_Init( void )
 	rc_speedometer_color = gEngfuncs.pfnRegisterVariable( "rc_speedometer_color", "255 255 255", FCVAR_ARCHIVE );
 
 	rc_rawinput = gEngfuncs.pfnRegisterVariable( "rc_rawinput", "1", FCVAR_ARCHIVE );
+
+	rc_viewmodel_fov = gEngfuncs.pfnRegisterVariable( "rc_viewmodel_fov", "0", FCVAR_ARCHIVE );
+	rc_viewmodel_ofs_forward = gEngfuncs.pfnRegisterVariable( "rc_viewmodel_ofs_forward", "0", FCVAR_ARCHIVE );
+	rc_viewmodel_ofs_right = gEngfuncs.pfnRegisterVariable( "rc_viewmodel_ofs_right", "0", FCVAR_ARCHIVE );
+	rc_viewmodel_ofs_up = gEngfuncs.pfnRegisterVariable( "rc_viewmodel_ofs_up", "0", FCVAR_ARCHIVE );
 
 	RcProf_Init();
 }
@@ -218,6 +233,89 @@ void RcClient_Redraw( float flTime, int intermission )
 		sprintf( text, "%d", s_iJumpSpeed );
 		RcDrawCentered( px, py + h + 2, text, color );
 	}
+}
+
+//-----------------------------------------------------------------------------
+// rc_viewmodel_ofs_forward, _right and _up move the weapon model along the view, in units, as BunnymodXT's
+// bxt_viewmodel_ofs_* do; the left hand item follows the weapon model. Iron sights ease them out over a
+// quarter of a second, so the sights stay on the middle of the screen
+//-----------------------------------------------------------------------------
+void RcViewmodelOffset( float *origin, const float *forward, const float *right, const float *up, float frametime )
+{
+	if ( !rc_viewmodel_ofs_forward )
+		return;
+
+	float target = gHUD.m_bIronSights_guess ? 0 : 1;
+	float step = frametime * 4;
+
+	if ( s_flViewmodelOfsScale < target )
+	{
+		s_flViewmodelOfsScale += step;
+		if ( s_flViewmodelOfsScale > target )
+			s_flViewmodelOfsScale = target;
+	}
+	else if ( s_flViewmodelOfsScale > target )
+	{
+		s_flViewmodelOfsScale -= step;
+		if ( s_flViewmodelOfsScale < target )
+			s_flViewmodelOfsScale = target;
+	}
+
+	float f = rc_viewmodel_ofs_forward->value * s_flViewmodelOfsScale;
+	float r = rc_viewmodel_ofs_right->value * s_flViewmodelOfsScale;
+	float u = rc_viewmodel_ofs_up->value * s_flViewmodelOfsScale;
+
+	for ( int i = 0; i < 3; i++ )
+		origin[i] += forward[i] * f + right[i] * r + up[i] * u;
+}
+
+//-----------------------------------------------------------------------------
+// rc_viewmodel_fov draws the weapon model and the left hand item with this horizontal field of view instead of
+// the view's, as BunnymodXT's bxt_viewmodel_fov does (0 keeps the view's). The engine's projection is a
+// symmetric frustum, so only its x and y scales change; the depth stays as the engine set it
+//-----------------------------------------------------------------------------
+int RcViewmodelFovBegin( void )
+{
+	if ( !rc_viewmodel_fov || rc_viewmodel_fov->value <= 0 || !gl.IsGLAllowed() )
+		return 0;
+
+	float fov = rc_viewmodel_fov->value;
+
+	if ( fov > 170 )
+		fov = 170;
+
+	GLfloat m[16];
+	GLint mode;
+
+	gl.glGetFloatv( GL_PROJECTION_MATRIX, m );
+
+	if ( m[0] <= 0 || m[11] != -1 )	// not a perspective projection
+		return 0;
+
+	float scale = 1.0 / ( tan( fov * M_PI / 360.0 ) * m[0] );
+	m[0] *= scale;
+	m[5] *= scale;
+
+	gl.glGetIntegerv( GL_MATRIX_MODE, &mode );
+	gl.glMatrixMode( GL_PROJECTION );
+	gl.glPushMatrix();
+	gl.glLoadMatrixf( m );
+	gl.glMatrixMode( mode );
+
+	return 1;
+}
+
+void RcViewmodelFovEnd( int on )
+{
+	if ( !on )
+		return;
+
+	GLint mode;
+
+	gl.glGetIntegerv( GL_MATRIX_MODE, &mode );
+	gl.glMatrixMode( GL_PROJECTION );
+	gl.glPopMatrix();
+	gl.glMatrixMode( mode );
 }
 
 //-----------------------------------------------------------------------------

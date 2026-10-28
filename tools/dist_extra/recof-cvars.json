@@ -114,6 +114,40 @@
       "group": "Performance",
       "label_en": "Frame profiler",
       "desc_en": "1 shows how long each part of the frame takes, 2 adds GPU times."
+    },
+    {
+      "name": "rc_viewmodel_fov",
+      "type": "int",
+      "default": "0",
+      "min": 0,
+      "max": 170,
+      "group": "Viewmodel",
+      "label_en": "Weapon field of view",
+      "desc_en": "Draws the weapon model with its own field of view, as BunnymodXT's bxt_viewmodel_fov. 0 keeps the view's."
+    },
+    {
+      "name": "rc_viewmodel_ofs_forward",
+      "type": "float",
+      "default": "0",
+      "group": "Viewmodel",
+      "label_en": "Weapon offset forward",
+      "desc_en": "Moves the weapon model forward (or back, below 0), in units. Iron sights ignore it."
+    },
+    {
+      "name": "rc_viewmodel_ofs_right",
+      "type": "float",
+      "default": "0",
+      "group": "Viewmodel",
+      "label_en": "Weapon offset right",
+      "desc_en": "Moves the weapon model right (or left, below 0), in units. Iron sights ignore it."
+    },
+    {
+      "name": "rc_viewmodel_ofs_up",
+      "type": "float",
+      "default": "0",
+      "group": "Viewmodel",
+      "label_en": "Weapon offset up",
+      "desc_en": "Moves the weapon model up (or down, below 0), in units. Iron sights ignore it."
     }
   ]
 }

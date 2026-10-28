@@ -29,6 +29,7 @@
 
 #include "gl_renderer.h"
 #include "rc_prof.h"	// ReCoF
+#include "rc_client.h"	// ReCoF
 
 //
 // Override the StudioModelRender virtual member functions here to implement custom bone
@@ -82,6 +83,16 @@ int R_StudioDrawModel( int flags )
 
 	if (IEngineStudio.GetCurrentEntity() != IEngineStudio.GetViewEntity() && IEngineStudio.GetCurrentEntity()->curstate.renderfx != 161)
 		RendererDrawNormal(); // buz: make shure that world draws before any studiomodel
+
+	// ReCoF: rc_viewmodel_fov
+	if ( IEngineStudio.GetCurrentEntity() == IEngineStudio.GetViewEntity() )
+	{
+		int iFov = RcViewmodelFovBegin();
+		int iResult = g_StudioRenderer.StudioDrawModel( flags );
+		RcViewmodelFovEnd( iFov );
+		return iResult;
+	}
+
 	return g_StudioRenderer.StudioDrawModel( flags );
 }
 
@@ -130,9 +141,14 @@ extern "C" int DLLEXPORT HUD_GetStudioModelInterface( int version, struct r_stud
 	return 1;
 }
 
+extern int g_iHeadShieldType_guess;
+
 void ExtDrawShield( void ) // buz test
 {
+	// ReCoF: rc_viewmodel_fov, also for the left hand item (head shield type 3), which follows the weapon model
+	int iFov = g_iHeadShieldType_guess == 3 ? RcViewmodelFovBegin() : 0;
 	g_StudioRenderer.StudioDrawHeadShield( );
+	RcViewmodelFovEnd( iFov );
 }
 
 void DrawCustomEntModel(cl_entity_t *ent, int amb, int shade) // buz

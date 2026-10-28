@@ -84,6 +84,7 @@ void VectorAngles( const float *forward, float *angles );
 #include "vgui_TeamFortressViewport.h"
 #include "RECBInventory_guess.h"
 #include "rc_prof.h"	// ReCoF
+#include "rc_client.h"	// ReCoF
 
 extern engine_studio_api_t IEngineStudio;
 
@@ -1184,6 +1185,7 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 	// cof: weapon model bob and lag
 	AddViewmodelBob_guess( pparams, view->origin, view->angles, pparams->frametime, gEngfuncs.GetClientTime(), view, false );
 	CalcViewModelLag_guess( pparams->frametime, view->origin, view->angles, v_angles, view, false );
+	RcViewmodelOffset( view->origin, pparams->forward, pparams->right, pparams->up, pparams->frametime );	// ReCoF
 
 	// cof: flashlight in the left hand
 	if ( !iPaused_guess && g_iHeadShieldType_guess == 3 && g_iDualWeapon1_guess == 10 && !IsViewEntityActive_guess() && !iBoat_guess && !iWheelchair_guess && !pTelescopeEnt_guess )

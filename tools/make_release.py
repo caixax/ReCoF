@@ -96,6 +96,9 @@ NEW CONSOLE OPTIONS (default in brackets)
   rc_prof [0]              1 = frame time per renderer phase, 2 = plus GPU
   rc_prof_dump             prints the rc_prof numbers to the console
   rc_modelarrays [1]       0 = retail model drawing, for comparison
+  rc_viewmodel_fov [0]     field of view of the weapon model (0 = the view's)
+  rc_viewmodel_ofs_forward, rc_viewmodel_ofs_right, rc_viewmodel_ofs_up [0]
+                           move the weapon model, in units
   god, noclip, notarget, fly work with sv_cheats 1
   Launch options: -rc_aff (pin to the first core as retail), -rc_nosleep
   (retail frame limiter that spins a whole core)
