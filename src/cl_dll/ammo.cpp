@@ -31,6 +31,7 @@
 #include "vgui_TeamFortressViewport.h"
 #include "Scope_guess.h"
 #include "particlemgr.h"
+#include "rc_client.h"	// ReCoF
 
 extern float flUnknown1055959C_guess;
 extern cvar_t *cl_crosshair;
@@ -1243,7 +1244,8 @@ int CHudAmmo::Draw(float flTime)
 			if ( cl_crosshair->value < 1 )
 				bCrosshair = false;
 
-			if ( !gViewPort->m_pScope_guess || ( !gViewPort->m_pScope_guess->m_iScope_guess && bCrosshair ) )
+			// ReCoF: rc_crosshair 0 hides the crosshair
+			if ( RcCrosshairOn() && ( !gViewPort->m_pScope_guess || ( !gViewPort->m_pScope_guess->m_iScope_guess && bCrosshair ) ) )
 			{
 				flCurrentKick_guess = 7;
 
@@ -1682,9 +1684,13 @@ int CHudAmmo::Draw(float flTime)
 				float flGap = flCurrentKick_guess * 3;
 				int iLength = ScreenWidth / 100;
 
-				FillRGBA( ScreenWidth / 2 + flGap, ScreenHeight / 2, iLength, 1, 255, 0, 0, 200 );
-				FillRGBA( ScreenWidth / 2 - ( iLength + flGap ), ScreenHeight / 2, iLength, 1, 255, 0, 0, 200 );
-				FillRGBA( ScreenWidth / 2 - 1, ScreenHeight / 2 + flGap, 2, iLength, 255, 0, 0, 200 );
+				// ReCoF: rc_crosshair 0 hides the crosshair
+				if ( RcCrosshairOn() )
+				{
+					FillRGBA( ScreenWidth / 2 + flGap, ScreenHeight / 2, iLength, 1, 255, 0, 0, 200 );
+					FillRGBA( ScreenWidth / 2 - ( iLength + flGap ), ScreenHeight / 2, iLength, 1, 255, 0, 0, 200 );
+					FillRGBA( ScreenWidth / 2 - 1, ScreenHeight / 2 + flGap, 2, iLength, 255, 0, 0, 200 );
+				}
 			}
 
 			ScaleColors(r, g, b, a );

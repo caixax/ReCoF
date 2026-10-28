@@ -116,6 +116,14 @@
       "desc_en": "1 shows how long each part of the frame takes, 2 adds GPU times."
     },
     {
+      "name": "rc_crosshair",
+      "type": "bool",
+      "default": "1",
+      "group": "Crosshair",
+      "label_en": "Cry of Fear crosshair",
+      "desc_en": "Off hides the red crosshair and keeps the ammo display."
+    },
+    {
       "name": "rc_viewmodel_fov",
       "type": "int",
       "default": "0",

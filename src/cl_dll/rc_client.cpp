@@ -51,6 +51,7 @@ static cvar_t		*rc_viewmodel_ofs_forward;
 static cvar_t		*rc_viewmodel_ofs_right;
 static cvar_t		*rc_viewmodel_ofs_up;
 static float		s_flViewmodelOfsScale = 1;	// viewmodel offsets: eased to 0 in iron sights
+static cvar_t		*rc_crosshair;
 
 //-----------------------------------------------------------------------------
 // Where this build keeps the values the LiveSplit autosplitter reads from client.dll, so a script can
@@ -109,6 +110,8 @@ void RcClient_Init( void )
 	rc_viewmodel_ofs_forward = gEngfuncs.pfnRegisterVariable( "rc_viewmodel_ofs_forward", "0", FCVAR_ARCHIVE );
 	rc_viewmodel_ofs_right = gEngfuncs.pfnRegisterVariable( "rc_viewmodel_ofs_right", "0", FCVAR_ARCHIVE );
 	rc_viewmodel_ofs_up = gEngfuncs.pfnRegisterVariable( "rc_viewmodel_ofs_up", "0", FCVAR_ARCHIVE );
+
+	rc_crosshair = gEngfuncs.pfnRegisterVariable( "rc_crosshair", "1", FCVAR_ARCHIVE );
 
 	RcProf_Init();
 }
@@ -233,6 +236,14 @@ void RcClient_Redraw( float flTime, int intermission )
 		sprintf( text, "%d", s_iJumpSpeed );
 		RcDrawCentered( px, py + h + 2, text, color );
 	}
+}
+
+//-----------------------------------------------------------------------------
+// rc_crosshair 0 hides the red Cry of Fear crosshair and keeps the ammo display; cl_crosshair 0 hides both
+//-----------------------------------------------------------------------------
+int RcCrosshairOn( void )
+{
+	return !rc_crosshair || rc_crosshair->value != 0;
 }
 
 //-----------------------------------------------------------------------------
