@@ -45,7 +45,7 @@ Releases are installed and updated by the [ReCoF Launcher](https://github.com/ca
 python tools/make_release.py --version 0.2.0 --channel beta
 ```
 
-It stages the binaries in game folder layout with `Play ReCoF.bat` and `tools/dist_extra/recof-cvars.json` (the options the launcher shows; add a new `rc_` cvar there when it should appear in the launcher), and runs `cargo xtask pack-recof` from a ReCoF-Launcher checkout next to this one, which signs the manifest with the launcher key. `pack-recof` refuses `CoFLaunchApp.exe`, so that set has no settings launcher; the script also writes `ReCoF-v<version>.zip`, every file including `CoFLaunchApp.exe`, for installing by hand. Upload the four files from `build/release/v<version>/upload` to the GitHub release `v<version>`; its body is the changelog the launcher shows. A beta is a GitHub prerelease, which launchers on the stable channel do not see.
+It stages the binaries in game folder layout with `Play ReCoF.bat` and `tools/dist_extra/recof-cvars.json` (the options the launcher shows; add a new `rc_` cvar there when it should appear in the launcher), and runs `cargo xtask pack-recof` from a ReCoF-Launcher checkout next to this one, which signs the manifest with the launcher key. Both sets carry the rebuilt `CoFLaunchApp.exe`; the script also writes `ReCoF-v<version>.zip`, the same files in one zip for installing by hand. Upload the four files from `build/release/v<version>/upload` to the GitHub release `v<version>`; its body is the changelog the launcher shows. A beta is a GitHub prerelease, which launchers on the stable channel do not see.
 
 ## Merging DeCoF corrections
 

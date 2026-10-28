@@ -6,17 +6,18 @@ Usage:
 
 1. Stages the rebuilt binaries in build/release/v<version>/files, laid out as
    they go into the game folder (hw.dll at the top, cryoffear/cl_dlls/... under
-   it), plus sw.dll as a copy of hw.dll as in retail, the files of
+   it), plus sw.dll as a copy of hw.dll as in retail, CoFLaunchApp.exe (the
+   rebuilt settings dialog, from build/coflaunchapp), the files of
    tools/dist_extra (Play ReCoF.bat, recof-cvars.json) and README-ReCoF-TEST.txt.
-   pack-recof refuses CoFLaunchApp.exe, so the launcher set has none.
 2. Runs `cargo xtask pack-recof` of the ReCoF-Launcher repository on that
    folder. It writes build/release/v<version>/upload/recof-<version>.zip,
    recof-manifest.json and recof-manifest.json.sig, signed with the launcher's
    key (keys/<id>.secret.key there, or RECOF_LAUNCHER_SIGNING_KEY), and checks
    the manifest against the rules the launcher applies. The format is
    described in that repository's docs/releases.md.
-3. Writes build/release/v<version>/upload/ReCoF-v<version>.zip, the whole set
-   for installing by hand: the staged files, sw.dll and CoFLaunchApp.exe.
+3. Writes build/release/v<version>/upload/ReCoF-v<version>.zip, the same files
+   in one zip for installing by hand (sw.dll included, which the launcher set
+   lists as a copy of hw.dll).
 
 The four files then go to the GitHub release v<version> of caixax/ReCoF
 (command printed at the end). The release body is the changelog the launcher
@@ -65,9 +66,7 @@ recof-manifest.json and recof-manifest.json.sig in one folder.
 By hand:
 1. Copy your Cry of Fear folder (Steam: steamapps\\common\\Cry of Fear) to
    another place, for example "Cry of Fear ReCoF test".
-2. Extract recof-{version}.zip into that copy and let it replace the files.
-   sw.dll is not in the zip: copy hw.dll to sw.dll in the copy (retail ships
-   the same file under both names).
+2. Extract ReCoF-v{version}.zip into that copy and let it replace the files.
 3. Start Steam, then double-click "Play ReCoF.bat" in the copy. It starts the
    game with the launcher's settings plus -condebug, which writes the console
    to cryoffear\\qconsole.log. Open the .bat in Notepad to set the resolution,
@@ -85,7 +84,9 @@ NOTES
 
 NEW CONSOLE OPTIONS (default in brackets)
   rc_retail_gameplay [0]   1 = retail behavior of every balance fix
-  rc_hlmovement [0]        1 = Half-Life 1 movement (no stamina or sprint)
+  rc_hlmovement [0]        1 = Half-Life 1 movement as in WON (no stamina or sprint);
+                           turning it on sets rc_bhopcap 0, rc_ducktap 1 and
+                           rc_autojump 1, turning it off sets them back
   rc_bhopcap [1]           0 = no bunny hop speed cap
   rc_ducktap [0]           1 = Half-Life ducktap
   rc_infinite_stamina [0]  1 = stamina never runs out
@@ -142,6 +143,8 @@ def main():
     missing = [src for _rel, src, _what in FILES if not os.path.isfile(os.path.join(BIN, src))]
     if missing:
         sys.exit("not built yet: %s (run the build.py links first)" % ", ".join(missing))
+    if not os.path.isfile(COFLAUNCHAPP):
+        sys.exit("not built yet: %s (run tools/coflaunchapp/build.py)" % COFLAUNCHAPP)
 
     staged = []
     for rel, src, what in FILES:
@@ -149,6 +152,8 @@ def main():
         os.makedirs(os.path.dirname(dest), exist_ok=True)
         shutil.copyfile(os.path.join(BIN, src), dest)
         staged.append((rel, what))
+    shutil.copyfile(COFLAUNCHAPP, os.path.join(stage, "CoFLaunchApp.exe"))
+    staged.append(("CoFLaunchApp.exe", "settings launcher"))
     for name in sorted(os.listdir(EXTRA)):
         shutil.copyfile(os.path.join(EXTRA, name), os.path.join(stage, name))
         staged.append((name, "test launch with the console log on" if name.endswith(".bat") else "ReCoF options for the launcher"))
@@ -170,16 +175,13 @@ def main():
     if subprocess.call(cmd, cwd=args.launcher) != 0:
         sys.exit("pack-recof failed")
 
-    # the whole set for installing by hand, settings launcher included
-    if not os.path.isfile(COFLAUNCHAPP):
-        sys.exit("not built yet: %s (run tools/coflaunchapp/build.py)" % COFLAUNCHAPP)
+    # the same set in one zip for installing by hand
     full = os.path.join(upload, "ReCoF-v%s.zip" % version)
     with zipfile.ZipFile(full, "w", zipfile.ZIP_DEFLATED) as z:
         for dirpath, _dirs, names in os.walk(stage):
             for name in sorted(names):
                 p = os.path.join(dirpath, name)
                 z.write(p, os.path.relpath(p, stage).replace("\\", "/"))
-        z.write(COFLAUNCHAPP, "CoFLaunchApp.exe")
 
     print("\nupload these to the GitHub release v%s of caixax/ReCoF:" % version)
     for name in sorted(os.listdir(upload)):
