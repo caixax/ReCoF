@@ -19,4 +19,7 @@ struct DynamicLight
 
 DynamicLight* MY_AllocDlight (int key);
 
+// ReCoF (B198): the key of the night vision light, so it keeps one slot (no entity index reaches it)
+#define RC_DLIGHT_NIGHTVISION	-4000
+
 int GetDlightsForPoint(vec3_t point, vec3_t mins, vec3_t maxs, DynamicLight **pOutArray, int alwaysFlashlight);

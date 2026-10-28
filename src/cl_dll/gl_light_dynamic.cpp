@@ -321,6 +321,10 @@ int SetupPointLight()
 	current_light_color[1] = ApplyGamma(current_light->color[1]) / 2;
 	current_light_color[2] = ApplyGamma(current_light->color[2]) / 2;
 
+	// ReCoF (B198): the night vision light stands for the two copies retail drew at the 100 fps cap
+	if (current_light->key == RC_DLIGHT_NIGHTVISION)
+		VectorScale(current_light_color, 2, current_light_color);
+
 	gl.glEnable(GL_BLEND);
 	gl.glDepthMask(GL_FALSE);
 

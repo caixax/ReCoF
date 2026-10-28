@@ -1274,7 +1274,11 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 	if ( !iPaused_guess && !bCamera && !iBoat_guess && !iWheelchair_guess && !pTelescopeEnt_guess && !IsViewEntityActive_guess() && player &&
 		( gHUD.m_iFlashFlags_guess & 64 ) )
 	{
-		DynamicLight *dl = MY_AllocDlight( 0 );
+		// ReCoF (B198): with key 0 and die = time + 0.01 every frame shorter than 10 ms added a copy while the
+		// last one was alive: at the 100 fps cap two copies in most frames and one in the others (the flicker
+		// of B188), more above it, each one more pass over the world and every model near the player. A fixed
+		// key keeps one copy; the light code gives it the brightness of the two
+		DynamicLight *dl = MY_AllocDlight( RC_DLIGHT_NIGHTVISION );
 		dl->origin = player->origin;
 		dl->radius = 900;
 		dl->color.x = 0.1;

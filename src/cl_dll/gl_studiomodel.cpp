@@ -1419,6 +1419,8 @@ void CStudioModelRenderer::GL_SetupLighting ()
 		g_dynlightcolor[g_numdynlights][0] = ApplyGamma(dlights[i]->color[0]) / 2;
 		g_dynlightcolor[g_numdynlights][1] = ApplyGamma(dlights[i]->color[1]) / 2;
 		g_dynlightcolor[g_numdynlights][2] = ApplyGamma(dlights[i]->color[2]) / 2;
+		if (dlights[i]->key == RC_DLIGHT_NIGHTVISION)	// ReCoF (B198): it stands for the two copies retail drew
+			VectorScale(g_dynlightcolor[g_numdynlights], 2, g_dynlightcolor[g_numdynlights]);
 		g_numdynlights++;
 	}
 
