@@ -3965,6 +3965,19 @@ static void RcSetPhysicsKey( edict_t *pEdict, const char *key, const char *value
 
 void CBasePlayer::PreThink(void)
 {
+	// ReCoF (rc_hlmovement): Half-Life movement plays as the WON version did, so turning it on also turns the
+	// bunny hop cap off and ducktap and autojump on, and turning it off turns them back. Only when the cvar
+	// changes, so each one can still be set by hand afterwards; rc_autojump is the host's client cvar
+	static bool s_bRcHLLinked = false;
+	if ( ( rc_hlmovement.value != 0 ) != s_bRcHLLinked )
+	{
+		s_bRcHLLinked = rc_hlmovement.value != 0;
+		CVAR_SET_FLOAT( "rc_bhopcap", s_bRcHLLinked ? 0 : 1 );
+		CVAR_SET_FLOAT( "rc_ducktap", s_bRcHLLinked ? 1 : 0 );
+		if ( CVAR_GET_POINTER( "rc_autojump" ) )
+			CVAR_SET_FLOAT( "rc_autojump", s_bRcHLLinked ? 1 : 0 );
+	}
+
 	// ReCoF (rc_hlmovement): the sprint key does nothing in Half-Life movement
 	if ( RcHLMovementOn( edict() ) )
 		pev->button &= ~IN_RUN;

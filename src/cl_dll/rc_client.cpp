@@ -82,7 +82,8 @@ void RcClient_Init( void )
 	gEngfuncs.pfnAddCommand( "+rc_ducktap", IN_RcDucktapDown );
 	gEngfuncs.pfnAddCommand( "-rc_ducktap", IN_RcDucktapUp );
 
-	rc_autojump = gEngfuncs.pfnRegisterVariable( "rc_autojump", "0", FCVAR_ARCHIVE );
+	// not archived: rc_hlmovement turns it on, and a saved 1 would keep it on in the next game without it
+	rc_autojump = gEngfuncs.pfnRegisterVariable( "rc_autojump", "0", 0 );
 	rc_ducktap_priority = gEngfuncs.pfnRegisterVariable( "rc_ducktap_priority", "1", FCVAR_ARCHIVE );
 	rc_jump_priority = gEngfuncs.pfnRegisterVariable( "rc_jump_priority", "0", FCVAR_ARCHIVE );
 
