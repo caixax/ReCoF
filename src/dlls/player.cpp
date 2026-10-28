@@ -8161,7 +8161,8 @@ void CBasePlayer::GameStart( void )
 
 int CBasePlayer::SufficientlyOffTheGround( void )
 {
-	if ( m_bJustJumped )
+	// ReCoF (rc_hlmovement): the weapons play their jump animations while this is TRUE; Half-Life has none
+	if ( m_bJustJumped && !RcHLMovementOn( edict() ) )
 		return TRUE;
 
 	return FALSE;
