@@ -21,6 +21,13 @@
 #include "iregistry.h"
 #include "SteamAppStartup_guess.h"
 
+// ReCoF (B296): the NVIDIA and AMD drivers look for these exports in the main executable and give the
+// process the discrete GPU of a hybrid graphics laptop; without them the game ran on the integrated
+// one. A per application choice in Windows Settings, Graphics still wins. Both are const, so they sit
+// in .rdata and the .data and .bss layout below is unchanged
+extern "C" __declspec(dllexport) const DWORD NvOptimusEnablement = 0x00000001;
+extern "C" __declspec(dllexport) const int AmdPowerXpressRequestHighPerformance = 1;
+
 IFileSystem *g_pFileSystem = NULL;
 
 // The three arrays below span exactly 0x2100000 bytes of .bss (0x014135C8 to
