@@ -70,8 +70,8 @@ By hand:
 2. Extract ReCoF-v{version}.zip into that copy and let it replace the files.
 3. Start Steam, then double-click "Play ReCoF.bat" in the copy. It starts the
    game with the launcher's settings plus -condebug, which writes the console
-   to cryoffear\\qconsole.log. Open the .bat in Notepad to set the resolution,
-   windowed mode or extra options.
+   to qconsole.log next to cof.exe. Open the .bat in Notepad to set the
+   resolution, windowed mode or extra options (-novid skips the intro videos).
 4. Report problems with the map name and what you did; qconsole.log helps.
 
 NOTES
