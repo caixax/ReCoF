@@ -1482,14 +1482,48 @@ static int				s_bRcImmediate;			// the strip being drawn uses immediate mode
 static float			s_flRcSt[2];			// the texture coordinate and colour of the next vertex
 static float			s_flRcColor[4];
 
+// ReCoF (B287 step 3): the strips and fans of one mesh share all their GL state, so RcEnd turns each one into
+// the same triangles, with the same winding and the same last vertex, and adds them to one list; RcMeshFlush
+// draws the list in one call at the end of the mesh, and before an immediate mode strip so the drawing order
+// stays the same. A strip is at most RC_STRIP_VERTS long, so its triangles always fit in an empty list
+#define RC_MESH_VERTS	( 3 * 8192 )
+
+static RcStripVert_t	s_RcMesh[RC_MESH_VERTS];
+static int				s_iRcMeshCount;
+
+static void RcMeshFlush( void )
+{
+	if ( !s_iRcMeshCount )
+		return;
+
+	if ( !s_bRcArraysOn )
+	{
+		if ( gl.glClientActiveTextureARB )
+			gl.glClientActiveTextureARB( GL_TEXTURE0_ARB );
+		gl.glTexCoordPointer( 2, GL_FLOAT, sizeof( RcStripVert_t ), s_RcMesh[0].st );
+		gl.glColorPointer( 4, GL_FLOAT, sizeof( RcStripVert_t ), s_RcMesh[0].color );
+		gl.glVertexPointer( 3, GL_FLOAT, sizeof( RcStripVert_t ), s_RcMesh[0].pos );
+		gl.glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+		gl.glEnableClientState( GL_COLOR_ARRAY );
+		gl.glEnableClientState( GL_VERTEX_ARRAY );
+		s_bRcArraysOn = TRUE;
+	}
+
+	gl.glDrawArrays( GL_TRIANGLES, 0, s_iRcMeshCount );
+	s_iRcMeshCount = 0;
+}
+
 static void RcArraysStart( void )
 {
 	s_bRcArrays = rc_modelarrays && rc_modelarrays->value && !use_vertex_array && gl.glColorPointer;
 	s_bRcArraysOn = FALSE;
+	s_iRcMeshCount = 0;
 }
 
 static void RcArraysFinish( void )
 {
+	RcMeshFlush();	// step 3
+
 	if ( !s_bRcArraysOn )
 		return;
 
@@ -1507,6 +1541,7 @@ static void RcBegin( GLenum mode, int count )
 
 	if ( s_bRcImmediate )
 	{
+		RcMeshFlush();	// step 3: the triangles before it are drawn first
 		gl.glBegin( mode );
 		return;
 	}
@@ -1561,23 +1596,37 @@ static void RcEnd( void )
 		return;
 	}
 
-	if ( !s_iRcStripCount )
+	// step 3: the strip's triangles join the mesh list. GL draws triangle k of a strip from vertices k, k+1, k+2,
+	// or k+1, k, k+2 when k is odd, which keeps the winding, and triangle k of a fan from 0, k+1, k+2; fewer
+	// than three vertices draw nothing, as glDrawArrays would
+	int tris = s_iRcStripCount - 2;
+	if ( tris <= 0 )
 		return;
 
-	if ( !s_bRcArraysOn )
-	{
-		if ( gl.glClientActiveTextureARB )
-			gl.glClientActiveTextureARB( GL_TEXTURE0_ARB );
-		gl.glTexCoordPointer( 2, GL_FLOAT, sizeof( RcStripVert_t ), s_RcStrip[0].st );
-		gl.glColorPointer( 4, GL_FLOAT, sizeof( RcStripVert_t ), s_RcStrip[0].color );
-		gl.glVertexPointer( 3, GL_FLOAT, sizeof( RcStripVert_t ), s_RcStrip[0].pos );
-		gl.glEnableClientState( GL_TEXTURE_COORD_ARRAY );
-		gl.glEnableClientState( GL_COLOR_ARRAY );
-		gl.glEnableClientState( GL_VERTEX_ARRAY );
-		s_bRcArraysOn = TRUE;
-	}
+	if ( s_iRcMeshCount + tris * 3 > RC_MESH_VERTS )
+		RcMeshFlush();
 
-	gl.glDrawArrays( s_RcStripMode, 0, s_iRcStripCount );
+	RcStripVert_t *out = &s_RcMesh[s_iRcMeshCount];
+	for ( int k = 0; k < tris; k++ )
+	{
+		if ( s_RcStripMode == GL_TRIANGLE_FAN )
+		{
+			*out++ = s_RcStrip[0];
+			*out++ = s_RcStrip[k + 1];
+		}
+		else if ( k & 1 )
+		{
+			*out++ = s_RcStrip[k + 1];
+			*out++ = s_RcStrip[k];
+		}
+		else
+		{
+			*out++ = s_RcStrip[k];
+			*out++ = s_RcStrip[k + 1];
+		}
+		*out++ = s_RcStrip[k + 2];
+	}
+	s_iRcMeshCount += tris * 3;
 }
 
 // ReCoF (B287): whether GL_DrawPoints hides the vertices of a bone. Retail made these tests for every
@@ -2277,6 +2326,8 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 				RcEnd( );
 			}
 		}
+
+		RcMeshFlush();	// ReCoF (B287 step 3): the whole mesh in one draw, before its state is undone
 
 		if (ptex->flags & STUDIO_NF_ADDITIVE && !useblending)	// buz
 		{

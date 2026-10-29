@@ -121,7 +121,7 @@
       "default": "1",
       "group": "Performance",
       "label_en": "Faster model drawing",
-      "desc_en": "Sends each model strip to the driver in one call. The picture is the same; off is the retail path, for comparison."
+      "desc_en": "Sends each model mesh to the driver in one call. The picture is the same; off is the retail path, for comparison."
     },
     {
       "name": "rc_vsync",
