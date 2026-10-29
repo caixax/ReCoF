@@ -8657,7 +8657,8 @@ void CBasePlayer::ImpulseCommands( )
 
 		if ( tr.flFraction != 1.0 )
 		{// line hit something, so paint a decal
-			m_flNextDecalTime = gpGlobals->time + decalfrequency.value;
+			// ReCoF: no wait between sprays in single player; decalfrequency (30 s) keeps co-op from being flooded
+			m_flNextDecalTime = gpGlobals->time + ( gpGlobals->maxClients > 1 ? decalfrequency.value : 0 );
 			CSprayCan *pCan = GetClassPtr((CSprayCan *)NULL);
 			pCan->Spawn( pev );
 		}
