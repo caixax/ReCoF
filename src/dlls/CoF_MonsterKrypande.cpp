@@ -23,6 +23,7 @@
 #include	"schedule.h"
 #include	"player.h"
 #include	"effects.h"
+#include	"scriptevent.h"
 
 
 //=========================================================
@@ -294,6 +295,31 @@ void CKrypande :: HandleAnimEvent( MonsterEvent_t *pEvent )
 
 			if (RANDOM_LONG(0,1))
 				AttackSound();
+		}
+		break;
+
+		case SCRIPT_EVENT_SOUND:
+		{
+			// ReCoF (B303): krypande.mdl and krypandenej.mdl play krypande/k_crawl1.wav to k_crawl7.wav, but
+			// the files are slower/k_crawl*.wav, which Precache loads, so the crawling never made a sound
+			// ("SV_StartSound: krypande/k_crawl1.wav not precached"). Play the slower one, as the base does
+			int i;
+			const char *pszSound = pEvent->options;
+
+			if ( pszSound && !strncmp( pszSound, "krypande/", 9 ) )
+			{
+				for ( i = 0; i < ARRAYSIZE( pCrawlSounds ); i++ )
+				{
+					if ( !strcmp( pszSound + 9, pCrawlSounds[i] + 7 ) )	// past "slower/"
+					{
+						if ( !(pev->spawnflags & SF_MONSTER_GAG) || m_MonsterState != MONSTERSTATE_IDLE )
+							EMIT_SOUND( edict(), CHAN_BODY, pCrawlSounds[i], 1.0, ATTN_IDLE );
+						return;
+					}
+				}
+			}
+
+			CBaseMonster::HandleAnimEvent( pEvent );
 		}
 		break;
 
