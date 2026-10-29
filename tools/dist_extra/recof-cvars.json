@@ -252,6 +252,14 @@
       "group": "Viewmodel",
       "label_en": "Weapon offset up",
       "desc_en": "Moves the weapon model up (or down, below 0), in units. Iron sights ignore it."
+    },
+    {
+      "name": "novid",
+      "type": "flag",
+      "default": "0",
+      "group": "Startup",
+      "label_en": "Skip the intro videos",
+      "desc_en": "Starts without the two videos before the menu (the engine's -novid)."
     }
   ]
 }

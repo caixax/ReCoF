@@ -112,8 +112,8 @@ NEW CONSOLE OPTIONS (default in brackets)
   rc_viewmodel_ofs_forward, rc_viewmodel_ofs_right, rc_viewmodel_ofs_up [0]
                            move the weapon model, in units
   god, noclip, notarget, fly work with sv_cheats 1
-  Launch options: -rc_aff (pin to the first core as retail), -rc_nosleep
-  (retail frame limiter that spins a whole core)
+  Launch options: -novid (skip the intro videos), -rc_aff (pin to the first core
+  as retail), -rc_nosleep (retail frame limiter that spins a whole core)
 
 HOW TO GO BACK
 Delete the test copy. If you replaced files in your Steam installation, Steam

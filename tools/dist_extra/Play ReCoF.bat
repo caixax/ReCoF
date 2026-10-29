@@ -1,6 +1,6 @@
 @echo off
 rem ReCoF test launch: the arguments CoFLaunchApp gives cof.exe, plus -condebug, which writes the
-rem console to cryoffear\qconsole.log. Steam must be running. Change the settings below, then
+rem console to qconsole.log next to cof.exe. Steam must be running. Change the settings below, then
 rem double-click this file.
 
 rem Screen size: leave both empty to keep the last one, or set for example 1920 and 1080
@@ -10,8 +10,8 @@ set HEIGHT=
 rem 1 = windowed, 0 = fullscreen
 set WINDOWED=0
 
-rem More launch options, for example -rc_aff (pin to the first core as retail did)
-rem or -rc_nosleep (the retail frame limiter)
+rem More launch options, for example -novid (skip the intro videos), -rc_aff (pin to the first
+rem core as retail did) or -rc_nosleep (the retail frame limiter)
 set EXTRA=
 
 cd /d "%~dp0"
