@@ -1061,30 +1061,8 @@ void CStudioModelRenderer::Lighting (vec3_t &lv, int bone, int flags, vec3_t nor
 
 	lv = illum;
 
-	// Cry of Fear: attachments of the left hand weapon (DualWield), for its muzzle flash and light
-	cl_entity_t *pSavedEntity = m_pCurrentEntity;
-
-	if (g_iDualLighting_guess && !(gHUD.m_iHideHUDDisplay & HIDEHUD_WEAPONS) && g_pHeadShieldEnt_guess)
-	{
-		m_pCurrentEntity = g_pHeadShieldEnt_guess;
-		StudioCalcAttachments();
-		IEngineStudio.StudioClientEvents();
-
-		if (m_pCurrentEntity->index > 0)
-		{
-			cl_entity_t *ent = gEngfuncs.GetEntityByIndex(m_pCurrentEntity->index);
-			memcpy(ent->attachment, m_pCurrentEntity->attachment, sizeof(vec3_t) * 4);
-		}
-
-		if (g_iDualLighting_guess)
-		{
-			vecDualAttachment0_guess = m_pCurrentEntity->attachment[0];
-			vecDualAttachment1_guess = m_pCurrentEntity->attachment[1];
-			g_iDualLighting_guess = 0;
-		}
-	}
-
-	m_pCurrentEntity = pSavedEntity;
+	// ReCoF (B294): the attachments of the left hand weapon were worked out here, in a test made for every
+	// normal; GL_DrawPoints now does it once, at the point where the first normal of a model is lit
 }
 
 
@@ -1838,14 +1816,55 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 
 	vec3_t *lv = g_pvlightvalues;
 	int j;
+
+	// Cry of Fear: attachments of the left hand weapon (DualWield), for its muzzle flash and light.
+	// ReCoF (B294): retail ran this inside Lighting, which tested it for every normal and ran it on the first
+	// normal lit after the flag was set; the light values do not depend on it, so running it here, before the
+	// first normal of the first model that has one, gives the same attachments at the same point of the frame
+	if (g_iDualLighting_guess && !(gHUD.m_iHideHUDDisplay & HIDEHUD_WEAPONS) && g_pHeadShieldEnt_guess)
+	{
+		int iNumNorms = 0;
+		for (j = 0; j < m_pSubModel->nummesh; j++)
+			iNumNorms += pmesh[j].numnorms;
+
+		if (iNumNorms > 0)
+		{
+			cl_entity_t *pSavedEntity = m_pCurrentEntity;
+
+			m_pCurrentEntity = g_pHeadShieldEnt_guess;
+			StudioCalcAttachments();
+			IEngineStudio.StudioClientEvents();
+
+			if (m_pCurrentEntity->index > 0)
+			{
+				cl_entity_t *ent = gEngfuncs.GetEntityByIndex(m_pCurrentEntity->index);
+				memcpy(ent->attachment, m_pCurrentEntity->attachment, sizeof(vec3_t) * 4);
+			}
+
+			vecDualAttachment0_guess = m_pCurrentEntity->attachment[0];
+			vecDualAttachment1_guess = m_pCurrentEntity->attachment[1];
+			g_iDualLighting_guess = 0;
+
+			m_pCurrentEntity = pSavedEntity;
+		}
+	}
+
 	for (j = 0; j < m_pSubModel->nummesh; j++)
 	{
 		int flags = ptexture[pskinref[pmesh[j].skinref]].flags;
+
+		// ReCoF (B294): a fullbright texture takes its colour from cof_fullbrighttextures, so its light values
+		// are never read, except fullbright_mess with the phone off and every mesh when the cvar is 0
+		const char *pszTexName = ptexture[pskinref[pmesh[j].skinref]].name;
+		bool bSkipLight = cv_fullbrighttextures_guess->value && strstr(pszTexName, "fullbright") &&
+			!(gHUD.m_bPhoneOff_guess && strstr(pszTexName, "fullbright_mess"));
+
 		for (i = 0; i < pmesh[j].numnorms; i++, lv++, pstudionorms++, pnormbone++)
 		{
 		//	float lv_tmp;
 		//	Lighting (&lv_tmp, *pnormbone, flags, (float *)pstudionorms);
-			Lighting (*lv, *pnormbone, flags, (float *)pstudionorms); // buz
+			if (!bSkipLight)	// ReCoF (B294)
+				Lighting (*lv, *pnormbone, flags, (float *)pstudionorms); // buz
 
 			// FIX: move this check out of the inner loop
 			if (flags & STUDIO_NF_CHROME)
