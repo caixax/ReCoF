@@ -34,6 +34,7 @@ extern "C"
 #include "HUDControl_guess.h"
 #include "RECBInventory_guess.h"
 #include "rc_client.h"
+#include "rc_version.h"
 #include "windows.h"
 
 //=========================================================
@@ -65,6 +66,7 @@ public:
 
 extern "C" __declspec( dllimport ) bool __cdecl SteamAPI_Init();
 extern "C" __declspec( dllimport ) ISteamUser * __cdecl SteamUser();
+extern "C" __declspec( dllimport ) void __cdecl SteamAPI_UseBreakpadCrashHandler( const char *pchVersion, const char *pchDate, const char *pchTime, bool bFullMemoryDumps, void *pvContext, void *pfnPreMinidumpCallback );
 //=========================================================
 
 
@@ -1554,6 +1556,13 @@ void InitInput (void)
 	KB_Init();
 	// Initialize view system
 	V_Init();
+
+	// ReCoF (B301): without a crash handler chosen first, SteamAPI_Init of the game folder's steam_api.dll
+	// loads the 2004 steam.dll next to it and calls its SteamMiniDumpInit, which waits about 18 seconds on
+	// Steam servers that no longer answer: the game froze after the intro videos.
+	// The Steam client's own crash handler, which the engine already picks for its Steam API
+	// (sys_dll2.cpp), leaves steam.dll alone
+	SteamAPI_UseBreakpadCrashHandler( "ReCoF-v" RECOF_VERSION, __DATE__, __TIME__, false, NULL, NULL );
 
 	if ( SteamAPI_Init() )
 		bSteamInit_guess = true;
