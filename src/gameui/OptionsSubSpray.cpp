@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "OptionsSubSpray.h"
 #include "EngineInterface.h"
@@ -28,10 +29,27 @@ using namespace vgui;
 
 #define SPRAY_TRANSPARENT	255		// the palette index of the see-through pixels; its color is pure blue
 
-// the longer side of the logo, in pixels, which is also its size in world units; the engine refuses a
-// logo wider or taller than 256 (Draw_ValidateCustomLogo), and Half-Life's logos are 64
-static const int s_SpraySizes[] = { 64, 96, 128, 160, 192, 256 };
-static int s_iSpraySize = 128;		// the size picked last, for the next picture
+// The engine takes a spray file of 1024 to 20480 bytes only (COM_CreateCustomization; anything else is
+// "Ignoring invalid custom decal") and a logo side of 256 at most (Draw_ValidateCustomLogo). 14336
+// pixels, 112 x 128, is the most a file of that size holds with its mip levels and palette. A logo
+// pixel is a world unit; Half-Life's logos are 64 x 64
+#define SPRAY_MIN_FILE		1024
+#define SPRAY_MAX_FILE		20480
+#define SPRAY_MAX_SIDE		256
+
+struct SpraySize_t
+{
+	const char	*name;
+	int			pixels;		// the most the logo may have; its shape follows the picture's
+};
+
+static const SpraySize_t s_SpraySizes[] =
+{
+	{ "Small (64 x 64 if square)", 64 * 64 },
+	{ "Medium (96 x 96 if square)", 96 * 96 },
+	{ "Largest the game takes", 112 * 128 },
+};
+static int s_iSpraySize = 2;		// the row picked last, for the next picture
 
 //-----------------------------------------------------------------------------
 // GDI+ flat API
@@ -63,11 +81,11 @@ typedef int ( WINAPI *GdipDrawImageRectRectI_t )( void *graphics, void *image, i
 typedef int ( WINAPI *GdipDelete_t )( void *object );
 
 //-----------------------------------------------------------------------------
-// Purpose: reads a picture and draws it, scaled to maxSide on its longer side and centered on a canvas
-//			whose sides are multiples of 16, which a mipmapped texture needs. *pBGRA gets B, G, R, A per
-//			pixel, see-through outside the picture; the caller frees it. On failure *pError says why
+// Purpose: reads a picture and draws it as large as fits maxPixels, centered on a canvas whose sides
+//			are multiples of 16, which a mipmapped texture needs. *pBGRA gets B, G, R, A per pixel,
+//			see-through outside the picture; the caller frees it. On failure *pError says why
 //-----------------------------------------------------------------------------
-static bool LoadSprayPicture( const char *pszPath, int maxSide, unsigned char **pBGRA, int *pWide, int *pTall, const char **pError )
+static bool LoadSprayPicture( const char *pszPath, int maxPixels, unsigned char **pBGRA, int *pWide, int *pTall, const char **pError )
 {
 	HMODULE hGdip;
 	GdipStartup_t pStartup;
@@ -87,6 +105,7 @@ static bool LoadSprayPicture( const char *pszPath, int maxSide, unsigned char **
 	void *source = NULL, *canvas = NULL, *graphics = NULL, *attributes = NULL;
 	unsigned int srcWide = 0, srcTall = 0;
 	int drawWide, drawTall, wide, tall;
+	double scale;
 	unsigned char *bgra;
 	bool ok = false;
 
@@ -137,25 +156,25 @@ static bool LoadSprayPicture( const char *pszPath, int maxSide, unsigned char **
 	if ( pCreateBitmapFromFile( wszPath, &source ) == 0 && pGetImageWidth( source, &srcWide ) == 0 &&
 		 pGetImageHeight( source, &srcTall ) == 0 && srcWide && srcTall )
 	{
-		// the longer side becomes maxSide; the canvas rounds each side up to 16
-		if ( srcWide >= srcTall )
+		// the picture's area becomes maxPixels, then shrinks until the canvas, each side rounded up to
+		// 16, fits maxPixels and no side passes SPRAY_MAX_SIDE; a 16 x 16 canvas always does
+		scale = sqrt( (double)maxPixels / ( (double)srcWide * srcTall ) );
+		for ( ;; )
 		{
-			drawWide = maxSide;
-			drawTall = (int)( (double)maxSide * srcTall / srcWide + 0.5 );
-		}
-		else
-		{
-			drawTall = maxSide;
-			drawWide = (int)( (double)maxSide * srcWide / srcTall + 0.5 );
-		}
+			drawWide = (int)( srcWide * scale + 0.5 );
+			drawTall = (int)( srcTall * scale + 0.5 );
+			if ( drawWide < 1 )
+				drawWide = 1;
+			if ( drawTall < 1 )
+				drawTall = 1;
 
-		if ( drawWide < 1 )
-			drawWide = 1;
-		if ( drawTall < 1 )
-			drawTall = 1;
+			wide = ( drawWide + 15 ) & ~15;
+			tall = ( drawTall + 15 ) & ~15;
+			if ( wide * tall <= maxPixels && wide <= SPRAY_MAX_SIDE && tall <= SPRAY_MAX_SIDE )
+				break;
 
-		wide = ( drawWide + 15 ) & ~15;
-		tall = ( drawTall + 15 ) & ~15;
+			scale *= 0.98;
+		}
 
 		bgra = (unsigned char *)calloc( wide * tall, 4 );
 		if ( bgra && pCreateBitmapFromScan0( wide, tall, wide * 4, GDIP_PIXELFORMAT_32BPP_ARGB, bgra, &canvas ) == 0 &&
@@ -348,6 +367,11 @@ static unsigned char *MakeSprayWad( const unsigned char *bgra, int wide, int tal
 
 	lumpSize = ( lumpSize + 3 ) & ~3;
 	fileSize = 12 + lumpSize + 32;
+	if ( fileSize < SPRAY_MIN_FILE || fileSize > SPRAY_MAX_FILE )
+	{
+		*pError = "This spray would be too big for the game";
+		return NULL;
+	}
 
 	visible = (SprayPixel_t *)malloc( pixels * sizeof( SprayPixel_t ) );
 	indices = (unsigned char *)malloc( pixels );
@@ -619,7 +643,6 @@ COptionsSubSpray::COptionsSubSpray( vgui::Panel *parent ) : vgui::PropertyPage( 
 	Label *label;
 	Button *button;
 	int i;
-	char text[64];
 
 	m_pWad = NULL;
 	m_nWadSize = 0;
@@ -632,21 +655,16 @@ COptionsSubSpray::COptionsSubSpray( vgui::Panel *parent ) : vgui::PropertyPage( 
 	m_pImageList = new ComboBox( this, "ImageList", 12, false );
 	m_pImageList->SetBounds( 16, 36, 236, 24 );
 
-	label = new Label( this, "SizeLabel", "Size (the longer side, in units)" );
+	label = new Label( this, "SizeLabel", "Size (a logo pixel is a world unit)" );
 	label->SetBounds( 16, 70, 240, 20 );
 
-	m_pSizeList = new ComboBox( this, "SizeList", 6, false );
-	m_pSizeList->SetBounds( 16, 92, 100, 24 );
+	m_pSizeList = new ComboBox( this, "SizeList", 3, false );
+	m_pSizeList->SetBounds( 16, 92, 236, 24 );
 	for ( i = 0; i < sizeof( s_SpraySizes ) / sizeof( s_SpraySizes[0] ); i++ )
 	{
-		KeyValues *data = new KeyValues( "size", "size", s_SpraySizes[i] );
+		KeyValues *data = new KeyValues( "size", "row", i );
 
-		if ( s_SpraySizes[i] == 64 )
-			sprintf( text, "%d (Half-Life)", s_SpraySizes[i] );
-		else
-			sprintf( text, "%d", s_SpraySizes[i] );
-
-		m_pSizeList->AddItem( text, data );
+		m_pSizeList->AddItem( s_SpraySizes[i].name, data );
 		data->deleteThis();
 	}
 
@@ -724,12 +742,9 @@ void COptionsSubSpray::FillImageList( void )
 	}
 	filesystem()->FindClose( handle );
 
-	sizeRow = 2;
-	for ( i = 0; i < sizeof( s_SpraySizes ) / sizeof( s_SpraySizes[0] ); i++ )
-	{
-		if ( s_SpraySizes[i] == s_iSpraySize )
-			sizeRow = i;
-	}
+	sizeRow = s_iSpraySize;
+	if ( sizeRow < 0 || sizeRow >= sizeof( s_SpraySizes ) / sizeof( s_SpraySizes[0] ) )
+		sizeRow = 2;
 
 	m_pImageList->ActivateItemByRow( 0 );
 	m_pSizeList->ActivateItemByRow( sizeRow );
@@ -800,7 +815,9 @@ void COptionsSubSpray::MakeSprayFromSelection( void )
 	m_pSizeList->SetEnabled( true );
 	data = m_pSizeList->GetActiveItemUserData();
 	if ( data )
-		s_iSpraySize = data->GetInt( "size", 128 );
+		s_iSpraySize = data->GetInt( "row", 2 );
+	if ( s_iSpraySize < 0 || s_iSpraySize >= sizeof( s_SpraySizes ) / sizeof( s_SpraySizes[0] ) )
+		s_iSpraySize = 2;
 
 	m_pPreview->SetSpray( NULL, 0, 0 );
 
@@ -812,7 +829,7 @@ void COptionsSubSpray::MakeSprayFromSelection( void )
 		return;
 	}
 
-	if ( !LoadSprayPicture( local, s_iSpraySize, &bgra, &wide, &tall, &error ) )
+	if ( !LoadSprayPicture( local, s_SpraySizes[s_iSpraySize].pixels, &bgra, &wide, &tall, &error ) )
 	{
 		SetStatus( error );
 		return;
