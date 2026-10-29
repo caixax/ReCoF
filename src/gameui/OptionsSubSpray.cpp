@@ -51,6 +51,10 @@ static const SpraySize_t s_SpraySizes[] =
 };
 static int s_iSpraySize = 2;		// the row picked last, for the next picture
 
+// rc_spray_size (client.dll, gl_decals.cpp): the longer side of the spray on the wall, in units; 0 is
+// a unit a picture pixel, as in Half-Life
+static const int s_SprayWallSizes[] = { 0, 32, 48, 64, 96, 128, 192, 256, 384, 512 };
+
 //-----------------------------------------------------------------------------
 // GDI+ flat API
 //-----------------------------------------------------------------------------
@@ -650,16 +654,16 @@ COptionsSubSpray::COptionsSubSpray( vgui::Panel *parent ) : vgui::PropertyPage( 
 	m_bFilling = false;
 
 	label = new Label( this, "ImageLabel", "Spray picture (from the logos folder)" );
-	label->SetBounds( 16, 14, 240, 20 );
+	label->SetBounds( 16, 10, 240, 20 );
 
 	m_pImageList = new ComboBox( this, "ImageList", 12, false );
-	m_pImageList->SetBounds( 16, 36, 236, 24 );
+	m_pImageList->SetBounds( 16, 30, 236, 24 );
 
-	label = new Label( this, "SizeLabel", "Size (a logo pixel is a world unit)" );
-	label->SetBounds( 16, 70, 240, 20 );
+	label = new Label( this, "SizeLabel", "Picture detail" );
+	label->SetBounds( 16, 60, 240, 20 );
 
 	m_pSizeList = new ComboBox( this, "SizeList", 3, false );
-	m_pSizeList->SetBounds( 16, 92, 236, 24 );
+	m_pSizeList->SetBounds( 16, 80, 236, 24 );
 	for ( i = 0; i < sizeof( s_SpraySizes ) / sizeof( s_SpraySizes[0] ); i++ )
 	{
 		KeyValues *data = new KeyValues( "size", "row", i );
@@ -668,22 +672,26 @@ COptionsSubSpray::COptionsSubSpray( vgui::Panel *parent ) : vgui::PropertyPage( 
 		data->deleteThis();
 	}
 
+	label = new Label( this, "WallLabel", "Size on the wall" );
+	label->SetBounds( 16, 110, 240, 20 );
+
+	m_pWallList = new ComboBox( this, "WallList", 10, false );
+	m_pWallList->SetBounds( 16, 130, 236, 24 );
+
 	button = new Button( this, "OpenFolder", "Open the logos folder" );
 	button->SetCommand( "OpenLogos" );
-	button->SetBounds( 16, 130, 170, 24 );
+	button->SetBounds( 16, 166, 170, 24 );
 
 	button = new Button( this, "Refresh", "Refresh" );
 	button->SetCommand( "Refresh" );
-	button->SetBounds( 192, 130, 60, 24 );
+	button->SetBounds( 192, 166, 60, 24 );
 
 	label = new Label( this, "Help1", "PNG, JPG, BMP, GIF or TIFF; see-through parts" );
-	label->SetBounds( 16, 170, 250, 18 );
+	label->SetBounds( 16, 200, 250, 18 );
 	label = new Label( this, "Help2", "stay see-through. Spray with the Spray logo" );
-	label->SetBounds( 16, 188, 250, 18 );
+	label->SetBounds( 16, 218, 250, 18 );
 	label = new Label( this, "Help3", "key of the Keyboard tab (impulse 201)." );
-	label->SetBounds( 16, 206, 250, 18 );
-	label = new Label( this, "Help4", "A new spray shows from the next map or save." );
-	label->SetBounds( 16, 224, 250, 18 );
+	label->SetBounds( 16, 236, 250, 18 );
 
 	m_pStatus = new Label( this, "Status", "" );
 	m_pStatus->SetBounds( 16, 262, 500, 20 );
@@ -748,6 +756,40 @@ void COptionsSubSpray::FillImageList( void )
 
 	m_pImageList->ActivateItemByRow( 0 );
 	m_pSizeList->ActivateItemByRow( sizeRow );
+
+	// the sizes on the wall, with the one in use picked; a size set in the console gets a row of its own
+	int wallSize = (int)engine->pfnGetCvarFloat( "rc_spray_size" );
+	int wallRow = -1;
+	char text[64];
+
+	m_pWallList->DeleteAllItems();
+	for ( i = 0; i < sizeof( s_SprayWallSizes ) / sizeof( s_SprayWallSizes[0] ); i++ )
+	{
+		if ( s_SprayWallSizes[i] == 0 )
+			strcpy( text, "As the picture (a unit a pixel)" );
+		else if ( s_SprayWallSizes[i] == 64 )
+			sprintf( text, "%d units (Half-Life)", s_SprayWallSizes[i] );
+		else
+			sprintf( text, "%d units", s_SprayWallSizes[i] );
+
+		data = new KeyValues( "wall", "units", s_SprayWallSizes[i] );
+		m_pWallList->AddItem( text, data );
+		data->deleteThis();
+
+		if ( s_SprayWallSizes[i] == wallSize )
+			wallRow = i;
+	}
+
+	if ( wallRow < 0 )
+	{
+		sprintf( text, "%d units", wallSize );
+		data = new KeyValues( "wall", "units", wallSize );
+		m_pWallList->AddItem( text, data );
+		data->deleteThis();
+		wallRow = i;
+	}
+
+	m_pWallList->ActivateItemByRow( wallRow );
 	m_bFilling = false;
 }
 
@@ -918,7 +960,17 @@ void COptionsSubSpray::OnResetData()
 void COptionsSubSpray::OnApplyChanges()
 {
 	FileHandle_t file;
+	KeyValues *data;
 	char command[128];
+
+	data = m_pWallList->GetActiveItemUserData();
+	if ( data && data->GetInt( "units", 0 ) != (int)engine->pfnGetCvarFloat( "rc_spray_size" ) )
+	{
+		_snprintf( command, sizeof( command ), "rc_spray_size %d\n", data->GetInt( "units", 0 ) );
+		command[sizeof( command ) - 1] = 0;
+		engine->pfnClientCmd( command );
+		SetStatus( "Saved. Your next spray has the new size." );
+	}
 
 	if ( !m_pWad )
 		return;
@@ -938,7 +990,7 @@ void COptionsSubSpray::OnApplyChanges()
 	command[sizeof( command ) - 1] = 0;
 	engine->pfnClientCmd( command );
 
-	SetStatus( "Saved. The new spray shows from the next map or save." );
+	SetStatus( "Saved. Your next spray uses it." );
 }
 
 void COptionsSubSpray::OnCommand( const char *command )
@@ -961,8 +1013,13 @@ void COptionsSubSpray::OnCommand( const char *command )
 //-----------------------------------------------------------------------------
 // Purpose: a list changed
 //-----------------------------------------------------------------------------
-void COptionsSubSpray::OnTextChanged()
+void COptionsSubSpray::OnTextChanged( vgui::Panel *panel )
 {
-	if ( !m_bFilling )
+	if ( m_bFilling )
+		return;
+
+	if ( panel == m_pWallList )
+		PostActionSignal( new KeyValues( "ApplyButtonEnable" ) );
+	else
 		MakeSprayFromSelection();
 }

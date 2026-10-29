@@ -126,6 +126,16 @@
       "desc_en": "1 shows how long each part of the frame takes, 2 adds GPU times."
     },
     {
+      "name": "rc_spray_size",
+      "type": "int",
+      "default": "0",
+      "min": 0,
+      "max": 512,
+      "group": "Spray",
+      "label_en": "Spray size",
+      "desc_en": "The longer side of your spray on the wall, in units. 0 keeps a unit a picture pixel, as in Half-Life. The picture is picked in Options, Spray."
+    },
+    {
       "name": "rc_crosshair",
       "type": "bool",
       "default": "1",

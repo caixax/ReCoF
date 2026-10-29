@@ -37,7 +37,7 @@ public:
 private:
 	virtual void OnCommand( const char *command );
 
-	MESSAGE_FUNC( OnTextChanged, "TextChanged" );
+	MESSAGE_FUNC_PTR( OnTextChanged, "TextChanged", panel );
 
 	void	FillImageList( void );
 	void	ShowCurrentSpray( void );
@@ -47,6 +47,7 @@ private:
 
 	vgui::ComboBox		*m_pImageList;
 	vgui::ComboBox		*m_pSizeList;
+	vgui::ComboBox		*m_pWallList;		// rc_spray_size
 	vgui::Label			*m_pStatus;
 	CSprayPreviewPanel	*m_pPreview;
 

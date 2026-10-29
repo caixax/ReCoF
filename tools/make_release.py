@@ -84,7 +84,7 @@ NOTES
 - The Linux patcher does not apply to these files.
 - Sprays: Options, Spray makes your spray from a PNG, JPG, BMP, GIF or TIFF
   picture in cryoffear\\logos; Options, Keyboard has the Spray logo key
-  (impulse 201). A new spray shows from the next map or save.
+  (impulse 201). Single player has no wait between sprays.
 
 NEW CONSOLE OPTIONS (default in brackets)
   rc_retail_gameplay [0]   1 = retail behavior of every balance fix
@@ -103,6 +103,8 @@ NEW CONSOLE OPTIONS (default in brackets)
   rc_prof_dump             prints the rc_prof numbers to the console
   rc_modelarrays [1]       0 = retail model drawing, for comparison
   rc_dlightcull [1]        0 = retail, draw lights that cannot reach the screen
+  rc_spray_size [0]        size of your spray on the wall in units (0 = a unit a
+                           picture pixel); Options, Spray sets it too
   rc_crosshair [1]         0 = no red crosshair (the ammo display stays)
   rc_cross [0]             1 = custom crosshair as BunnymodXT's bxt_cross, set by
                            rc_cross_color, _alpha, _thickness, _size, _gap,
