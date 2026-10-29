@@ -100,7 +100,7 @@ protected:
 	void				CenterEngineWindow( HWND hWndCenter, int width, int height );
 	void				LoadStartupGraphic( void );
 	void				DrawStartupGraphic( HWND window );
-	void				DrawImage_guess( HDC hdc, byte *rgba, int imageWidth, int imageHeight, int x0, int y0, int x1, int y1 );
+	void				DrawImage_guess( unsigned int *pBits, int bitsWide, int bitsTall, byte *rgba, int imageWidth, int imageHeight, int x0, int y0, int x1, int y1 );
 
 	struct bimage_t
 	{
@@ -473,8 +473,24 @@ void CVideoMode_Common::DrawStartupGraphic( HWND window )
 
 	HDC hdc = GetDC( window );
 	HDC memDC_guess = CreateCompatibleDC( hdc );
-	HBITMAP bitmap_guess = CreateCompatibleBitmap( hdc, mode->width, mode->height );
-	SelectObject( memDC_guess, bitmap_guess );
+
+	// ReCoF (B257): the tiles go straight into the memory of a 32-bit DIB. Retail drew them into a
+	// compatible bitmap with one SetPixel call per screen pixel, which froze the window for about 2 s at
+	// 1920x1080 and 8.6 s at 4K right after the intro videos
+	BITMAPINFO bmi;
+	unsigned int *pBits = NULL;
+
+	memset( &bmi, 0, sizeof( bmi ) );
+	bmi.bmiHeader.biSize = sizeof( BITMAPINFOHEADER );
+	bmi.bmiHeader.biWidth = mode->width;
+	bmi.bmiHeader.biHeight = -mode->height;	// top-down rows, as SetPixel counted them
+	bmi.bmiHeader.biPlanes = 1;
+	bmi.bmiHeader.biBitCount = 32;
+	bmi.bmiHeader.biCompression = BI_RGB;
+
+	HBITMAP bitmap_guess = CreateDIBSection( hdc, &bmi, DIB_RGB_COLORS, (void **)&pBits, NULL, 0 );
+	if ( bitmap_guess )
+		SelectObject( memDC_guess, bitmap_guess );
 
 	float xScale = (float)mode->width / m_iBaseResX;
 	float yScale = (float)mode->height / m_iBaseResY;
@@ -498,12 +514,16 @@ void CVideoMode_Common::DrawStartupGraphic( HWND window )
 			dt = dy + bimage.height;
 		}
 
-		DrawImage_guess( memDC_guess, bimage.buffer, bimage.width, bimage.height, dx, dy, dw, dt );
+		if ( pBits )
+			DrawImage_guess( pBits, mode->width, mode->height, bimage.buffer, bimage.width, bimage.height, dx, dy, dw, dt );
 	}
 
-	SetViewportOrgEx( hdc, 0, 0, NULL );
-	BitBlt( hdc, 0, 0, mode->width, mode->height, memDC_guess, 0, 0, SRCCOPY );
-	DeleteObject( bitmap_guess );
+	if ( pBits )
+	{
+		SetViewportOrgEx( hdc, 0, 0, NULL );
+		BitBlt( hdc, 0, 0, mode->width, mode->height, memDC_guess, 0, 0, SRCCOPY );
+		DeleteObject( bitmap_guess );
+	}
 	DeleteDC( memDC_guess );
 	ReleaseDC( window, hdc );
 
@@ -516,7 +536,9 @@ void CVideoMode_Common::DrawStartupGraphic( HWND window )
 	m_ImageID.Purge();
 }
 
-void CVideoMode_Common::DrawImage_guess( HDC hdc, byte *rgba, int imageWidth, int imageHeight, int x0, int y0, int x1, int y1 )
+// ReCoF (B257): writes into pBits (bitsWide x bitsTall, 0x00RRGGBB) the pixels retail set one SetPixel
+// call at a time; SetPixel drew nothing outside the bitmap, so neither does this
+void CVideoMode_Common::DrawImage_guess( unsigned int *pBits, int bitsWide, int bitsTall, byte *rgba, int imageWidth, int imageHeight, int x0, int y0, int x1, int y1 )
 {
 	int x0_guess = x0;
 	int ypos_guess = y0;
@@ -529,13 +551,21 @@ void CVideoMode_Common::DrawImage_guess( HDC hdc, byte *rgba, int imageWidth, in
 
 	for ( int j_guess = 0; j_guess < height_guess; j_guess++ )
 	{
+		int y = ypos_guess + j_guess;
+		if ( y < 0 || y >= bitsTall )
+			continue;
+
 		byte *src = rgba + (int)( j_guess * flScaleY_guess ) * pitch_guess;
+		unsigned int *dest = pBits + y * bitsWide;
 		int xacc = 0;
 
 		for ( int x = 0; x < width_guess; x++ )
 		{
 			byte *p = &src[ ( xacc >> 8 ) * 4 ];
-			SetPixel( hdc, x0_guess + x, ypos_guess + j_guess, RGB( p[0], p[1], p[2] ) );
+			int dx = x0_guess + x;
+
+			if ( dx >= 0 && dx < bitsWide )
+				dest[ dx ] = ( p[0] << 16 ) | ( p[1] << 8 ) | p[2];
 			xacc += xInc_guess;
 		}
 	}
