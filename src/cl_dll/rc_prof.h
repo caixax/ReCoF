@@ -21,6 +21,9 @@ enum
 	RCP_WORLD_DECALS,	// decals
 	RCP_SKY,			// sky
 	RCP_MODELS,			// studio models and players
+	RCP_MDL_VERTS,		// models: the vertices moved by their bones (GL_DrawPoints)
+	RCP_MDL_LIGHT,		// models: the normals lit (GL_DrawPoints)
+	RCP_MDL_DRAW,		// models: the meshes sent to the driver (GL_DrawPoints)
 	RCP_TRANS,			// transparent triangles: fog, particles, objects, grass, weather, glows
 	RCP_WATER,			// Cg water
 	RCP_POST,			// post effects

@@ -39,14 +39,15 @@ struct RcGpuFrame_t
 static const char *s_szScopeName[RCP_COUNT] =
 {
 	"other", "view", "entities", "client frame", "world", "world 1st", "bump", "dlights", "world 2nd",
-	"specular", "brush ents", "decals", "sky", "models", "transparent", "water", "post fx", "hud"
+	"specular", "brush ents", "decals", "sky", "models", "mdl vertices", "mdl lighting", "mdl drawing",
+	"transparent", "water", "post fx", "hud"
 };
 
 // the scopes that issue GL work get their own GPU time; the GPU time of the others falls to "other"
 static const bool s_bGLScope[RCP_COUNT] =
 {
 	false, false, false, false, true, true, true, true, true,
-	true, true, true, true, true, true, true, true, true
+	true, true, true, true, true, false, false, false, true, true, true, true
 };
 
 static cvar_t		*rc_prof;
@@ -112,6 +113,11 @@ static void RcGpuFollow( void )
 		return;
 
 	int cur = RcCurrent();
+
+	// the parts of models are timed on the CPU only; the GPU keeps charging models, so they add no marks
+	if ( cur == RCP_MDL_VERTS || cur == RCP_MDL_LIGHT || cur == RCP_MDL_DRAW )
+		cur = RCP_MODELS;
+
 	int scope = s_bGLScope[cur] ? cur : RCP_OTHER;
 
 	if ( scope != s_iGpuScope )

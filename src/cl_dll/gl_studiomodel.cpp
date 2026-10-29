@@ -29,6 +29,7 @@
 #include "gl_renderer.h"
 #include "gl_dlight.h"
 #include "gl_texloader.h"
+#include "rc_prof.h"	// ReCoF
 
 extern engine_studio_api_t IEngineStudio;
 extern int g_iUnlockClothes_guess;
@@ -1852,10 +1853,12 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 		pskinref += (skinnum * m_pTextureHeader->numskinref);
 
 	int i;
+	RcProf_Push( RCP_MDL_VERTS );	// ReCoF
 	for (i = 0; i < m_pSubModel->numverts; i++)
 	{
 		VectorTransform (pstudioverts[i], (*m_pbonetransform)[pvertbone[i]], g_pxformverts[i]);
 	}
+	RcProf_Pop();	// ReCoF
 
 //
 // clip and draw all triangles
@@ -1865,6 +1868,8 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 
 	vec3_t *lv = g_pvlightvalues;
 	int j;
+
+	RcProf_Push( RCP_MDL_LIGHT );	// ReCoF: popped after the normal loop
 
 	// Cry of Fear: attachments of the left hand weapon (DualWield), for its muzzle flash and light.
 	// ReCoF (B294): retail ran this inside Lighting, which tested it for every normal and ran it on the first
@@ -1925,9 +1930,12 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 		}
 	}
 
+	RcProf_Pop();	// ReCoF: RCP_MDL_LIGHT
+
 	gl.glCullFace(GL_FRONT);
 
 	RcArraysStart();	// ReCoF (B287)
+	RcProf_Push( RCP_MDL_DRAW );	// ReCoF: popped after RcArraysFinish; no return in between
 
 	mstudiobone_t *pbones = (mstudiobone_t *)((byte *)m_pStudioHeader + m_pStudioHeader->boneindex);
 
@@ -2345,6 +2353,7 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 	}
 
 	RcArraysFinish();	// ReCoF (B287)
+	RcProf_Pop();	// ReCoF: RCP_MDL_DRAW
 }
 
 
