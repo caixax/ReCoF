@@ -7950,6 +7950,27 @@ void CSprayCan::Think( void )
 	UTIL_MakeVectors(pev->angles);
 	UTIL_TraceLine ( pev->origin, pev->origin + gpGlobals->v_forward * 128, ignore_monsters, pev->owner, & tr);
 
+	// ReCoF (B302): Cry of Fear's renderer draws only its own decals (gl_decals.cpp), never the engine's,
+	// so the spray painted below never showed. A customdecal message named rcspray<player> has the
+	// client paint the player's tempdecal.wad itself; a retail client has no decal group of that name
+	// and ignores it. Like those decals, only on the world
+	if ( pev->frame == 0 && tr.flFraction != 1.0 && tr.pHit && ENTINDEX( tr.pHit ) == 0 )
+	{
+		char szName[16];
+
+		sprintf( szName, "rcspray%d", playernum );
+		MESSAGE_BEGIN( MSG_ALL, gmsgCustomDecal );
+			WRITE_COORD( tr.vecEndPos.x );
+			WRITE_COORD( tr.vecEndPos.y );
+			WRITE_COORD( tr.vecEndPos.z );
+			WRITE_COORD( tr.vecPlaneNormal.x );
+			WRITE_COORD( tr.vecPlaneNormal.y );
+			WRITE_COORD( tr.vecPlaneNormal.z );
+			WRITE_BYTE( 0 );
+			WRITE_STRING( szName );
+		MESSAGE_END();
+	}
+
 	// No customization present.
 	if (nFrames == -1)
 	{

@@ -19,6 +19,7 @@
 #include "pmtrace.h"
 #include "parsemsg.h"
 #include "gl_renderer.h"
+#include "gl_dlight.h"
 
 
 #define MAX_DECALTEXTURES	128
@@ -720,6 +721,11 @@ int DrawSingleDecal(customdecal *decal)
 }
 
 
+static int RcSprayCount( void );		// ReCoF (B302), below
+static void RcDrawSprays( void );
+static void RcSpray( vec3_t pos, vec3_t normal, int player );
+static void RcSpraysClear( void );
+
 void DrawDecals()
 {
 	decalrendercounter = 0;
@@ -727,7 +733,7 @@ void DrawDecals()
 
 	CreateCachedDecals();
 
-	if ((!numdecals && !numstaticdecals) || !cv_customdecals->value)
+	if ((!numdecals && !numstaticdecals && !RcSprayCount()) || !cv_customdecals->value)
 		return;
 
 	gl.glEnable(GL_BLEND);
@@ -767,6 +773,8 @@ void DrawDecals()
 			staticdecalrendercounter++;
 	}
 
+	RcDrawSprays();	// ReCoF (B302)
+
 	gl.glDisable ( GL_POLYGON_OFFSET_FILL );
 }
 
@@ -785,7 +793,14 @@ int MsgCustomDecal(const char *pszName, int iSize, void *pbuf)
 	int persistent = READ_BYTE();
 //	CONPRINT("fgdsfgdsd %d\n", persistent);
 
-	CreateDecal(pos, normal, READ_STRING(), persistent);
+	const char *name = READ_STRING();
+	if (!strncmp(name, "rcspray", 7))	// ReCoF (B302): a player's spray (CSprayCan::Think)
+	{
+		RcSpray(pos, normal, atoi(name + 7));
+		return 1;
+	}
+
+	CreateDecal(pos, normal, name, persistent);
 	return 1;
 }
 
@@ -795,6 +810,7 @@ void DeleteDecals()
 	numdecals = 0;
 	curdecal = 0;
 	numstaticdecals = 0;
+	RcSpraysClear();	// ReCoF (B302)
 }
 /*
 void HowManyDecals()
@@ -827,4 +843,359 @@ void DecalsPrintDebugInfo()
 		sprintf(msg, "%d static decals in memory, %d rendered\n", numstaticdecals, staticdecalrendercounter);
 		DrawConsoleString( XRES(10), YRES(115), msg );
 	}
+}
+
+//-----------------------------------------------------------------------------
+// ReCoF (B302): player sprays. The engine paints a spray (TE_PLAYERDECAL) as one of its own decals,
+// and this renderer never draws those, so no spray ever showed. CSprayCan::Think also sends a
+// customdecal message named rcspray<player>; for the local player the spray is drawn here from the
+// tempdecal.wad the engine sent (the first one the file system finds, as CL_CreateResourceList
+// reads it). Other players' pictures do not reach the client, so their sprays still do not show.
+// A spray pixel is one unit, as in Half-Life. It is drawn over the wall with its see-through parts,
+// lit by the wall's own lightmap at that point and by the dynamic lights that reach it, the
+// flashlight among them, so it is as dark as the wall around it.
+//-----------------------------------------------------------------------------
+#define RC_MAX_SPRAYS	64
+
+struct rcspray_t
+{
+	msurface_t	*surface;
+	vec3_t		point;
+	vec3_t		normal;
+	float		light[3];		// the wall's lightmap at the point, 1 = full
+};
+
+static rcspray_t		s_Sprays[RC_MAX_SPRAYS];
+static int				s_iNumSprays;
+static int				s_iNextSpray;
+static int				s_iSprayTexture;		// gl texture id, taken the first time
+static int				s_iSprayWide, s_iSprayTall;
+static int				s_bSprayReload = 1;		// read tempdecal.wad again before drawing
+static unsigned char	*s_pSprayFile;			// the tempdecal.wad the texture was made from
+static int				s_iSprayFileSize;
+
+extern int current_ext_texture_id;	// gl_texloader.cpp
+
+static int RcSprayCount( void )
+{
+	return s_iNumSprays;
+}
+
+static void RcSpraysClear( void )
+{
+	s_iNumSprays = 0;
+	s_iNextSpray = 0;
+	s_bSprayReload = 1;	// a new map: the spray may have changed in the options
+}
+
+// the wall's own light at point, from the surface's first light map, 1 at 128 (the drawing caps it)
+static void RcSpraySurfaceLight( msurface_t *surf, const vec3_t &point, float *light )
+{
+	mtexinfo_t *tex = surf->texinfo;
+	int s, t, smax;
+	color24 *lm;
+
+	light[0] = light[1] = light[2] = 1.0f;
+	if (!surf->samples || !tex || surf->styles[0] == 255)
+		return;
+
+	s = (int)(point.x * tex->vecs[0][0] + point.y * tex->vecs[0][1] + point.z * tex->vecs[0][2] + tex->vecs[0][3]) - surf->texturemins[0];
+	t = (int)(point.x * tex->vecs[1][0] + point.y * tex->vecs[1][1] + point.z * tex->vecs[1][2] + tex->vecs[1][3]) - surf->texturemins[1];
+	if (s < 0) s = 0;
+	if (s > surf->extents[0]) s = surf->extents[0];
+	if (t < 0) t = 0;
+	if (t > surf->extents[1]) t = surf->extents[1];
+
+	smax = (surf->extents[0] >> 4) + 1;
+	lm = surf->samples + (t >> 4) * smax + (s >> 4);
+
+	light[0] = lm->r / 128.0f;
+	light[1] = lm->g / 128.0f;
+	light[2] = lm->b / 128.0f;
+}
+
+// reads tempdecal.wad into the spray texture when it changed; false when there is no usable spray
+static int RcSprayLoadTexture( void )
+{
+	int size = 0;
+	unsigned char *file = (unsigned char *)gEngfuncs.COM_LoadFile("tempdecal.wad", 5, &size);
+
+	if (!file)
+		return s_iSprayTexture && s_iSprayWide;
+
+	if (s_pSprayFile && size == s_iSprayFileSize && !memcmp(file, s_pSprayFile, size))
+	{
+		gEngfuncs.COM_FreeFile(file);
+		return s_iSprayTexture && s_iSprayWide;
+	}
+
+	// one WAD3 lump: miptex header, four mip levels, a 256 color palette (WAD3 as the engine checks it,
+	// Draw_CustomCacheWadInit and Draw_ValidateCustomLogo)
+	int ok = 0, wide = 0, tall = 0;
+	unsigned char *rgba = NULL;
+
+	if (size >= 12 && !memcmp(file, "WAD3", 4) && *(int *)(file + 4) == 1)
+	{
+		int info = *(int *)(file + 8);
+		int filepos = (info >= 12 && info + 32 <= size) ? *(int *)(file + info) : 0;
+
+		if (filepos >= 12 && filepos + 40 <= size)
+		{
+			unsigned char *lump = file + filepos;
+			wide = *(int *)(lump + 16);
+			tall = *(int *)(lump + 20);
+			int offset = *(int *)(lump + 24);
+			int pixels = wide * tall;
+			int mipBytes = pixels + pixels / 4 + pixels / 16 + pixels / 64;
+
+			if (wide > 0 && tall > 0 && wide <= 256 && tall <= 256 && offset >= 40 && filepos + offset + mipBytes + 2 + 768 <= size)
+			{
+				unsigned char *index = lump + offset;
+				unsigned char *pal = index + mipBytes + 2;
+				int solid = (pal[765] == 0 && pal[766] == 0 && pal[767] == 255);
+
+				rgba = new unsigned char[pixels * 4];
+				for (int i = 0; i < pixels; i++)
+				{
+					int c = index[i];
+					int a, r, g, b;
+
+					if (solid)
+					{
+						// '{' logo: index 255 is see-through
+						a = (c == 255) ? 0 : 255;
+						r = pal[c * 3 + 0]; g = pal[c * 3 + 1]; b = pal[c * 3 + 2];
+					}
+					else
+					{
+						// one color logo: the last palette color, as solid as the index (GL_Upload8)
+						a = c;
+						r = pal[765]; g = pal[766]; b = pal[767];
+					}
+
+					// premultiplied, so the filtering at the edges of the see-through parts stays clean
+					rgba[i * 4 + 0] = (unsigned char)(r * a / 255);
+					rgba[i * 4 + 1] = (unsigned char)(g * a / 255);
+					rgba[i * 4 + 2] = (unsigned char)(b * a / 255);
+					rgba[i * 4 + 3] = (unsigned char)a;
+				}
+				ok = 1;
+			}
+		}
+	}
+
+	if (!ok)
+	{
+		gEngfuncs.COM_FreeFile(file);
+		return s_iSprayTexture && s_iSprayWide;
+	}
+
+	if (!s_iSprayTexture)
+		s_iSprayTexture = current_ext_texture_id++;
+
+	// binding 0 first makes the second call select unit 0 whatever the bind cache held
+	Bind2DTexture(GL_TEXTURE0_ARB, 0);
+	Bind2DTexture(GL_TEXTURE0_ARB, s_iSprayTexture);
+	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wide, tall, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
+	delete[] rgba;
+
+	s_iSprayWide = wide;
+	s_iSprayTall = tall;
+
+	delete[] s_pSprayFile;
+	s_pSprayFile = new unsigned char[size];
+	memcpy(s_pSprayFile, file, size);
+	s_iSprayFileSize = size;
+
+	gEngfuncs.COM_FreeFile(file);
+	return 1;
+}
+
+// a spray landed on the world; as CreateDecal, every world surface it covers gets a piece
+static void RcSpray( vec3_t pos, vec3_t normal, int player )
+{
+	cl_entity_t *local = gEngfuncs.GetLocalPlayer();
+	model_t *world = gEngfuncs.GetEntityByIndex(0)->model;
+
+	if (!cv_customdecals->value || !world || !local || local->index != player)
+		return;
+
+	s_bSprayReload = 1;	// the next draw checks tempdecal.wad again (Apply in the Spray tab)
+
+	// the message sends the normal as coordinates, in eighths
+	VectorNormalize(normal);
+	if (normal.Length() < 0.5f)
+		return;
+
+	// the size is the picture's; until the first draw reads it, the largest the engine takes
+	float xsize = (s_iSprayWide ? s_iSprayWide : 128) / 2.0f;
+	float ysize = (s_iSprayTall ? s_iSprayTall : 128) / 2.0f;
+	float radius = sqrt(xsize * xsize + ysize * ysize);
+
+	vec3_t right, up;
+	GetUpRight(normal, up, right);
+
+	msurface_t *surfaces = &world->surfaces[world->firstmodelsurface];
+	for (int i = 0; i < world->nummodelsurfaces; i++)
+	{
+		vec3_t norm;
+		float ndist = surfaces[i].plane->dist;
+		VectorCopy(surfaces[i].plane->normal, norm);
+		if (surfaces[i].flags & SURF_PLANEBACK)
+		{
+			VectorInverse(norm);
+			ndist *= -1;
+		}
+
+		if (DotProduct(normal, norm) < 0.7)
+			continue;
+
+		float dist = DotProduct(norm, pos) - ndist;
+		if (dist < 0) dist *= -1;
+		if (dist > radius)
+			continue;
+
+		if (surfaces[i].flags & (SURF_DRAWSKY|SURF_DRAWTURB))
+			continue;
+
+		if (!surfaces[i].samples)
+			continue;
+
+		// keep it only if some of the surface is left inside the spray
+		glpoly_t *p = surfaces[i].polys;
+		float *v = p->verts[0];
+		vec3_t array1[64];
+		vec3_t array2[64];
+		for (int j = 0; j < p->numverts; j++, v += VERTEXSIZE)
+			VectorCopy(v, array1[j]);
+
+		int nv;
+		vec3_t planepoint;
+		VectorMA(pos, -xsize, right, planepoint);
+		nv = ClipPolygonByPlane(array1, p->numverts, right, planepoint, array2);
+		VectorMA(pos, xsize, right, planepoint);
+		nv = ClipPolygonByPlane(array2, nv, right*-1, planepoint, array1);
+		VectorMA(pos, -ysize, up, planepoint);
+		nv = ClipPolygonByPlane(array1, nv, up, planepoint, array2);
+		VectorMA(pos, ysize, up, planepoint);
+		nv = ClipPolygonByPlane(array2, nv, up*-1, planepoint, array1);
+		if (!nv)
+			continue;
+
+		rcspray_t *spray = &s_Sprays[s_iNextSpray];
+		s_iNextSpray = (s_iNextSpray + 1) % RC_MAX_SPRAYS;
+		if (s_iNumSprays < RC_MAX_SPRAYS)
+			s_iNumSprays++;
+
+		spray->surface = &surfaces[i];
+		VectorCopy(pos, spray->point);
+		VectorCopy(normal, spray->normal);
+		RcSpraySurfaceLight(&surfaces[i], pos, spray->light);
+	}
+}
+
+static void RcDrawSprays( void )
+{
+	if (!s_iNumSprays)
+		return;
+
+	if (s_bSprayReload)
+	{
+		s_bSprayReload = 0;
+		RcSprayLoadTexture();
+	}
+
+	if (!s_iSprayTexture || !s_iSprayWide)
+		return;
+
+	float xsize = s_iSprayWide / 2.0f;
+	float ysize = s_iSprayTall / 2.0f;
+
+	gl.glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	SetTexEnvs(ENVSTATE_MUL);
+	Bind2DTexture(GL_TEXTURE0_ARB, s_iSprayTexture);
+
+	for (int i = 0; i < s_iNumSprays; i++)
+	{
+		rcspray_t *spray = &s_Sprays[i];
+
+		if (spray->surface->visframe != framecount)
+			continue;
+
+		vec3_t right, up;
+		GetUpRight(spray->normal, up, right);
+		float texc_orig_x = DotProduct(spray->point, right);
+		float texc_orig_y = DotProduct(spray->point, up);
+
+		glpoly_t *p = spray->surface->polys;
+		float *v = p->verts[0];
+		vec3_t array1[64];
+		vec3_t array2[64];
+		for (int j = 0; j < p->numverts; j++, v += VERTEXSIZE)
+			VectorCopy(v, array1[j]);
+
+		int nv;
+		vec3_t planepoint;
+		VectorMA(spray->point, -xsize, right, planepoint);
+		nv = ClipPolygonByPlane(array1, p->numverts, right, planepoint, array2);
+		VectorMA(spray->point, xsize, right, planepoint);
+		nv = ClipPolygonByPlane(array2, nv, right*-1, planepoint, array1);
+		VectorMA(spray->point, -ysize, up, planepoint);
+		nv = ClipPolygonByPlane(array1, nv, up, planepoint, array2);
+		VectorMA(spray->point, ysize, up, planepoint);
+		nv = ClipPolygonByPlane(array2, nv, up*-1, planepoint, array1);
+		if (!nv)
+			continue;
+
+		// the wall's light plus the dynamic lights that reach the spray, as the models take them
+		float light[3] = { spray->light[0], spray->light[1], spray->light[2] };
+		DynamicLight *dlights[32];	// MAX_DLIGHTS of gl_light_dynamic.cpp
+		vec3_t lightpoint = spray->point + spray->normal * 2;
+		int numdlights = GetDlightsForPoint(lightpoint, Vector(-2, -2, -2), Vector(2, 2, 2), dlights, 0);
+		int k;
+		for (k = 0; k < numdlights; k++)
+		{
+			DynamicLight *dl = dlights[k];
+			float frac = 1.0f - (lightpoint - dl->origin).Length() / dl->radius;
+			if (frac <= 0)
+				continue;
+
+			if (dl->spot_texture[0])
+			{
+				// spot lights (the flashlight) carry their color in a texture: white
+				light[0] += frac; light[1] += frac; light[2] += frac;
+			}
+			else
+			{
+				light[0] += frac * dl->color[0]; light[1] += frac * dl->color[1]; light[2] += frac * dl->color[2];
+			}
+		}
+		for (k = 0; k < 3; k++)
+		{
+			if (light[k] > 1.0f)
+				light[k] = 1.0f;
+		}
+		gl.glColor4f(light[0], light[1], light[2], 1.0f);
+
+		gl.glBegin(GL_POLYGON);
+		for (k = 0; k < nv; k++)
+		{
+			// CreateDecal's right points to the left of someone facing the wall: mirror the picture
+			float texc_x = (DotProduct(array1[k], right) - texc_orig_x) / xsize;
+			float texc_y = (DotProduct(array1[k], up) - texc_orig_y) / ysize;
+			texc_x = 1.0f - (texc_x + 1) / 2;
+			texc_y = (texc_y + 1) / 2;
+
+			gl.glMultiTexCoord2fARB(GL_TEXTURE0_ARB, texc_x, texc_y);
+			gl.glVertex3fv(array1[k]);
+		}
+		gl.glEnd();
+	}
+
+	gl.glColor4f(1, 1, 1, 1);
+	gl.glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
 }
