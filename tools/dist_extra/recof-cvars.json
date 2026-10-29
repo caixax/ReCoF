@@ -108,6 +108,14 @@
       "desc_en": "Sends each model strip to the driver in one call. The picture is the same; off is the retail path, for comparison."
     },
     {
+      "name": "rc_vsync",
+      "type": "bool",
+      "default": "0",
+      "group": "Performance",
+      "label_en": "Vertical sync",
+      "desc_en": "Waits for the monitor's refresh before showing a frame. Off, the default, shows each frame at once, with the least input lag; on stops tearing. A vsync forced in the graphics driver's control panel still wins. Options, Video sets it too."
+    },
+    {
       "name": "rc_dlightcull",
       "type": "bool",
       "default": "1",

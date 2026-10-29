@@ -10,6 +10,7 @@
 
 #include "OptionsSubVideo.h"
 #include "CvarSlider.h"
+#include "CvarToggleCheckButton.h"
 #include "EngineInterface.h"
 #include "igameuifuncs.h"
 #include "modes.h"
@@ -72,6 +73,12 @@ COptionsSubVideo::COptionsSubVideo( vgui::Panel *parent ) : PropertyPage( parent
 	SetCurrentRendererComboItem();
 
 	LoadControlSettings( "Resource\\OptionsSubVideo.res" );
+
+	// ReCoF (B304): rc_vsync, in the empty right column next to the window mode; the layout file does not
+	// know it, so it is placed here. The page listens to it, so a change turns on the Apply button
+	m_pVsync = new CCvarToggleCheckButton( this, "RcVsync", "Vertical sync", "rc_vsync" );
+	m_pVsync->SetBounds( 248, 50, 200, 24 );
+	m_pVsync->AddActionSignalTarget( this );
 
 	PrepareResolutionList();
 }
@@ -150,6 +157,7 @@ void COptionsSubVideo::OnResetData()
 
 	m_pBrightnessSlider->Reset();
 	m_pGammaSlider->Reset();
+	m_pVsync->Reset();	// ReCoF (B304)
 
 	SetCurrentRendererComboItem();
 	SetCurrentResolutionComboItem();
@@ -209,6 +217,7 @@ void COptionsSubVideo::OnApplyChanges()
 
 	m_pBrightnessSlider->ApplyChanges();
 	m_pGammaSlider->ApplyChanges();
+	m_pVsync->ApplyChanges();	// ReCoF (B304): takes effect at once, without the video restart
 
 	ApplyVidSettings( bChanged );
 }

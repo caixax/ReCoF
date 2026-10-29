@@ -17,6 +17,7 @@
 namespace vgui = vgui2;
 
 class CCvarSlider;
+class CCvarToggleCheckButton;
 
 namespace vgui2
 {
@@ -69,6 +70,7 @@ private:
 	vgui::ComboBox *m_pAspectRatio;
 	CCvarSlider		*m_pBrightnessSlider;
 	CCvarSlider		*m_pGammaSlider;
+	CCvarToggleCheckButton	*m_pVsync;	// ReCoF (B304): rc_vsync
 
 	char		m_pszRenderNames[ 3 ][ 32 ];
 	char		m_pszAspectName[ 2 ][ 32 ];

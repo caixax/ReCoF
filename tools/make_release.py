@@ -103,6 +103,7 @@ NEW CONSOLE OPTIONS (default in brackets)
   rc_prof_dump             prints the rc_prof numbers to the console
   rc_modelarrays [1]       0 = retail model drawing, for comparison
   rc_dlightcull [1]        0 = retail, draw lights that cannot reach the screen
+  rc_vsync [0]             1 = vertical sync on; Options, Video sets it too
   rc_spray_size [0]        size of your spray on the wall in units (0 = a unit a
                            picture pixel); Options, Spray sets it too
   rc_crosshair [1]         0 = no red crosshair (the ammo display stays)

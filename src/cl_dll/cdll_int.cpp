@@ -39,6 +39,7 @@ extern "C"
 #include "interface.h"
 #include "mp3.h"
 #include "rc_prof.h"	// ReCoF
+#include "rc_client.h"	// ReCoF
 
 #define DLLEXPORT __declspec( dllexport )
 
@@ -269,6 +270,8 @@ Called by engine every frame that client .dll is loaded
 void DLLEXPORT HUD_Frame( double time )
 {
 	RcProfScope prof( RCP_CLFRAME );	// ReCoF
+
+	RcVsyncFrame();	// ReCoF (B304)
 
 	ServersThink( time );
 

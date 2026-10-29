@@ -44,6 +44,7 @@ static int			s_bDucktapReleased;	// +rc_ducktap released duck on the frame befor
 static vec3_t		s_vecLastVelocity;	// speedometer: the velocity of the frame before
 static int			s_iJumpSpeed;		// speedometer: the speed at the last takeoff
 static cvar_t		*rc_rawinput;
+static cvar_t		*rc_vsync;	// B304
 static HWND			s_hRawWnd;			// raw input 1: the game window, once hooked
 static WNDPROC		s_pfnRawOldProc;	// raw input 1: the engine's window procedure
 static HANDLE		s_hRawThread;		// raw input 2: the input thread
@@ -126,6 +127,7 @@ void RcClient_Init( void )
 	rc_speedometer_color = gEngfuncs.pfnRegisterVariable( "rc_speedometer_color", "255 255 255", FCVAR_ARCHIVE );
 
 	rc_rawinput = gEngfuncs.pfnRegisterVariable( "rc_rawinput", "2", FCVAR_ARCHIVE );
+	rc_vsync = gEngfuncs.pfnRegisterVariable( "rc_vsync", "0", FCVAR_ARCHIVE );	// B304
 
 	rc_viewmodel_fov = gEngfuncs.pfnRegisterVariable( "rc_viewmodel_fov", "0", FCVAR_ARCHIVE );
 	rc_viewmodel_ofs_forward = gEngfuncs.pfnRegisterVariable( "rc_viewmodel_ofs_forward", "0", FCVAR_ARCHIVE );
@@ -780,4 +782,41 @@ void RcRawMouseShutdown( void )
 
 	s_hRawWnd = NULL;
 	s_iRawMode = 0;
+}
+
+//-----------------------------------------------------------------------------
+// B304 rc_vsync: the engine never sets the swap interval, so the driver's default applied, which is vsync
+// on, and only the driver's control panel could turn it off. 0 turns it off, 1 on. It is set when the value
+// or the GL context changes; a setting forced in the driver's control panel still wins
+//-----------------------------------------------------------------------------
+typedef BOOL (WINAPI *RcSwapInterval_t)( int interval );
+
+void RcVsyncFrame( void )
+{
+	static HGLRC s_hContext;
+	static int s_iApplied = -1;
+	static RcSwapInterval_t s_pfnSwapInterval;
+
+	if ( !rc_vsync )
+		return;
+
+	HGLRC hContext = wglGetCurrentContext();
+	if ( !hContext )
+		return;
+
+	int iWant = rc_vsync->value ? 1 : 0;
+	if ( hContext == s_hContext && iWant == s_iApplied )
+		return;
+
+	if ( hContext != s_hContext )
+	{
+		s_hContext = hContext;
+		s_pfnSwapInterval = (RcSwapInterval_t)wglGetProcAddress( "wglSwapIntervalEXT" );
+		if ( !s_pfnSwapInterval )
+			gEngfuncs.Con_Printf( "rc_vsync: the driver has no wglSwapIntervalEXT, so vsync stays as the driver sets it\n" );
+	}
+
+	s_iApplied = iWant;
+	if ( s_pfnSwapInterval )
+		s_pfnSwapInterval( iWant );
 }

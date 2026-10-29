@@ -32,4 +32,7 @@ void RcRawMouseReset( void );
 void RcRawMouse( int *mx, int *my );
 void RcRawMouseShutdown( void );
 
+// B304 rc_vsync: sets the swap interval when rc_vsync or the GL context changes (called from HUD_Frame)
+void RcVsyncFrame( void );
+
 #endif // RC_CLIENT_H
