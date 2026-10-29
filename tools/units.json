@@ -4668,6 +4668,7 @@
           "GameUI/OptionsSubMultiplayer",
           "GameUI/OptionsSubVideo",
           "GameUI/OptionsSubVoice",
+          "GameUI/OptionsSubSpray",
           "vgui2/controls/controls",
           "vgui2/controls/Button",
           "vgui2/controls/Label",
@@ -5101,6 +5102,10 @@
           "name": "GameUI/OptionsSubVoice",
           "source": "src/gameui/OptionsSubVoice.cpp",
           "functions_file": "tools/units/gameui_GameUI_OptionsSubVoice.txt"
+        },
+        {
+          "name": "GameUI/OptionsSubSpray",
+          "source": "src/gameui/OptionsSubSpray.cpp"
         },
         {
           "name": "GameUI/ScriptObject",

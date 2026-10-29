@@ -378,6 +378,18 @@ void COptionsSubKeyboard::ParseActionDescriptions( void )
 			}
 		}
 	}
+
+	// ReCoF: Cry of Fear's list has no spray; Half-Life's impulse 201 paints the logo of the Spray tab
+	if ( sectionIndex > 0 && !GetItemForBinding( "impulse 201" ) )
+	{
+		item = new KeyValues( "Item" );
+		item->SetString( "Action", "Spray logo" );
+		item->SetString( "Binding", "impulse 201" );
+		item->SetString( "Key", "" );
+		item->SetString( "AltKey", "" );
+		m_pKeyBindList->AddItem( sectionIndex, item );
+		item->deleteThis();
+	}
 }
 
 //-----------------------------------------------------------------------------

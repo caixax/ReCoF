@@ -82,6 +82,9 @@ NOTES
   values moved. The script addition is in docs/speedrun.md of the ReCoF
   repository ("ReCoF autosplitter block").
 - The Linux patcher does not apply to these files.
+- Sprays: Options, Spray makes your spray from a PNG, JPG, BMP, GIF or TIFF
+  picture in cryoffear\\logos; Options, Keyboard has the Spray logo key
+  (impulse 201). A new spray shows from the next map or save.
 
 NEW CONSOLE OPTIONS (default in brackets)
   rc_retail_gameplay [0]   1 = retail behavior of every balance fix

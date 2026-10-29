@@ -11,6 +11,7 @@
 #include "OptionsSubAudio.h"
 #include "OptionsSubVideo.h"
 #include "OptionsSubVoice.h"
+#include "OptionsSubSpray.h"
 #include "MultiplayerAdvancedDialog.h"
 #include "Taskbar.h"
 
@@ -25,7 +26,7 @@ using namespace vgui;
 //-----------------------------------------------------------------------------
 COptionsDialog::COptionsDialog( vgui::Panel *parent ) : PropertyDialog( parent, "OptionsDialog" )
 {
-	SetBounds( 0, 0, 512, 406 );
+	SetBounds( 0, 0, 560, 406 );	// ReCoF: 48 wider for the seventh tab (Spray); retail 512
 	SetSizeable( false );
 
 	g_pTaskbar->AddTask( GetVPanel() );
@@ -38,6 +39,7 @@ COptionsDialog::COptionsDialog( vgui::Panel *parent ) : PropertyDialog( parent, 
 	AddPage( new COptionsSubVideo( this ), "#GameUI_Video" );
 	AddPage( new COptionsSubVoice( this ), "#GameUI_Voice" );
 	AddPage( new CMultiplayerAdvancedPage( this ), "#GameUI_AdvancedNoEllipsis" );
+	AddPage( new COptionsSubSpray( this ), "Spray" );	// ReCoF: the spray logo
 
 	SetApplyButtonVisible( true );
 	GetPropertySheet()->SetTabWidth( 72 );
