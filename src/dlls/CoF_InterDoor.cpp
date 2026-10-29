@@ -25,6 +25,7 @@
 #include "player.h"
 #include "shake.h"
 #include "cdll_dll.h"
+#include "game.h"
 
 extern void UTIL_ProMessage( CBaseEntity *pEntity, const char *pMessage, int colour, bool all );
 
@@ -338,7 +339,9 @@ void CInterDoor::StartSequence( void )
 		if ( pev->noise )
 			EMIT_SOUND( ENT( pPlayer->pev ), CHAN_AUTO, STRING( pev->noise ), 1, 0.8 );
 
-		UTIL_ScreenFade( pPlayer, Vector( 0, 0, 0 ), 0.5, 2, 255, FFADE_OUT | FFADE_STAYOUT );
+		// ReCoF: rc_door_skip 1 keeps the screen clear and moves the player at once
+		if ( !rc_door_skip.value )
+			UTIL_ScreenFade( pPlayer, Vector( 0, 0, 0 ), 0.5, 2, 255, FFADE_OUT | FFADE_STAYOUT );
 
 		pPlayer->m_OnStairs = false;
 
@@ -380,7 +383,7 @@ void CInterDoor::StartSequence( void )
 
 		ShiftMonsters();
 
-		SetNextThink( 2 );
+		SetNextThink( rc_door_skip.value ? 0.1 : 2 );	// ReCoF: rc_door_skip
 		SetThink( &CInterDoor::EndSequence );
 		return;
 	}
@@ -523,7 +526,12 @@ void CInterDoor::EndSequence( void )
 		if ( pev->noise1 )
 			EMIT_SOUND( ENT( pPlayer->pev ), CHAN_AUTO, STRING( pev->noise1 ), 1, 0.8 );
 
-		UTIL_ScreenFade( pPlayer, Vector( 0, 0, 0 ), 0.5, 0, 255, FFADE_IN );
+		// ReCoF: with rc_door_skip 1 an empty fade clears the screen at once; it also ends a fade that began
+		// before the cvar changed, so the screen never stays black
+		if ( rc_door_skip.value )
+			UTIL_ScreenFade( pPlayer, Vector( 0, 0, 0 ), 0, 0, 0, FFADE_IN );
+		else
+			UTIL_ScreenFade( pPlayer, Vector( 0, 0, 0 ), 0.5, 0, 255, FFADE_IN );
 
 		pPlayer->EnableControl( TRUE );
 		pPlayer->m_iHideHUD &= ~HIDEHUD_HEALTH;

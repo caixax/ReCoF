@@ -18,6 +18,14 @@
       "desc_en": "Stamina never runs out. The stamina bar still shows."
     },
     {
+      "name": "rc_door_skip",
+      "type": "bool",
+      "default": "0",
+      "group": "Gameplay",
+      "label_en": "Skip the door fades",
+      "desc_en": "The doors that take you to the other side move you at once, without the fade to black and back. For fun: runs with it are not comparable to retail runs."
+    },
+    {
       "name": "rc_hlmovement",
       "type": "bool",
       "default": "0",

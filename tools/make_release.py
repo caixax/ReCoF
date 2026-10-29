@@ -94,6 +94,7 @@ NEW CONSOLE OPTIONS (default in brackets)
   rc_bhopcap [1]           0 = no bunny hop speed cap
   rc_ducktap [0]           1 = Half-Life ducktap
   rc_infinite_stamina [0]  1 = stamina never runs out
+  rc_door_skip [0]         1 = the doors move you at once, without the fade
   +rc_ducktap, rc_autojump [0], rc_ducktap_priority [1], rc_jump_priority [0]
   rc_speedometer [0] (and rc_speedometer_jump, _3d, _pos, _color)
   rc_rawinput [2]          raw mouse input, no Windows acceleration: 2 = read on a

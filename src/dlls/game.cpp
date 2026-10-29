@@ -68,6 +68,8 @@ cvar_t	rc_ducktap = {"rc_ducktap","0", FCVAR_SERVER };
 cvar_t	rc_infinite_stamina = {"rc_infinite_stamina","0", FCVAR_SERVER };
 // ReCoF: 1 gives Half-Life 1 movement (retail and default: 0); sent to client prediction as physinfo "hlm"
 cvar_t	rc_hlmovement = {"rc_hlmovement","0", FCVAR_SERVER };
+// ReCoF: 1 skips the black fade of the doors that move the player to the other side (retail and default: 0)
+cvar_t	rc_door_skip = {"rc_door_skip","0", FCVAR_SERVER };
 cvar_t	cof_walksteptime = {"cof_walksteptime","410", FCVAR_SERVER };
 cvar_t	cof_runsteptime = {"cof_runsteptime","375", FCVAR_SERVER };
 cvar_t	cof_sprintsteptime = {"cof_sprintsteptime","300", FCVAR_SERVER };
@@ -546,6 +548,7 @@ void GameDLLInit( void )
 	CVAR_REGISTER (&rc_ducktap);
 	CVAR_REGISTER (&rc_infinite_stamina);
 	CVAR_REGISTER (&rc_hlmovement);
+	CVAR_REGISTER (&rc_door_skip);
 	CVAR_REGISTER (&cof_walksteptime);
 	CVAR_REGISTER (&cof_runsteptime);
 	CVAR_REGISTER (&cof_sprintsteptime);
