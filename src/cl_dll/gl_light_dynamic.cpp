@@ -888,16 +888,14 @@ void DrawDynamicLights()
 
 			// set clipping before light setup, because we should not
 			// change something after the light set up
-			if (current_light->key != -666) // dont set clip planes for flashlight
-				worldLightFrustum.GL_FrustumSetClipPlanes();
-			if (current_light->key != -665)
+			// ReCoF (B204): one test for both flashlight keys; two separate ifs set and cleared the planes
+			// twice for every spot light, the flashlight keys included
+			if (current_light->key != -666 && current_light->key != -665) // dont set clip planes for flashlight
 				worldLightFrustum.GL_FrustumSetClipPlanes();
 
 			if (!SetupSpotLight())
 			{
-				if (current_light->key != -666)
-					worldLightFrustum.GL_DisableClipPlanes();
-				if (current_light->key != -665)
+				if (current_light->key != -666 && current_light->key != -665)	// ReCoF (B204)
 					worldLightFrustum.GL_DisableClipPlanes();
 				continue;
 			}
@@ -947,9 +945,7 @@ void DrawDynamicLights()
 		{
 			FinishSpotLight();
 
-			if (current_light->key != -666)
-				worldLightFrustum.GL_DisableClipPlanes();
-			if (current_light->key != -665)
+			if (current_light->key != -666 && current_light->key != -665)	// ReCoF (B204)
 				worldLightFrustum.GL_DisableClipPlanes();
 		}
 		else
