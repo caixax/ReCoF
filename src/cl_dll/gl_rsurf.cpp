@@ -14,6 +14,7 @@
 #include "r_studioint.h"
 #include "ref_params.h"
 #include "gl_renderer.h"
+#include "rc_prof.h"	// ReCoF
 
 
 extern int norm_cubemap_id;
@@ -321,12 +322,62 @@ static struct
 
 static int texmatrixsel = -1;	// unit selected with the matrix mode on GL_TEXTURE, -1 when not known
 
+//===============
+// ReCoF (B195): world polygon batching
+//
+// Retail drew every world polygon with its own glDrawArrays(GL_POLYGON), about 9000 calls a frame on a
+// lamp heavy map. Between RcBatchBegin and RcBatchEnd, DrawPolyFromArray queues the polygon as a fan of
+// triangles in an index list instead, and the list goes to the driver in one glDrawElements when the GL
+// state is about to change (the helpers below flush first) or the scope ends. The polygons are drawn in
+// the same order with the same state, so the picture is the same; a convex polygon and its fan cover
+// the same pixels. rc_worldbatch 0 draws one call per polygon again
+//===============
+extern cvar_t *rc_worldbatch;	// gl_renderer.cpp
+
+#define RC_BATCH_MAX	( 3 * 16384 )
+
+static GLuint	s_RcBatch[RC_BATCH_MAX];
+static int		s_iRcBatchCount;
+static int		s_iRcBatching;
+
+// the light matrix last loaded on unit 0 inside a scope, so equal matrices of the next polygons are not
+// loaded again and their polygons stay in one batch (SetupTexMatrix)
+static float	s_flRcTexMatrix[16];
+static int		s_iRcTexMatrixValid;
+
+void RcBatchFlush()
+{
+	if (!s_iRcBatchCount)
+		return;
+
+	gl.glDrawElements(GL_TRIANGLES, s_iRcBatchCount, GL_UNSIGNED_INT, s_RcBatch);
+	s_iRcBatchCount = 0;
+	RcProf_Count( RCC_WORLDDRAWS );
+}
+
+#define RC_BATCH_FLUSH()	if (s_iRcBatchCount) RcBatchFlush()
+
+void RcBatchBegin()
+{
+	RC_BATCH_FLUSH();
+	s_iRcBatching = (rc_worldbatch && rc_worldbatch->value && gl.glDrawElements) ? 1 : 0;
+	s_iRcTexMatrixValid = 0;
+}
+
+void RcBatchEnd()
+{
+	RC_BATCH_FLUSH();
+	s_iRcBatching = 0;
+	s_iRcTexMatrixValid = 0;
+}
+
 void RcTexMatrixDirty()
 {
 	for (int i = 0; i < 4; i++)
 		texmatrix[i].known = FALSE;
 
 	texmatrixsel = -1;
+	s_iRcTexMatrixValid = 0;	// ReCoF (B195)
 }
 
 // selects the texture matrix of a unit, without repeating the two calls in front of the load
@@ -351,6 +402,7 @@ void Bind2DTexture(GLenum texture, GLuint id)
 	int idx = texture - GL_TEXTURE0_ARB;
 	if (currentbinds[idx] != id)
 	{
+		RC_BATCH_FLUSH();	// ReCoF (B195)
 		gl.glActiveTextureARB( texture );
 		gl.glBindTexture(GL_TEXTURE_2D, id);
 		currentbinds[idx] = id;
@@ -477,23 +529,27 @@ void SetTexEnvs(int env0, int env1, int env2, int env3)
 	texmatrixsel = -1;	// ReCoF (B292): the branches below move the active unit
 
 	if (envstates[0] != env0) {
+		RC_BATCH_FLUSH();	// ReCoF (B195)
 		gl.glActiveTextureARB( GL_TEXTURE0_ARB );
 		SetTexEnv_Internal(env0);
 		envstates[0] = env0;
 	}
 	if (envstates[1] != env1) {
+		RC_BATCH_FLUSH();	// ReCoF (B195)
 		gl.glActiveTextureARB( GL_TEXTURE1_ARB );
 		SetTexEnv_Internal(env1);
 		envstates[1] = env1;
 	}
 	if (gl.MAX_TU_supported < 3) return;
 	if (envstates[2] != env2) {
+		RC_BATCH_FLUSH();	// ReCoF (B195)
 		gl.glActiveTextureARB( GL_TEXTURE2_ARB );
 		SetTexEnv_Internal(env2);
 		envstates[2] = env2;
 	}
 	if (gl.MAX_TU_supported < 4) return;
 	if (envstates[3] != env3) {
+		RC_BATCH_FLUSH();	// ReCoF (B195)
 		gl.glActiveTextureARB( GL_TEXTURE3_ARB );
 		SetTexEnv_Internal(env3);
 		envstates[3] = env3;
@@ -513,6 +569,7 @@ void SetTexPointer(int unitnum, int tc)
 	if (texpointer[unitnum] == tc)
 		return;
 
+	RC_BATCH_FLUSH();	// ReCoF (B195)
 	gl.glClientActiveTextureARB(unitnum + GL_TEXTURE0_ARB);
 	
 	switch(tc)
@@ -571,6 +628,9 @@ void SetTextureMatrix(int unit, int xscale, int yscale)
 	if (cached && texmatrix[unit].known && texmatrix[unit].xscale == xscale && texmatrix[unit].yscale == yscale)
 		return;
 
+	RC_BATCH_FLUSH();	// ReCoF (B195)
+	if (unit == 0)
+		s_iRcTexMatrixValid = 0;
 	gl.glActiveTextureARB(unit + GL_TEXTURE0_ARB);
 	gl.glMatrixMode(GL_TEXTURE);
 	gl.glLoadIdentity();
@@ -688,7 +748,28 @@ void DrawPolyFromArray (glpoly_t *p)
 {
 	int facedataindex = (p->flags >> 16) & 0xFFFF;
 	BrushFace* ext = &faces_extradata[facedataindex];
-	gl.glDrawArrays(GL_POLYGON, ext->start_vertex, p->numverts);	
+
+	// ReCoF (B195): inside a batch scope the polygon joins the queue as a fan of triangles
+	int n = (p->numverts - 2) * 3;
+	if (s_iRcBatching && n > 0 && n <= RC_BATCH_MAX)
+	{
+		if (s_iRcBatchCount + n > RC_BATCH_MAX)
+			RcBatchFlush();
+
+		GLuint first = ext->start_vertex;
+		GLuint *idx = &s_RcBatch[s_iRcBatchCount];
+		for (int k = 1; k < p->numverts - 1; k++)
+		{
+			*idx++ = first;
+			*idx++ = first + k;
+			*idx++ = first + k + 1;
+		}
+		s_iRcBatchCount += n;
+		return;
+	}
+
+	gl.glDrawArrays(GL_POLYGON, ext->start_vertex, p->numverts);
+	RcProf_Count( RCC_WORLDDRAWS );	// ReCoF
 }
 
 void DrawPolyFromArray (msurface_t *s)
@@ -749,14 +830,17 @@ void DrawNormalPoly (msurface_t *s)
 			// rendering only one polygon!
 			// I should render whole entity two times, instead of
 			// rendering two times each poly, but i'm too lazy
+			RC_BATCH_FLUSH();	// ReCoF (B195): direct state changes around this polygon
 			gl.glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 			SetTexEnvs(ENVSTATE_REPLACE, ENVSTATE_REPLACE);
 			Bind2DTexture( GL_TEXTURE1_ARB, t->gl_texturenum);
 			DrawPolyFromArray(s);
+			RC_BATCH_FLUSH();	// ReCoF (B195)
 			gl.glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 			gl.glDepthFunc(GL_EQUAL);
 			SetTexEnvs(ENVSTATE_REPLACE);
 			DrawPolyFromArray(s);
+			RC_BATCH_FLUSH();	// ReCoF (B195)
 			gl.glDepthFunc(GL_LEQUAL);
 			AddPolyToTextureChain(s);
 			return;
@@ -873,11 +957,13 @@ void RenderAdditionalBumpPass()
 			if (surf)
 			{
 				Bind2DTexture( GL_TEXTURE0_ARB, i + g_lightmap_addlight);
+				RcBatchBegin();	// ReCoF (B195)
 				while (surf)
 				{
 					DrawPolyFromArray(surf);
 					surf = surf->texturechain;
 				}
+				RcBatchEnd();	// ReCoF (B195)
 			}
 		}
 	}
@@ -890,6 +976,7 @@ void RenderAdditionalBumpPass()
 		if (surf)
 		{
 			Bind2DTexture( GL_TEXTURE0_ARB, i + g_lightmap_baselight);
+			RcBatchBegin();	// ReCoF (B195)
 			while (surf)
 			{
 				DrawPolyFromArray(surf);
@@ -897,6 +984,7 @@ void RenderAdditionalBumpPass()
 				AddPolyToTextureChain(surf);
 				surf = next;
 			}
+			RcBatchEnd();	// ReCoF (B195)
 		}
 	}
 }
@@ -944,6 +1032,7 @@ void RenderSecondPass()
 				SetTexEnvs(ENVSTATE_REPLACE);
 			}
 
+			RcBatchBegin();	// ReCoF (B195): the chain shares one state
 			while(s)
 			{
 				DrawPolyFromArray(s);
@@ -952,6 +1041,7 @@ void RenderSecondPass()
 					AddPolyToSpecularChain(s);
 				s = next;
 			}
+			RcBatchEnd();	// ReCoF (B195)
 		}
 	}
 
@@ -1125,9 +1215,21 @@ void SetupTexMatrix( msurface_t *s, const vec3_t &vec )
 	m[3] = m[7] = m[11] = 0;
 	m[15] = 1;
 
+	// ReCoF (B195): polygons of one plane and texture axis get the same matrix; inside a batch scope it is
+	// loaded once, and their polygons go to the driver together
+	if (s_iRcBatching && s_iRcTexMatrixValid && !memcmp(m, s_flRcTexMatrix, sizeof(m)))
+		return;
+
+	RC_BATCH_FLUSH();
 	RcTexMatrixSelect(0);	// ReCoF (B292): the unit and the matrix mode do not change per surface
 	gl.glLoadMatrixf(m);
 	texmatrix[0].known = FALSE;
+
+	if (s_iRcBatching)
+	{
+		memcpy(s_flRcTexMatrix, m, sizeof(m));
+		s_iRcTexMatrixValid = 1;
+	}
 }
 
 //

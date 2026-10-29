@@ -320,6 +320,7 @@ int GLManager::LoadFunctions()
 	LOAD_PROC(glDisable);
 	LOAD_PROC(glDisableClientState);
 	LOAD_PROC(glDrawArrays);
+	LOAD_PROC(glDrawElements);	// ReCoF (B195)
 	LOAD_PROC(glDrawBuffer);
 	LOAD_PROC(glEnable);
 	LOAD_PROC(glEnableClientState);

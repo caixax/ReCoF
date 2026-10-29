@@ -52,6 +52,7 @@ public:
 	void (APIENTRY *glDisable)	(GLenum cap);
 	void (APIENTRY *glDisableClientState)	(GLenum array);
 	void (APIENTRY *glDrawArrays) (GLenum mode, GLint first, GLsizei count);
+	void (APIENTRY *glDrawElements) (GLenum mode, GLsizei count, GLenum type, const GLvoid *indices);	// ReCoF (B195)
 	void (APIENTRY *glDrawBuffer) (GLenum mode);
 	void (APIENTRY *glEnable)	(GLenum cap);
 	void (APIENTRY *glEnableClientState) (GLenum array);

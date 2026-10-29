@@ -911,7 +911,9 @@ void DrawDynamicLights()
 		RcTexMatrixDirty();	// ReCoF (B292): the light setup moved the active unit and the matrices
 
 		// Draw world
+		RcBatchBegin();	// ReCoF (B195)
 		RecursiveDrawWorldLight (g_RcWorldModel->nodes);	// ReCoF (B295)
+		RcBatchEnd();	// ReCoF (B195)
 
 		// Draw static entites
 		if (cv_entdynamiclight->value)

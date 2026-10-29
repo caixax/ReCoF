@@ -147,3 +147,9 @@ void RendererVidInit();
 void RendererInit();
 void RendererCleanup();
 void RendererDrawHud();
+
+// ReCoF (B195): world polygons drawn between RcBatchBegin and RcBatchEnd are queued and drawn together
+// until the GL state changes (gl_rsurf.cpp)
+void RcBatchBegin();
+void RcBatchEnd();
+void RcBatchFlush();

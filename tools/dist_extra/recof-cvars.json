@@ -108,6 +108,14 @@
       "desc_en": "Reads the mouse directly, without Windows acceleration. 2 reads it as RInput does, on a thread of its own; 1 reads it on the game window; 0 is the retail mouse."
     },
     {
+      "name": "rc_worldbatch",
+      "type": "bool",
+      "default": "1",
+      "group": "Performance",
+      "label_en": "Faster world drawing",
+      "desc_en": "Sends runs of world polygons that share the same state to the driver in one call instead of one call per polygon. The picture is the same; off is the retail path, for comparison."
+    },
+    {
       "name": "rc_modelarrays",
       "type": "bool",
       "default": "1",

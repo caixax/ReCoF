@@ -78,6 +78,7 @@ cvar_t *cv_reducedlightcolour3_guess;
 cvar_t *cv_fullbrighttextures_guess;
 cvar_t *rc_modelarrays;	// ReCoF (B287): studio model strips through vertex arrays
 cvar_t *rc_dlightcull;	// ReCoF (B291): skip dynamic lights that cannot reach the screen
+cvar_t *rc_worldbatch;	// ReCoF (B195): draw runs of world polygons in one call
 
 int		norm_cubemap_id = 0;
 int		default_normalmap_id = 0;
@@ -451,6 +452,7 @@ e->angles[0] = -e->angles[0];	// stupid quake bug
 		gl.glColor4ub(255, 255, 255, e->curstate.renderamt);
 	}	
 
+	RcBatchBegin();	// ReCoF (B195)
 	for (i=0 ; i<clmodel->nummodelsurfaces ; i++, psurf++)
 	{
 		pplane = psurf->plane;
@@ -463,6 +465,7 @@ e->angles[0] = -e->angles[0];	// stupid quake bug
 			DrawPolyFirstPass(psurf);
 		}
 	}
+	RcBatchEnd();	// ReCoF (B195)
 
 	if (e->curstate.rendermode == kRenderTransAlpha)
 	{
@@ -686,7 +689,9 @@ void DrawBump()
 
 	RcProf_Push( RCP_WORLD_FIRST );
 	PrepareFirstPass();
+	RcBatchBegin();	// ReCoF (B195)
 	RecursiveDrawWorld (world->nodes);
+	RcBatchEnd();	// ReCoF (B195)
 
 //	CONPRINT("static start\n");
 
@@ -1319,6 +1324,7 @@ void RendererInit()
 	cv_fullbrighttextures_guess = gEngfuncs.pfnRegisterVariable( "cof_fullbrighttextures","0.5", 0 );
 	rc_modelarrays = gEngfuncs.pfnRegisterVariable( "rc_modelarrays", "1", FCVAR_ARCHIVE );	// ReCoF (B287)
 	rc_dlightcull = gEngfuncs.pfnRegisterVariable( "rc_dlightcull", "1", FCVAR_ARCHIVE );	// ReCoF (B291)
+	rc_worldbatch = gEngfuncs.pfnRegisterVariable( "rc_worldbatch", "1", FCVAR_ARCHIVE );	// ReCoF (B195)
 
 	gEngfuncs.pfnAddCommand ("dumptextures", DumpTextures);
 	gEngfuncs.pfnAddCommand ("dumplevel", DumpLevel);
