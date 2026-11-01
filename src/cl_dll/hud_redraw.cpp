@@ -838,17 +838,20 @@ void CHud :: DrawBlurTest( float frametime )
 
 		int iSteps = ScreenWidth / iStepX + 1;
 
+		// ReCoF (B196): every quad used the same texture, blending and colour, set again before each one and
+		// undone after it; they are set once and the quads go in one glBegin, which GL draws in the same order
+		// with the same blending, so the zoom blur looks the same
+		gl.glBindTexture( GL_TEXTURE_2D, g_iBlurTexture_guess );
+		gl.glEnable( GL_BLEND );
+		gl.glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+		gl.glColor4f( 1, 1, 1, cv_opacity_guess->value );
+
+		glBegin( GL_QUADS );
 		for ( int i = 0; i < iSteps; i++ )
 		{
-			gl.glBindTexture( GL_TEXTURE_2D, g_iBlurTexture_guess );
-			gl.glEnable( GL_BLEND );
-			gl.glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-			gl.glColor4f( 1, 1, 1, cv_opacity_guess->value );
-
 			iHeight += iStepY;
 			iWidth += iStepX;
 
-			glBegin( GL_QUADS );
 			glTexCoord2f( 0, 1 );
 			glVertex2f( ScreenWidth / 2 - iWidth / 2, ScreenHeight / 2 - iHeight / 2 );
 			glTexCoord2f( 1, 1 );
@@ -857,10 +860,10 @@ void CHud :: DrawBlurTest( float frametime )
 			glVertex2f( ScreenWidth / 2 + iWidth / 2, ScreenHeight / 2 + iHeight / 2 );
 			glTexCoord2f( 0, 0 );
 			glVertex2f( ScreenWidth / 2 - iWidth / 2, ScreenHeight / 2 + iHeight / 2 );
-			glEnd();
-
-			gl.glDisable( GL_BLEND );
 		}
+		glEnd();
+
+		gl.glDisable( GL_BLEND );
 	}
 }
 

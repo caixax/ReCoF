@@ -499,7 +499,19 @@ void CaptureBlurTexture_guess( int width, int height, int iUnused1, int iUnused2
 	if (height)
 		y = ScreenHeight / 2 - height / 2;
 
-	gl.glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, x, y, width, height, 0);
+	// ReCoF (B196): glCopyTexImage2D allocates the texture again at every capture, which the screen blur does
+	// every frame; a capture of the size the texture already has copies into it, which gives the same texels.
+	// The size changes when the camera viewfinder, which captures the size of its own texture, shares a frame
+	// with the screen blur
+	static int s_iRcBlurWidth = 256, s_iRcBlurHeight = 256;	// the blank texture made above
+	if (width == s_iRcBlurWidth && height == s_iRcBlurHeight)
+		gl.glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, x, y, width, height);
+	else
+	{
+		gl.glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, x, y, width, height, 0);
+		s_iRcBlurWidth = width;
+		s_iRcBlurHeight = height;
+	}
 	g_bBlurTextureCaptured_guess = true;
 }
 
