@@ -534,8 +534,11 @@ void EngineSurface::pushMakeCurrent( int *insets, int *absExtents, int *clipRect
 	int wide = surfaceAbsExtents[2] - surfaceAbsExtents[0];
 	int tall = surfaceAbsExtents[3] - surfaceAbsExtents[1];
 
+	// ReCoF (B255): the projection was read back with glGetFloatv for every panel painted, and each read makes a
+	// threaded driver finish the commands queued before it; the matrix stack keeps it instead. Panels never nest
+	// their push and pop, so one level above the view's projection is enough
 	qglMatrixMode( GL_PROJECTION );
-	qglGetFloatv( GL_PROJECTION_MATRIX, g_ProjectionMatrix_guess );
+	qglPushMatrix();
 	qglLoadIdentity();
 	qglOrtho( 0, wide, tall, 0, -1, 1 );
 
@@ -593,7 +596,7 @@ void EngineSurface::popMakeCurrent( void )
 	drawFlushText();
 
 	qglMatrixMode( GL_PROJECTION );
-	qglLoadMatrixf( g_ProjectionMatrix_guess );
+	qglPopMatrix();	// ReCoF (B255): pushed by pushMakeCurrent
 
 	qglMatrixMode( GL_MODELVIEW );
 	qglPopMatrix();
