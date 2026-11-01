@@ -21,6 +21,10 @@
 #include "gl_renderer.h"
 #include "gl_dlight.h"
 #include "rc_prof.h"	// ReCoF
+#include "rc_glsl.h"	// ReCoF (B195 step 2)
+
+#include <stdlib.h>
+#include <string.h>
 
 
 #define MAX_DLIGHTS 32
@@ -49,6 +53,61 @@ static int texid; // current spot light texture id
 static int RcLightReachesView( DynamicLight *dl );	// ReCoF (B291), defined with HasDynamicLights
 
 extern cvar_t *cv_dyntwopass; // debug - force lights to draw in two pass
+
+// ReCoF (B195 step 2): one pass lights on the world through a vertex shader. The light pass loaded a texture
+// matrix on unit 0 for every surface (SetupTexMatrix: the vector to the light in the surface's tangent space,
+// looked up in the normalization cube map), so polygons of different planes could not share a draw call. The
+// shader works the same vector out per vertex from the face's tangent space (gl_rsurf.cpp RcTangentArrays), and
+// the eye linear coordinates of units 2 and 3 from the same planes the setup functions give GL, so the light
+// pass binds only the normal map per surface. The fragment stage stays fixed function: the same cube map, dot3,
+// attenuation and spot textures, light colour and fog. One pass lights add with GL_ONE, GL_ONE where the depth
+// is equal, which does not depend on the order, so their surfaces are also sorted by normal map
+extern cvar_t *rc_lightshader;	// gl_renderer.cpp
+extern int use_vertex_array;	// gl_rsurf.cpp
+
+#define RC_LIGHT_ATTR_S	5	// generic attributes the light shader's conventional ones do not share
+#define RC_LIGHT_ATTR_T	6
+#define RC_LIGHT_ATTR_N	7
+
+static int		s_iRcLightState;		// 0 not tried on this map, 1 ready, -1 not available
+static GLuint	s_iRcLightProgram;
+static GLint	s_iULLightOrg, s_iULSpot, s_iULTg2, s_iULTg3;
+static int		s_bRcLightShader;		// the light being drawn uses the shader (LightDrawPoly)
+static float	s_flRcTg2[4][4];		// the eye planes of unit 2 and of unit 3's s, as the setup functions set them
+static float	s_flRcTg3[4];
+
+static const char *s_szRcLightVertex =
+	"#version 110\n"
+	"uniform vec3 rc_lightorg;\n"
+	"uniform float rc_spot;\n"
+	"uniform vec4 rc_tg2[4];\n"
+	"uniform vec4 rc_tg3;\n"
+	"attribute vec3 rc_tans;\n"
+	"attribute vec3 rc_tant;\n"
+	"attribute vec3 rc_norm;\n"
+	"void main()\n"
+	"{\n"
+	"	gl_Position = ftransform();\n"		// the same depth as the first pass, for GL_EQUAL
+	"	vec4 ep = gl_ModelViewMatrix * gl_Vertex;\n"
+	"	gl_ClipVertex = ep;\n"
+	"	gl_FogFragCoord = abs( ep.z );\n"
+	"	gl_FrontColor = gl_Color;\n"
+	"	gl_FrontSecondaryColor = gl_SecondaryColor;\n"
+	// SetupTexMatrix: the rows s, t and n of the face times the vector from the vertex to the light
+	"	vec3 l = rc_lightorg - gl_Vertex.xyz;\n"
+	"	gl_TexCoord[0] = vec4( dot( rc_tans, l ), dot( rc_tant, l ), dot( rc_norm, l ), 1.0 );\n"
+	"	gl_TexCoord[1] = gl_TextureMatrix[1] * gl_MultiTexCoord1;\n"
+	// eye linear generation under the modelview the planes were given with is the plane times the vertex
+	"	vec4 g2 = vec4( dot( rc_tg2[0], gl_Vertex ), dot( rc_tg2[1], gl_Vertex ), dot( rc_tg2[2], gl_Vertex ), gl_MultiTexCoord2.q );\n"
+	"	vec4 g3 = gl_MultiTexCoord3;\n"
+	"	if ( rc_spot > 0.5 )\n"
+	"	{\n"
+	"		g2.q = dot( rc_tg2[3], gl_Vertex );\n"
+	"		g3.s = dot( rc_tg3, gl_Vertex );\n"
+	"	}\n"
+	"	gl_TexCoord[2] = gl_TextureMatrix[2] * g2;\n"
+	"	gl_TexCoord[3] = gl_TextureMatrix[3] * g3;\n"
+	"}\n";
 
 
 //============================
@@ -117,6 +176,12 @@ void SetupProjection()
 	GLfloat planeR[] = {0.0, 0.0, 1.0, 0.0};
 	GLfloat planeQ[] = {0.0, 0.0, 0.0, 1.0};
 
+	// ReCoF (B195 step 2): the same planes for the light shader
+	memcpy(s_flRcTg2[0], planeS, sizeof(planeS));
+	memcpy(s_flRcTg2[1], planeT, sizeof(planeT));
+	memcpy(s_flRcTg2[2], planeR, sizeof(planeR));
+	memcpy(s_flRcTg2[3], planeQ, sizeof(planeQ));
+
 	gl.glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR); gl.glTexGenfv(GL_S, GL_EYE_PLANE, planeS);
 	gl.glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR); gl.glTexGenfv(GL_T, GL_EYE_PLANE, planeT);
 	gl.glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR); gl.glTexGenfv(GL_R, GL_EYE_PLANE, planeR);
@@ -162,6 +227,7 @@ void SetupAttenuationSpotlight()
 	planeS[1] = current_spot_vec_forward[1] / current_light->radius;
 	planeS[2] = current_spot_vec_forward[2] / current_light->radius;
 	planeS[3] = - DotProduct(current_spot_vec_forward, current_light_origin) / current_light->radius;
+	memcpy(s_flRcTg3, planeS, sizeof(planeS));	// ReCoF (B195 step 2)
 
 	gl.glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR); gl.glTexGenfv(GL_S, GL_EYE_PLANE, planeS);
 	gl.glEnable(GL_TEXTURE_GEN_S);
@@ -185,6 +251,11 @@ void SetupAttenuation3D()
 	GLfloat planeS[] = {r, 0, 0, -current_light_origin[0] * r + 0.5};
 	GLfloat planeT[] = {0, r, 0, -current_light_origin[1] * r + 0.5};
 	GLfloat planeR[] = {0, 0, r, -current_light_origin[2] * r + 0.5};
+
+	// ReCoF (B195 step 2): the same planes for the light shader; q is not generated
+	memcpy(s_flRcTg2[0], planeS, sizeof(planeS));
+	memcpy(s_flRcTg2[1], planeT, sizeof(planeT));
+	memcpy(s_flRcTg2[2], planeR, sizeof(planeR));
 
 	gl.glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR); gl.glTexGenfv(GL_S, GL_EYE_PLANE, planeS);
 	gl.glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR); gl.glTexGenfv(GL_T, GL_EYE_PLANE, planeT);
@@ -615,6 +686,13 @@ void LightDrawPoly( msurface_t *surf )
 		normalmap_id = pExtData->gl_normalmap_id;
 
 	Bind2DTexture(GL_TEXTURE1_ARB, normalmap_id);
+
+	if (s_bRcLightShader)	// ReCoF (B195 step 2): the shader makes the light vector, and there is no second pass
+	{
+		DrawPolyFromArray (surf);
+		return;
+	}
+
 	SetupTexMatrix (surf, current_light_origin);
 	DrawPolyFromArray (surf);
 
@@ -846,6 +924,194 @@ void RecursiveDrawWorldLight (mnode_t *node)
 
 
 
+// ReCoF (B195 step 2): the shader for the current one pass light; false keeps the fixed function path
+static bool RcWorldLightBegin()
+{
+	if (!rc_lightshader || !rc_lightshader->value || twopass || !use_vertex_array)
+		return false;
+
+	if (!s_iRcLightState)
+	{
+		s_iRcLightState = -1;
+		if (!RcGlslInit())
+			return false;
+
+		static const int index[] = { RC_LIGHT_ATTR_S, RC_LIGHT_ATTR_T, RC_LIGHT_ATTR_N };
+		static const char *name[] = { "rc_tans", "rc_tant", "rc_norm", NULL };
+		s_iRcLightProgram = RcGlslProgram("world light", s_szRcLightVertex, NULL, index, name);
+		if (!s_iRcLightProgram)
+			return false;
+
+		s_iULLightOrg = rcgl.glGetUniformLocation(s_iRcLightProgram, "rc_lightorg");
+		s_iULSpot = rcgl.glGetUniformLocation(s_iRcLightProgram, "rc_spot");
+		s_iULTg2 = rcgl.glGetUniformLocation(s_iRcLightProgram, "rc_tg2");
+		s_iULTg3 = rcgl.glGetUniformLocation(s_iRcLightProgram, "rc_tg3");
+		s_iRcLightState = 1;
+	}
+
+	if (s_iRcLightState < 0 || !RcTangentArrays(true, RC_LIGHT_ATTR_S, RC_LIGHT_ATTR_T, RC_LIGHT_ATTR_N))
+		return false;
+
+	rcgl.glUseProgram(s_iRcLightProgram);
+	rcgl.glUniform3f(s_iULLightOrg, current_light_origin[0], current_light_origin[1], current_light_origin[2]);
+	rcgl.glUniform1f(s_iULSpot, current_light->spot_texture[0] ? 1.0f : 0.0f);
+	rcgl.glUniform4fv(s_iULTg2, 4, &s_flRcTg2[0][0]);
+	rcgl.glUniform4fv(s_iULTg3, 1, s_flRcTg3);
+	s_bRcLightShader = TRUE;
+	return true;
+}
+
+static void RcWorldLightEnd()
+{
+	rcgl.glUseProgram(0);
+	RcTangentArrays(false, RC_LIGHT_ATTR_S, RC_LIGHT_ATTR_T, RC_LIGHT_ATTR_N);
+	s_bRcLightShader = FALSE;
+}
+
+// ReCoF (B195 step 2): the visible world nodes that hold surfaces, gathered once per view instead of walking
+// the tree again for every light, and the surfaces one light reaches, sorted by normal map
+struct RcLitSurf_t
+{
+	int			normalmap;
+	msurface_t	*surf;
+};
+
+static mnode_t		**s_ppRcNodes;
+static int			s_iRcNodes, s_iRcNodesMax;
+static int			s_iRcNodesFrame = -1, s_iRcNodesVis = -1;
+static RcLitSurf_t	*s_pRcLit;
+static int			s_iRcLitMax;
+
+void RcWorldLightNewMap()
+{
+	if (s_iRcLightState > 0)
+		rcgl.glDeleteProgram(s_iRcLightProgram);
+	s_iRcLightProgram = 0;
+	s_iRcLightState = 0;
+
+	free(s_ppRcNodes);
+	s_ppRcNodes = NULL;
+	s_iRcNodes = s_iRcNodesMax = 0;
+	s_iRcNodesFrame = s_iRcNodesVis = -1;
+	free(s_pRcLit);
+	s_pRcLit = NULL;
+	s_iRcLitMax = 0;
+}
+
+// the nodes RecursiveDrawWorldLight would enter, apart from its light test
+static void RcGatherNodes(mnode_t *node)
+{
+	if (node->contents == CONTENTS_SOLID)
+		return;
+
+	if (node->visframe != curvisframe)
+		return;
+
+	if (node->contents < 0)
+		return;
+
+	if (node->numsurfaces && s_iRcNodes < s_iRcNodesMax)
+		s_ppRcNodes[s_iRcNodes++] = node;
+
+	RcGatherNodes(node->children[0]);
+	RcGatherNodes(node->children[1]);
+}
+
+static int RcLitCompare(const void *a, const void *b)
+{
+	return ((const RcLitSurf_t *)a)->normalmap - ((const RcLitSurf_t *)b)->normalmap;
+}
+
+// draws what RecursiveDrawWorldLight draws for a one pass light in the shader. A node's box holds its
+// children's boxes, so testing every node against the light gives the nodes the walk reaches; the surfaces of
+// a node pass or fail the same side test as there
+static void RcDrawWorldLightSorted()
+{
+	model_t *world = g_RcWorldModel;
+
+	if (s_iRcNodesMax < world->numnodes || s_iRcLitMax < world->numsurfaces)
+	{
+		free(s_ppRcNodes);
+		free(s_pRcLit);
+		s_ppRcNodes = (mnode_t **)malloc(world->numnodes * sizeof(mnode_t *));
+		s_pRcLit = (RcLitSurf_t *)malloc(world->numsurfaces * sizeof(RcLitSurf_t));
+		s_iRcNodesMax = s_ppRcNodes ? world->numnodes : 0;
+		s_iRcLitMax = s_pRcLit ? world->numsurfaces : 0;
+		s_iRcNodesFrame = -1;
+		if (!s_ppRcNodes || !s_pRcLit)
+		{
+			RecursiveDrawWorldLight(world->nodes);
+			return;
+		}
+	}
+
+	if (s_iRcNodesFrame != framecount || s_iRcNodesVis != curvisframe)
+	{
+		s_iRcNodes = 0;
+		RcGatherNodes(world->nodes);
+		s_iRcNodesFrame = framecount;
+		s_iRcNodesVis = curvisframe;
+	}
+
+	int count = 0;
+	for (int n = 0; n < s_iRcNodes; n++)
+	{
+		mnode_t *node = s_ppRcNodes[n];
+
+		if (current_light->spot_texture[0])
+		{
+			if (worldLightFrustum.R_CullBox (node->minmaxs, node->minmaxs+3))
+				continue;
+		}
+		else
+		{
+			if (CullPointlightBBox (node->minmaxs, node->minmaxs+3))
+				continue;
+		}
+
+		double dot;
+		mplane_t *plane = node->plane;
+		switch (plane->type)
+		{
+		case PLANE_X:
+			dot = current_light_origin[0] - plane->dist;	break;
+		case PLANE_Y:
+			dot = current_light_origin[1] - plane->dist;	break;
+		case PLANE_Z:
+			dot = current_light_origin[2] - plane->dist;	break;
+		default:
+			dot = DotProduct (current_light_origin, plane->normal) - plane->dist; break;
+		}
+
+		msurface_t *surf = world->surfaces + node->firstsurface;
+		for (int c = node->numsurfaces; c && count < s_iRcLitMax; c--, surf++)
+		{
+			if (surf->visframe != framecount)
+				continue;
+
+			if ( !(surf->flags & SURF_UNDERWATER) && ( (dot < 0) ^ !!(surf->flags & SURF_PLANEBACK)) )
+				continue;
+
+			int normalmap_id = default_normalmap_id;
+			ExtTextureData *pExtData = GetExtTexData (surf->texinfo->texture);
+			if (pExtData && pExtData->gl_normalmap_id)
+				normalmap_id = pExtData->gl_normalmap_id;
+
+			s_pRcLit[count].normalmap = normalmap_id;
+			s_pRcLit[count].surf = surf;
+			count++;
+		}
+	}
+
+	qsort(s_pRcLit, count, sizeof(RcLitSurf_t), RcLitCompare);
+
+	for (int i = 0; i < count; i++)
+	{
+		Bind2DTexture(GL_TEXTURE1_ARB, s_pRcLit[i].normalmap);
+		DrawPolyFromArray (s_pRcLit[i].surf);
+	}
+}
+
 extern cvar_t *cv_entdynamiclight;
 int IsEntityMoved(cl_entity_t *e);
 
@@ -910,9 +1176,14 @@ void DrawDynamicLights()
 
 		RcTexMatrixDirty();	// ReCoF (B292): the light setup moved the active unit and the matrices
 
+		bool bRcShader = RcWorldLightBegin();	// ReCoF (B195 step 2)
+
 		// Draw world
 		RcBatchBegin();	// ReCoF (B195)
-		RecursiveDrawWorldLight (g_RcWorldModel->nodes);	// ReCoF (B295)
+		if (bRcShader)
+			RcDrawWorldLightSorted();	// ReCoF (B195 step 2)
+		else
+			RecursiveDrawWorldLight (g_RcWorldModel->nodes);	// ReCoF (B295)
 		RcBatchEnd();	// ReCoF (B195)
 
 		// Draw static entites
@@ -942,6 +1213,9 @@ void DrawDynamicLights()
 				}
 			}
 		}
+
+		if (bRcShader)
+			RcWorldLightEnd();	// ReCoF (B195 step 2)
 
 		if (current_light->spot_texture[0])
 		{

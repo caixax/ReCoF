@@ -81,6 +81,7 @@ cvar_t *rc_modelarrays;	// ReCoF (B287): studio model strips through vertex arra
 cvar_t *rc_gpumodels;	// ReCoF (B287 step 4): studio models moved and lit by a vertex shader
 cvar_t *rc_dlightcull;	// ReCoF (B291): skip dynamic lights that cannot reach the screen
 cvar_t *rc_worldbatch;	// ReCoF (B195): draw runs of world polygons in one call
+cvar_t *rc_lightshader;	// ReCoF (B195 step 2): one pass dynamic lights on the world through a vertex shader
 
 int		norm_cubemap_id = 0;
 int		default_normalmap_id = 0;
@@ -640,6 +641,7 @@ void PrepareRenderer( ref_params_t *pparams )
 		BumpMarkFaces();
 		GenerateVertexArray();
 		RcGpuModelsNewMap();	// ReCoF (B287 step 4): the model memory of the last map is gone
+		RcWorldLightNewMap();	// ReCoF (B195 step 2)
 		reloaded = 0;
 	}
 
@@ -1329,6 +1331,7 @@ void RendererInit()
 	rc_gpumodels = gEngfuncs.pfnRegisterVariable( "rc_gpumodels", "1", FCVAR_ARCHIVE );	// ReCoF (B287 step 4)
 	rc_dlightcull = gEngfuncs.pfnRegisterVariable( "rc_dlightcull", "1", FCVAR_ARCHIVE );	// ReCoF (B291)
 	rc_worldbatch = gEngfuncs.pfnRegisterVariable( "rc_worldbatch", "1", FCVAR_ARCHIVE );	// ReCoF (B195)
+	rc_lightshader = gEngfuncs.pfnRegisterVariable( "rc_lightshader", "1", FCVAR_ARCHIVE );	// ReCoF (B195 step 2)
 
 	gEngfuncs.pfnAddCommand ("dumptextures", DumpTextures);
 	gEngfuncs.pfnAddCommand ("dumplevel", DumpLevel);

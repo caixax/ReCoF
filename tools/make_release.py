@@ -105,6 +105,7 @@ NEW CONSOLE OPTIONS (default in brackets)
   rc_modelarrays [1]       0 = retail model drawing, for comparison
   rc_gpumodels [1]         models moved and lit on the GPU; 0 = on the CPU
   rc_worldbatch [1]        0 = retail world drawing, one call per polygon
+  rc_lightshader [1]       dynamic lights on the world through a shader; 0 = retail light pass
   rc_dlightcull [1]        0 = retail, draw lights that cannot reach the screen
   rc_vsync [0]             1 = vertical sync on; Options, Video sets it too
   rc_spray_size [0]        size of your spray on the wall in units (0 = a unit a

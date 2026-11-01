@@ -116,6 +116,14 @@
       "desc_en": "Sends runs of world polygons that share the same state to the driver in one call instead of one call per polygon. The picture is the same; off is the retail path, for comparison."
     },
     {
+      "name": "rc_lightshader",
+      "type": "bool",
+      "default": "1",
+      "group": "Performance",
+      "label_en": "Faster dynamic lights",
+      "desc_en": "Draws the flashlight and the other dynamic lights on the world with a shader, so each light needs far fewer draw calls. The picture is the same; off is the retail light pass, for comparison."
+    },
+    {
       "name": "rc_gpumodels",
       "type": "bool",
       "default": "1",

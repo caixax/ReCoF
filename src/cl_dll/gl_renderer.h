@@ -153,3 +153,10 @@ void RendererDrawHud();
 void RcBatchBegin();
 void RcBatchEnd();
 void RcBatchFlush();
+
+// ReCoF (B195 step 2): points generic attributes at the tangent space of each world vertex's face, the rows
+// SetupTexMatrix loads (gl_rsurf.cpp); false when the world has no vertex array
+bool RcTangentArrays( bool enable, int attrS, int attrT, int attrN );
+
+// ReCoF (B195 step 2): frees the dynamic light shader and its lists, at a map load (gl_light_dynamic.cpp)
+void RcWorldLightNewMap();

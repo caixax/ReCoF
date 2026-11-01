@@ -15,6 +15,7 @@
 #include "ref_params.h"
 #include "gl_renderer.h"
 #include "rc_prof.h"	// ReCoF
+#include "rc_glsl.h"	// ReCoF (B195 step 2)
 
 
 extern int norm_cubemap_id;
@@ -76,6 +77,18 @@ BrushFace* faces_extradata = NULL;
 
 int use_vertex_array = 0; // 1 - VAR, 2 - VBO
 
+// ReCoF (B195 step 2): the tangent space of each vertex's face, the three vectors SetupTexMatrix puts in the
+// light matrix, in an array parallel to buffer_data, for the dynamic light vertex shader
+struct RcTangentVertex
+{
+	float	s[3];
+	float	t[3];
+	float	n[3];
+};
+
+static RcTangentVertex	*s_pRcTangents = NULL;
+static GLuint			s_iRcTangentBuffer = 0;
+
 
 void FreeBuffer()
 {
@@ -100,6 +113,15 @@ void FreeBuffer()
 		delete[] faces_extradata;
 		faces_extradata = NULL;
 	}
+
+	// ReCoF (B195 step 2)
+	if (s_iRcTangentBuffer)
+	{
+		gl.glDeleteBuffersARB(1, &s_iRcTangentBuffer);
+		s_iRcTangentBuffer = 0;
+	}
+	delete[] s_pRcTangents;
+	s_pRcTangents = NULL;
 }
 
 
@@ -141,6 +163,7 @@ void GenerateVertexArray()
 	int curface = 0;
 	buffer_data = new BrushVertex[numverts];
 	faces_extradata = new BrushFace[numfaces];
+	s_pRcTangents = new RcTangentVertex[numverts];	// ReCoF (B195 step 2)
 	for (i = 0; i < world->numsurfaces; i++)
 	{
 		if (!(surfaces[i].flags & (SURF_DRAWSKY|SURF_DRAWTURB)))
@@ -186,6 +209,12 @@ void GenerateVertexArray()
 					buffer_data[curvert].texcoord[1] = v[4];
 					buffer_data[curvert].lightmaptexcoord[0] = v[5];
 					buffer_data[curvert].lightmaptexcoord[1] = v[6];
+					for (int c = 0; c < 3; c++)	// ReCoF (B195 step 2)
+					{
+						s_pRcTangents[curvert].s[c] = ext->s_tangent[c];
+						s_pRcTangents[curvert].t[c] = ext->t_tangent[c];
+						s_pRcTangents[curvert].n[c] = ext->normal[c];
+					}
 					curvert++;
 				}
 				curface++;
@@ -207,6 +236,16 @@ void GenerateVertexArray()
 				// VBO created succesfully!!!
 				gl.glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0); // remove binding
 				Log("Created VBO for world polys\n");
+
+				// ReCoF (B195 step 2): the tangent array goes to a buffer of its own; without one the shader
+				// reads it from client memory
+				gl.glGenBuffersARB(1, &s_iRcTangentBuffer);
+				if (s_iRcTangentBuffer)
+				{
+					gl.glBindBufferARB(GL_ARRAY_BUFFER_ARB, s_iRcTangentBuffer);
+					gl.glBufferDataARB(GL_ARRAY_BUFFER_ARB, numverts*sizeof(RcTangentVertex), s_pRcTangents, GL_STATIC_DRAW_ARB);
+					gl.glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+				}
 			}
 			else
 			{
@@ -242,6 +281,41 @@ void EnableVertexArray()
 	}
 
 	gl.glEnableClientState(GL_VERTEX_ARRAY);	
+}
+
+bool RcTangentArrays( bool enable, int attrS, int attrT, int attrN )
+{
+	if (!s_pRcTangents || !use_vertex_array)
+		return false;
+
+	if (!enable)
+	{
+		rcgl.glDisableVertexAttribArray(attrS);
+		rcgl.glDisableVertexAttribArray(attrT);
+		rcgl.glDisableVertexAttribArray(attrN);
+		return true;
+	}
+
+	// the attribute pointers take the buffer bound when they are set; the world's buffer is bound again after
+	const char *base = (const char *)s_pRcTangents;
+	if (use_vertex_array == 2)
+	{
+		gl.glBindBufferARB(GL_ARRAY_BUFFER_ARB, s_iRcTangentBuffer);
+		if (s_iRcTangentBuffer)
+			base = NULL;
+	}
+
+	rcgl.glVertexAttribPointer(attrS, 3, GL_FLOAT, GL_FALSE, sizeof(RcTangentVertex), base + (size_t)OFFSET(RcTangentVertex, s));
+	rcgl.glVertexAttribPointer(attrT, 3, GL_FLOAT, GL_FALSE, sizeof(RcTangentVertex), base + (size_t)OFFSET(RcTangentVertex, t));
+	rcgl.glVertexAttribPointer(attrN, 3, GL_FLOAT, GL_FALSE, sizeof(RcTangentVertex), base + (size_t)OFFSET(RcTangentVertex, n));
+
+	if (use_vertex_array == 2)
+		gl.glBindBufferARB(GL_ARRAY_BUFFER_ARB, buffer);
+
+	rcgl.glEnableVertexAttribArray(attrS);
+	rcgl.glEnableVertexAttribArray(attrT);
+	rcgl.glEnableVertexAttribArray(attrN);
+	return true;
 }
 
 void DisableVertexArray()
