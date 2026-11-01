@@ -1822,6 +1822,14 @@
         {
           "name": "cl_dll/rc_prof",
           "source": "src/cl_dll/rc_prof.cpp"
+        },
+        {
+          "name": "cl_dll/rc_glsl",
+          "source": "src/cl_dll/rc_glsl.cpp"
+        },
+        {
+          "name": "cl_dll/rc_gpumodel",
+          "source": "src/cl_dll/rc_gpumodel.cpp"
         }
       ],
       "link": {
@@ -2019,7 +2027,9 @@
           "cl_dll/vgui_tips",
           "cl_dll/view",
           "cl_dll/rc_client",
-          "cl_dll/rc_prof"
+          "cl_dll/rc_prof",
+          "cl_dll/rc_glsl",
+          "cl_dll/rc_gpumodel"
         ]
       }
     },

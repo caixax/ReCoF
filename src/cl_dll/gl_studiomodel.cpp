@@ -30,6 +30,7 @@
 #include "gl_dlight.h"
 #include "gl_texloader.h"
 #include "rc_prof.h"	// ReCoF
+#include "rc_gpumodel.h"	// ReCoF (B287 step 4)
 
 extern engine_studio_api_t IEngineStudio;
 extern int g_iUnlockClothes_guess;
@@ -81,6 +82,11 @@ lighting_ext light; // buz
 vec3_t	g_bdynlightvec[MAX_MODEL_DYNLIGHTS][MAXSTUDIOBONES]; // light vectors in bone reference frames
 vec3_t	g_dynlightcolor[MAX_MODEL_DYNLIGHTS];
 int		g_numdynlights;
+
+// ReCoF (B287 step 4): where each light's vectors above start, its radius squared and its spot cone, for the
+// model shader, which works the vectors out per vertex from the bone positions
+static float	g_rcdlorg[MAX_MODEL_DYNLIGHTS][4];
+static float	g_rcdlspot[MAX_MODEL_DYNLIGHTS][4];
 
 int		g_chrome[MAXSTUDIOVERTS][2];	// texture coords for surface normals
 int		g_chromeage[MAXSTUDIOBONES];	// last time chrome vectors were updated
@@ -1407,6 +1413,22 @@ void CStudioModelRenderer::GL_SetupLighting ()
 			}
 		}
 
+		// ReCoF (B287 step 4): the same start point, radius and cone for the model shader
+		vec3_t rcorg = isViewModelHack ? alternateOrigin : dlights[i]->origin;
+		g_rcdlorg[g_numdynlights][0] = rcorg[0];
+		g_rcdlorg[g_numdynlights][1] = rcorg[1];
+		g_rcdlorg[g_numdynlights][2] = rcorg[2];
+		g_rcdlorg[g_numdynlights][3] = r;
+		if (dlights[i]->spot_texture[0])
+		{
+			g_rcdlspot[g_numdynlights][0] = forward[0];
+			g_rcdlspot[g_numdynlights][1] = forward[1];
+			g_rcdlspot[g_numdynlights][2] = forward[2];
+			g_rcdlspot[g_numdynlights][3] = spotcos;
+		}
+		else
+			g_rcdlspot[g_numdynlights][3] = 2;	// no cone
+
 		g_dynlightcolor[g_numdynlights][0] = ApplyGamma(dlights[i]->color[0]) / 2;
 		g_dynlightcolor[g_numdynlights][1] = ApplyGamma(dlights[i]->color[1]) / 2;
 		g_dynlightcolor[g_numdynlights][2] = ApplyGamma(dlights[i]->color[2]) / 2;
@@ -1865,12 +1887,60 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 		pskinref += (skinnum * m_pTextureHeader->numskinref);
 
 	int i;
-	RcProf_Push( RCP_MDL_VERTS );	// ReCoF
-	for (i = 0; i < m_pSubModel->numverts; i++)
+	int j;
+
+	// ReCoF (B287): the bones a dual weapon or a severed limb hides, worked out once per bone (RcHideBone).
+	// Moved up from the drawing so the shader path below can be chosen before the vertices are moved; only a
+	// bone that is really hidden counts, the vertex test of the drawing skips nothing for the others
+	mstudiobone_t *pbones = (mstudiobone_t *)((byte *)m_pStudioHeader + m_pStudioHeader->boneindex);
+	static bool s_bHideBone[256];
+	bool bHideBones = false;
+	int severedBits = m_pCurrentEntity->curstate.playerclass;
+	bool bDualHands = (gHUD.m_Ammo.m_pWeapon && gHUD.m_Ammo.m_pWeapon->iId == 15 && !iGoro_guess) ? true : false;
+
+	if (bDualHands || severedBits > 0)
 	{
-		VectorTransform (pstudioverts[i], (*m_pbonetransform)[pvertbone[i]], g_pxformverts[i]);
+		bool bViewModel = (m_pCurrentEntity == gEngfuncs.GetViewModel()) ? true : false;
+
+		for (int b = 0; b < m_pStudioHeader->numbones && b < 256; b++)
+		{
+			s_bHideBone[b] = RcHideBone(pbones[b].name, bDualHands, bViewModel, severedBits);
+			if (s_bHideBone[b])
+				bHideBones = true;
+		}
 	}
-	RcProf_Pop();	// ReCoF
+
+	// ReCoF (B287 step 4): with rc_gpumodels the vertex shader moves and lights the vertices (rc_gpumodel.h).
+	// Chrome coordinates, the random brightness of corona textures, hidden bones and the world pass, whose
+	// vertex arrays are bound, keep the CPU path for the whole submodel
+	bool bGpu = false;
+	if (!bHideBones && !use_vertex_array && m_pStudioHeader->numbones <= RC_GPU_MAXBONES && RcGpuModelsReady())
+	{
+		bGpu = true;
+		for (j = 0; j < m_pSubModel->nummesh; j++)
+		{
+			mstudiotexture_t *ptex = &ptexture[pskinref[pmesh[j].skinref]];
+			if ((ptex->flags & STUDIO_NF_CHROME) ||
+				(cv_fullbrighttextures_guess->value && strstr(ptex->name, "fullbright") && strstr(ptex->name, "corona_")))
+			{
+				bGpu = false;
+				break;
+			}
+		}
+
+		if (bGpu)
+			bGpu = RcGpuPrepare(m_pStudioHeader, m_pSubModel);
+	}
+
+	if (!bGpu)
+	{
+		RcProf_Push( RCP_MDL_VERTS );	// ReCoF
+		for (i = 0; i < m_pSubModel->numverts; i++)
+		{
+			VectorTransform (pstudioverts[i], (*m_pbonetransform)[pvertbone[i]], g_pxformverts[i]);
+		}
+		RcProf_Pop();	// ReCoF
+	}
 
 //
 // clip and draw all triangles
@@ -1879,7 +1949,6 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 	bool bBlurTexture = false;
 
 	vec3_t *lv = g_pvlightvalues;
-	int j;
 
 	RcProf_Push( RCP_MDL_LIGHT );	// ReCoF: popped after the normal loop
 
@@ -1915,7 +1984,7 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 		}
 	}
 
-	for (j = 0; j < m_pSubModel->nummesh; j++)
+	for (j = 0; !bGpu && j < m_pSubModel->nummesh; j++)	// ReCoF (B287 step 4): the shader lights its vertices
 	{
 		int flags = ptexture[pskinref[pmesh[j].skinref]].flags;
 
@@ -1949,21 +2018,33 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 	RcArraysStart();	// ReCoF (B287)
 	RcProf_Push( RCP_MDL_DRAW );	// ReCoF: popped after RcArraysFinish; no return in between
 
-	mstudiobone_t *pbones = (mstudiobone_t *)((byte *)m_pStudioHeader + m_pStudioHeader->boneindex);
+	// ReCoF (B287 step 4): the entity's lighting for the shader, and the last vertex it draws, whose colour and
+	// texture coordinate immediate mode leaves current
+	bool bRcLast = false;
+	int iRcLastMode = RC_GPU_LIT, iRcLastNorm = 0, iRcLastFlags = 0;
+	float flRcLastBright = 0, flRcLastScale = 1, flRcLastS = 0, flRcLastT = 0;
 
-	// ReCoF (B287): the bones a dual weapon or a severed limb hides, worked out once per bone (RcHideBone)
-	static bool s_bHideBone[256];
-	bool bHideBones = false;
-	int severedBits = m_pCurrentEntity->curstate.playerclass;
-	bool bDualHands = (gHUD.m_Ammo.m_pWeapon && gHUD.m_Ammo.m_pWeapon->iId == 15 && !iGoro_guess) ? true : false;
-
-	if (bDualHands || severedBits > 0)
+	if (bGpu)
 	{
-		bool bViewModel = (m_pCurrentEntity == gEngfuncs.GetViewModel()) ? true : false;
+		RcGpuLight_t gpulight;
+		for (int c = 0; c < 3; c++)
+		{
+			gpulight.ambient[c] = light.ambientlight[c];
+			gpulight.addlight[c] = light.addlight[c];
+			gpulight.lightdir[c] = light.lightdir[c];
+		}
+		gpulight.lambert = cv_lambert->value > 1.0 ? cv_lambert->value : 1.0;	// Lighting: r <= 1 is 1
+		gpulight.numdl = g_numdynlights;
+		for (int l = 0; l < g_numdynlights; l++)
+		{
+			memcpy(gpulight.dlorg[l], g_rcdlorg[l], sizeof(gpulight.dlorg[l]));
+			memcpy(gpulight.dlspot[l], g_rcdlspot[l], sizeof(gpulight.dlspot[l]));
+			gpulight.dlcolor[l][0] = g_dynlightcolor[l][0];
+			gpulight.dlcolor[l][1] = g_dynlightcolor[l][1];
+			gpulight.dlcolor[l][2] = g_dynlightcolor[l][2];
+		}
 
-		bHideBones = true;
-		for (int b = 0; b < m_pStudioHeader->numbones && b < 256; b++)
-			s_bHideBone[b] = RcHideBone(pbones[b].name, bDualHands, bViewModel, severedBits);
+		RcGpuBegin((const float *)(*m_pbonetransform), m_pStudioHeader->numbones, *m_pStudioModelCount, m_pStudioHeader, &gpulight);
 	}
 
 	for (j = 0; j < m_pSubModel->nummesh; j++)
@@ -2271,6 +2352,40 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 				RcEnd( );
 			}
 		}
+		else if (bGpu)
+		{
+			// ReCoF (B287 step 4): the colour the loop below gives every vertex of this mesh, as one mode
+			int mode = (ptex->flags & STUDIO_NF_FLATSHADE) ? RC_GPU_FLAT : RC_GPU_LIT;
+			float bright = 0, scale = 1;
+
+			if (cv_fullbrighttextures_guess->value)
+			{
+				if (bFullbrightTex)
+				{
+					if (!bFullbrightMess || !gHUD.m_bPhoneOff_guess)
+					{
+						mode = RC_GPU_BRIGHT;
+						bright = cv_fullbrighttextures_guess->value;
+					}
+				}
+				else if ((g_DrawHeadShied || bMeshIsViewModel) && bHandTex)
+					scale = handScale;
+			}
+
+			RcGpuDrawMesh(j, mode, bright, scale, alpha, s, t);
+
+			int lastS, lastT;
+			if (RcGpuMeshLast(j, &iRcLastNorm, &lastS, &lastT))
+			{
+				bRcLast = true;
+				iRcLastMode = mode;
+				iRcLastFlags = ptex->flags;
+				flRcLastBright = bright;
+				flRcLastScale = scale;
+				flRcLastS = lastS * s;
+				flRcLastT = lastT * t;
+			}
+		}
 		else
 		{
 			while (i = *(ptricmds++))
@@ -2362,6 +2477,31 @@ void CStudioModelRenderer::GL_DrawPoints ( )
 
 		if (bBlurTexture)
 			gl.glBindTexture( GL_TEXTURE_2D, g_iOldTexture_guess );
+	}
+
+	if (bGpu)
+	{
+		RcGpuEnd();	// ReCoF (B287 step 4)
+
+		// the colour and texture coordinate of the last vertex, worked out once on the CPU
+		if (bRcLast)
+		{
+			float c[3];
+			if (iRcLastMode == RC_GPU_BRIGHT)
+				c[0] = c[1] = c[2] = flRcLastBright;
+			else
+			{
+				byte *pnb = (byte *)m_pStudioHeader + m_pSubModel->norminfoindex;
+				vec3_t *pn = (vec3_t *)((byte *)m_pStudioHeader + m_pSubModel->normindex);
+				vec3_t lvlast;
+				Lighting(lvlast, pnb[iRcLastNorm], iRcLastFlags, pn[iRcLastNorm]);
+				c[0] = lvlast[0] / flRcLastScale;
+				c[1] = lvlast[1] / flRcLastScale;
+				c[2] = lvlast[2] / flRcLastScale;
+			}
+			gl.glColor4f(c[0], c[1], c[2], alpha);
+			gl.glTexCoord2f(flRcLastS, flRcLastT);
+		}
 	}
 
 	RcArraysFinish();	// ReCoF (B287)

@@ -116,6 +116,14 @@
       "desc_en": "Sends runs of world polygons that share the same state to the driver in one call instead of one call per polygon. The picture is the same; off is the retail path, for comparison."
     },
     {
+      "name": "rc_gpumodels",
+      "type": "bool",
+      "default": "1",
+      "group": "Performance",
+      "label_en": "Models on the GPU",
+      "desc_en": "Moves and lights the models in a shader on the graphics card instead of on the processor every frame. The picture is the same; off is the processor path, for comparison."
+    },
+    {
       "name": "rc_modelarrays",
       "type": "bool",
       "default": "1",

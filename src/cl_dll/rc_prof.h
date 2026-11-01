@@ -36,6 +36,7 @@ enum
 	RCC_MODELS = 0,		// studio models drawn
 	RCC_DLIGHTS,		// dynamic lights drawn on the world
 	RCC_WORLDDRAWS,		// draw calls of world and brush polygons from the vertex buffer (B195)
+	RCC_GPUMESHES,		// studio model meshes moved and lit by the vertex shader (B287 step 4)
 	RCC_COUNT
 };
 

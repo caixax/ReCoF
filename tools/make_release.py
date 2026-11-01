@@ -103,6 +103,7 @@ NEW CONSOLE OPTIONS (default in brackets)
   rc_prof [0]              1 = frame time per renderer phase, 2 = plus GPU
   rc_prof_dump             prints the rc_prof numbers to the console
   rc_modelarrays [1]       0 = retail model drawing, for comparison
+  rc_gpumodels [1]         models moved and lit on the GPU; 0 = on the CPU
   rc_worldbatch [1]        0 = retail world drawing, one call per polygon
   rc_dlightcull [1]        0 = retail, draw lights that cannot reach the screen
   rc_vsync [0]             1 = vertical sync on; Options, Video sets it too

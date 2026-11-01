@@ -22,6 +22,7 @@
 #include "gl_renderer.h"
 #include "gl_dlight.h" // buz
 #include "rc_prof.h"	// ReCoF
+#include "rc_gpumodel.h"	// ReCoF (B287 step 4)
 
 
 extern vec3_t	render_origin;
@@ -77,6 +78,7 @@ cvar_t *cv_reducedlightcolour2_guess;
 cvar_t *cv_reducedlightcolour3_guess;
 cvar_t *cv_fullbrighttextures_guess;
 cvar_t *rc_modelarrays;	// ReCoF (B287): studio model strips through vertex arrays
+cvar_t *rc_gpumodels;	// ReCoF (B287 step 4): studio models moved and lit by a vertex shader
 cvar_t *rc_dlightcull;	// ReCoF (B291): skip dynamic lights that cannot reach the screen
 cvar_t *rc_worldbatch;	// ReCoF (B195): draw runs of world polygons in one call
 
@@ -637,6 +639,7 @@ void PrepareRenderer( ref_params_t *pparams )
 		CreateExtDataForTextures();
 		BumpMarkFaces();
 		GenerateVertexArray();
+		RcGpuModelsNewMap();	// ReCoF (B287 step 4): the model memory of the last map is gone
 		reloaded = 0;
 	}
 
@@ -1323,6 +1326,7 @@ void RendererInit()
 	cv_reducedlightcolour3_guess = gEngfuncs.pfnRegisterVariable( "cof_reducedlightcolour3","0.26", 0 );
 	cv_fullbrighttextures_guess = gEngfuncs.pfnRegisterVariable( "cof_fullbrighttextures","0.5", 0 );
 	rc_modelarrays = gEngfuncs.pfnRegisterVariable( "rc_modelarrays", "1", FCVAR_ARCHIVE );	// ReCoF (B287)
+	rc_gpumodels = gEngfuncs.pfnRegisterVariable( "rc_gpumodels", "1", FCVAR_ARCHIVE );	// ReCoF (B287 step 4)
 	rc_dlightcull = gEngfuncs.pfnRegisterVariable( "rc_dlightcull", "1", FCVAR_ARCHIVE );	// ReCoF (B291)
 	rc_worldbatch = gEngfuncs.pfnRegisterVariable( "rc_worldbatch", "1", FCVAR_ARCHIVE );	// ReCoF (B195)
 

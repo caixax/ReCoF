@@ -386,7 +386,8 @@ void RcProf_Draw( void )
 		y += h;
 	}
 
-	sprintf( text, "models %.1f, dlights %.1f, world draws %.0f", s_flShowCount[RCC_MODELS], s_flShowCount[RCC_DLIGHTS], s_flShowCount[RCC_WORLDDRAWS] );
+	sprintf( text, "models %.1f, dlights %.1f, world draws %.0f, gpu meshes %.0f", s_flShowCount[RCC_MODELS], s_flShowCount[RCC_DLIGHTS],
+		s_flShowCount[RCC_WORLDDRAWS], s_flShowCount[RCC_GPUMESHES] );
 	RcDrawLine( x, y, text );
 	y += h;
 
@@ -433,9 +434,9 @@ static void RcProf_Dump( void )
 
 	int gpu = s_iOn >= 2 && s_iGpuState == 1 && s_iShowGpuValid;
 
-	sprintf( line, "rc_prof: frame %.2f ms (%.0f fps), worst %.2f ms, models %.1f, dlights %.1f, world draws %.0f\n", s_flShowFrame,
-		s_flShowFrame > 0 ? 1000.0 / s_flShowFrame : 0.0, s_flShowWorst, s_flShowCount[RCC_MODELS], s_flShowCount[RCC_DLIGHTS],
-		s_flShowCount[RCC_WORLDDRAWS] );
+	sprintf( line, "rc_prof: frame %.2f ms (%.0f fps), worst %.2f ms, models %.1f, dlights %.1f, world draws %.0f, gpu meshes %.0f\n",
+		s_flShowFrame, s_flShowFrame > 0 ? 1000.0 / s_flShowFrame : 0.0, s_flShowWorst, s_flShowCount[RCC_MODELS], s_flShowCount[RCC_DLIGHTS],
+		s_flShowCount[RCC_WORLDDRAWS], s_flShowCount[RCC_GPUMESHES] );
 	ConsolePrint( line );
 
 	if ( gpu )
