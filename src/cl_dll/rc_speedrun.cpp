@@ -541,8 +541,7 @@ static void RcInfoFrame( void )
 
 	s_iRcInfoWidth = 0;
 
-	RcInfoLine( "ReCoF" );
-	RcInfoLine( "Version: %s", RECOF_VERSION );
+	RcInfoLine( "ReCoF v%s", RECOF_VERSION );	// one line where RebuiltSimon has its name and a version line
 	s_RcInfo.index++;
 
 	if ( rc_info_stats->value && ( rc_info_health->value || rc_info_stamina->value || rc_info_speed->value ) )
