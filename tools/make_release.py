@@ -118,6 +118,10 @@ NEW CONSOLE OPTIONS (default in brackets)
   rc_viewmodel_fov [0]     field of view of the weapon model (0 = the view's)
   rc_viewmodel_ofs_forward, rc_viewmodel_ofs_right, rc_viewmodel_ofs_up [0]
                            move the weapon model, in units
+  rc_endstats [1]          end of game statistics: a click before they are fully
+                           shown is ignored, and a dark backdrop behind them
+  rc_print_score           prints the statistics and grade of the game that just
+                           ended in the console (only once the game has ended)
   god, noclip, notarget, fly work with sv_cheats 1
   rc_vidmode w h m         change resolution and display mode without a restart
                            (m: 0 full screen, 1 window, 2 borderless window);

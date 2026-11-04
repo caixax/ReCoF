@@ -98,6 +98,14 @@
       "desc_en": "The speedometer counts vertical speed too."
     },
     {
+      "name": "rc_endstats",
+      "type": "bool",
+      "default": "1",
+      "group": "HUD",
+      "label_en": "Readable end statistics",
+      "desc_en": "The statistics and grade at the end of the game get a dark backdrop, and a click before they are fully shown is ignored. Off is retail, where an early click skipped them or left them half shown. The console command rc_print_score prints them once the game has ended."
+    },
+    {
       "name": "rc_rawinput",
       "type": "int",
       "default": "2",

@@ -423,11 +423,16 @@ static void RcDrawCross( void )
 		gl.glEnable( GL_ALPHA_TEST );
 }
 
+void RcScoreFrame( void );		// Credits_guess.cpp (B309)
+
 //-----------------------------------------------------------------------------
-// called from CHud::Redraw: the custom crosshair, the movement mode tag and the speedometer
+// called from CHud::Redraw: the end of game score check, the custom crosshair, the movement mode tag and the
+// speedometer
 //-----------------------------------------------------------------------------
 void RcClient_Redraw( float flTime, int intermission )
 {
+	RcScoreFrame();
+
 	if ( intermission || !rc_speedometer )
 		return;
 

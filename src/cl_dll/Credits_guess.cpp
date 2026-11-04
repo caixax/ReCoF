@@ -39,6 +39,94 @@ int g_iCreditsLetterboxHeight_guess;
 int g_iCoopCredits_guess;			// Credits message, the co-op statistics follow
 int iUnknown101B27C8_guess;			// pitch of the unlock model
 
+//-----------------------------------------------------------------------------
+// ReCoF (B309): the statistics and grade at the end of a game.
+//  - rc_endstats 1: a press while they still fade in no longer moves on (retail froze them half shown, or hid them
+//    for the unlocks), and a dark backdrop fades in with them; retail drew them white with the screen behind left
+//    clear, over the bright black and white camera view of the ending.
+//  - rc_print_score: prints them in the console from the moment the end credits or statistics of a game start
+//    until another game loads a map; the menu after the end keeps them.
+//-----------------------------------------------------------------------------
+#define RC_STATS_BACKDROP	96		// the backdrop's VGUI1 alpha, which is transparency: 0 opaque, 255 clear
+
+static cvar_t	*rc_endstats;
+static char		s_szRcScore[1024];		// the lines of the statistics screen of the game that ended, empty during a game
+static char		s_szRcScoreMap[64];		// the map it ended on, as pfnGetLevelName gives it
+
+static bool RcEndStats( void )
+{
+	return rc_endstats && rc_endstats->value;
+}
+
+// the statistics have faded in and have been on the screen for a moment
+static bool RcStatsShown( CCredits *p )
+{
+	int r, g, b, a;
+
+	p->m_pStatLabel_guess[1]->getFgColor( r, g, b, a );
+	return a == 0 && gEngfuncs.GetClientTime() > p->m_flStatsTime_guess + 1.5f;
+}
+
+// the backdrop fades in with the statistics, from clear to RC_STATS_BACKDROP
+static int RcStatsBackdrop( CCredits *p )
+{
+	int r, g, b, a;
+
+	p->m_pStatLabel_guess[1]->getFgColor( r, g, b, a );
+	return a > RC_STATS_BACKDROP ? a : RC_STATS_BACKDROP;
+}
+
+static void RcScoreAdd( const char *pszLine )
+{
+	if ( !pszLine[0] || !strcmp( pszLine, " " ) )
+		return;
+
+	if ( strlen( s_szRcScore ) + strlen( pszLine ) + 4 > sizeof( s_szRcScore ) )
+		return;
+
+	strcat( s_szRcScore, "  " );
+	strcat( s_szRcScore, pszLine );
+	strcat( s_szRcScore, "\n" );
+}
+
+// a score belongs to the game being played on the map where it ended and in the menu after it; any other map is
+// another game
+static bool RcScoreCurrent( void )
+{
+	const char *pszLevel = gEngfuncs.pfnGetLevelName();
+
+	return !pszLevel || !pszLevel[0] || !strcmp( pszLevel, s_szRcScoreMap ) || strstr( pszLevel, "game_menu" );
+}
+
+// called every frame (rc_client.cpp RcClient_Redraw); the level name is not set yet when HUD_VidInit runs
+void RcScoreFrame( void )
+{
+	if ( s_szRcScore[0] && !RcScoreCurrent() )
+		s_szRcScore[0] = '\0';
+}
+
+static void RcPrintScore_f( void )
+{
+	RcScoreFrame();
+
+	if ( !s_szRcScore[0] )
+	{
+		gEngfuncs.Con_Printf( "rc_print_score: no game has ended. The score of a game is printed once its end credits or statistics start\n" );
+		return;
+	}
+
+	const char *pszMap = s_szRcScoreMap;
+	if ( !strncmp( pszMap, "maps/", 5 ) )
+		pszMap += 5;
+
+	int iLen = strlen( pszMap );
+	if ( iLen > 4 && !_stricmp( pszMap + iLen - 4, ".bsp" ) )
+		iLen -= 4;
+
+	gEngfuncs.Con_Printf( "Statistics and grade of the game that ended on %.*s:\n", iLen, pszMap );
+	gEngfuncs.Con_Printf( "%s", s_szRcScore );
+}
+
 CCredits::CCredits() : Panel( 0, 0, ScreenWidth, ScreenHeight )
 {
 	int i;
@@ -619,6 +707,51 @@ int MsgCredits_guess( const char *pszName, int iSize, void *pbuf )
 		gViewPort->m_pCredits_guess->m_pStatLabel_guess[14]->setText( " " );
 	}
 
+	// ReCoF (B309): the credits or cof_stats at the end of a game (neither a conclusion text nor the message that hides
+	// the panel) keep what the statistics screen shows for rc_print_score. The distance gets its metres with three
+	// digits and the time two digit minutes and seconds, where the screen shows 2 km 5 m as 2.5 km
+	if ( !iTextOnly && !iHide )
+	{
+		static const char *s_pszRcDifficulty[] = { "Easy", "Easy", "Normal", "Hard", "Nightmare" };	// 1 to 4, clamped above
+		static const char s_szRcGrade[] = "SABCDE";	// grades 1 to 6, anything else is F
+		CCredits *p = gViewPort->m_pCredits_guess;
+
+		s_szRcScore[0] = '\0';
+		RcScoreAdd( UTIL_VarArgs_guess( "Shots fired: %i", p->m_iShotsFired_guess ) );
+		RcScoreAdd( UTIL_VarArgs_guess( "Shots hit: %i", p->m_iShotsHit_guess ) );
+		RcScoreAdd( UTIL_VarArgs_guess( "Shots missed: %i", p->m_iShotsMissed_guess ) );
+		RcScoreAdd( UTIL_VarArgs_guess( "Overall accuracy: %i percent", (int)p->m_flAccuracy_guess ) );
+
+		if ( !iCoop )	// iCoop is the message's doctor mode byte, the doctor's story has no syringes, saves or weapons
+		{
+			RcScoreAdd( UTIL_VarArgs_guess( "Syringes used: %i", p->m_iSyringesUsed_guess ) );
+			RcScoreAdd( UTIL_VarArgs_guess( "Times saved: %i", p->m_iTimesSaved_guess ) );
+			RcScoreAdd( UTIL_VarArgs_guess( "Weapons found: %i", p->m_iWeaponsFound_guess ) );
+		}
+
+		RcScoreAdd( UTIL_VarArgs_guess( "Overall damage taken: %i", p->m_iDamageTaken_guess ) );
+		RcScoreAdd( UTIL_VarArgs_guess( "Distance travelled on foot: %i.%03i km", (int)p->m_flDistance_guess, (int)p->m_flDistanceDecimal_guess ) );
+		RcScoreAdd( UTIL_VarArgs_guess( "Time taken: %i:%02i:%02i", p->m_iHours_guess, p->m_iMinutes_guess, p->m_iSeconds_guess ) );
+		RcScoreAdd( UTIL_VarArgs_guess( "Enemies killed by melee: %i", p->m_iMeleeKills_guess ) );
+		RcScoreAdd( UTIL_VarArgs_guess( "Enemies killed by firearms: %i", p->m_iFirearmKills_guess ) );
+		RcScoreAdd( UTIL_VarArgs_guess( "Difficulty chosen: %s", s_pszRcDifficulty[p->m_iDifficulty_guess] ) );
+
+		if ( iShowGrade )
+		{
+			if ( strcmp( szEnding, "Ending seen: " ) )
+				RcScoreAdd( szEnding );
+
+			RcScoreAdd( UTIL_VarArgs_guess( "Grade: %c", ( iGrade >= 1 && iGrade <= 6 ) ? s_szRcGrade[iGrade - 1] : 'F' ) );
+		}
+		else
+		{
+			RcScoreAdd( "Grade: none (given at the end of the story to a game started with New Game)" );
+		}
+
+		strncpy( s_szRcScoreMap, gEngfuncs.pfnGetLevelName(), sizeof( s_szRcScoreMap ) - 1 );
+		s_szRcScoreMap[sizeof( s_szRcScoreMap ) - 1] = '\0';
+	}
+
 	if ( iStatsTimer )
 	{
 		gViewPort->m_pCredits_guess->m_bStatsTimer_guess = true;
@@ -736,6 +869,9 @@ char *UTIL_VarArgs_guess( const char *format, ... )
 void VGUI_CreditsInit_guess()
 {
 	gEngfuncs.pfnHookUserMsg( "Credits", MsgCredits_guess );
+
+	rc_endstats = gEngfuncs.pfnRegisterVariable( "rc_endstats", "1", FCVAR_ARCHIVE );	// ReCoF (B309)
+	gEngfuncs.pfnAddCommand( "rc_print_score", RcPrintScore_f );
 }
 
 void CCredits::solve()
@@ -1236,7 +1372,10 @@ void CCredits::solve()
 			if ( m_bContinue_guess )
 			{
 				m_bContinue_guess = false;
-				m_bUnlocks_guess = true;
+
+				// ReCoF (B309): with rc_endstats a press before the statistics are fully shown is dropped
+				if ( !RcEndStats() || RcStatsShown( this ) )
+					m_bUnlocks_guess = true;
 			}
 
 			setBgColor( 255, 255, 255, 255 );
@@ -1313,6 +1452,10 @@ void CCredits::solve()
 			if ( a > 255 )
 				a = 255;
 			setBgColor( 255 - m_iBrightness_guess, 255 - m_iBrightness_guess, 255 - m_iBrightness_guess, a );
+
+			// ReCoF (B309): the statistics branch above set the background to clear, so this keeps it clear in retail
+			if ( RcEndStats() )
+				setBgColor( 0, 0, 0, RcStatsBackdrop( this ) );
 		}
 		else if ( !m_bTextOnly_guess )
 		{
@@ -1326,7 +1469,11 @@ void CCredits::solve()
 		}
 	}
 
-	setBgColor( 255, 255, 255, 255 );
+	// ReCoF (B309): with no unlock to show, the statistics stay on the screen until the next press; their backdrop stays
+	if ( m_bUnlocks_guess && RcEndStats() && m_pStatLabel_guess[1]->isVisible() )
+		setBgColor( 0, 0, 0, RcStatsBackdrop( this ) );
+	else
+		setBgColor( 255, 255, 255, 255 );
 	Panel::solve();
 }
 
