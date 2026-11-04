@@ -1037,8 +1037,11 @@ void ResetHeadShield(); // buz
 void ResetGlows();
 void CAM_ToFirstPerson( void );
 
+void RcSpeedrun_VidInit( void );	// ReCoF: rc_speedrun.cpp
+
 void CHud :: VidInit( void )
 {
+	RcSpeedrun_VidInit();	// ReCoF (B312): a map is loading, for the run timer
 	iMenuMode_guess = 1;
 	m_flDamageTime_guess = 0;
 	m_bSaveHack_guess = false;

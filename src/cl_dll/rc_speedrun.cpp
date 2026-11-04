@@ -68,8 +68,10 @@ static bool		s_bRunEnded;		// the run reached an ending; its time stays
 static bool		s_bRunHeld;			// rc_timer_stop: the time stays until rc_timer_start
 static bool		s_bRunCounting;		// the last frame counted
 static double	s_flRunTime;		// seconds counted
-static float	s_flRunLastIgt;		// cryoffear.asl "igt" on the last frame
 static LARGE_INTEGER	s_liRunLast;	// when the last frame ran, 0 before the first
+static bool		s_bRunViewPaused;	// cl.paused on the last view (V_CalcRefdef)
+static bool		s_bRunVidInit;		// a map started loading and has not been drawn yet
+static bool		s_bRunSpawned;		// the map was drawn once since it loaded
 
 // what the ReCoF autosplitter reads (B313), found in client.dll by its tag as g_RcAutosplit is. A block of its
 // own, so the script addition in docs/speedrun.md, which looks for g_RcAutosplit with its version 1, still finds
@@ -77,12 +79,20 @@ static LARGE_INTEGER	s_liRunLast;	// when the last frame ran, 0 before the first
 struct RcRunTimer_t
 {
 	char	magic[16];		// "ReCoF_RUNTIMER", written at start-up (the whole tag is in no other place)
-	int		version;		// 1
+	int		version;		// 2
 	int		state;			// 0 reset, 1 running, 2 stopped by rc_timer_stop, 3 ended at an ending
 	double	time;			// seconds counted
 	int		runId;			// one more each time a run starts from zero
 	int		counting;		// the time advanced on the last frame
 	char	recof[16];		// RECOF_VERSION
+	// the game state the timer and the autosplitter's split rules use
+	char	map[48];		// the map being played, as "c_nightmare.bsp"; empty out of a game
+	int		loading;		// a map is loading or not drawn yet since it loaded
+	int		paused;			// the game is paused (the engine's cl.paused)
+	int		dead;			// the player has no health
+	int		cutscene;		// the cutscene bars are on
+	int		frozen;			// the player cannot move
+	int		newmap;			// one more each time a map is drawn for the first time after it loaded
 };
 
 RcRunTimer_t g_RcRunTimer;
@@ -247,26 +257,26 @@ static int RcDrawSeparator( int x, int y, bool bColon, const int *color )
 }
 
 //-----------------------------------------------------------------------------
-// the run timer (B312). The values are the ones cryoffear.asl reads: the hw.dll ones at the offsets ReCoF keeps
-// for it (tools/check_runner.py fails a build that moves them), the client.dll ones through g_RcAutosplit
-// (rc_client.cpp). The script's rules are followed one for one; its test of combase.dll (a Windows file whose
-// data changes with each Windows build) on the death screen is left out, so the timer keeps counting there.
+// the run timer (B312). It keeps cryoffear.asl's rules but reads the game's real state. The script's hw.dll
+// addresses only happen to follow that state in retail: its "loading" is the text of light style 21, its "can move"
+// the name of the 27th physics entity of the server's player move, its "paused" a field of player 16 in the first
+// client frame, and in ReCoF they say loading or paused all the time, so the timer never counted. Here: paused is
+// the engine's cl.paused (the view's ref_params paused); loading is no map, a map whose decals are not loaded (the
+// script's decal counter) or a map not drawn yet since HUD_VidInit; the player cannot move when frozen (FL_FROZEN)
+// or without speed; dead is no health; the maps and menus are the level name; the music, the decal counter and the
+// cutscene bars come through g_RcAutosplit as before. The script's test of combase.dll on the death screen is left
+// out, so the timer keeps counting there.
 //-----------------------------------------------------------------------------
-#define RC_HW_PAUSE		0x11119E4	// float, nonzero while the game is paused
-#define RC_HW_LOADING	0x10D279C	// float, 0 while a map loads
-#define RC_HW_MAP		0xF1AA15	// the client's map as "c_nightmare.bsp"
-#define RC_HW_MENUMAP	0x820495	// the server's map
-#define RC_HW_CANMOVE	0x9FDC30	// float, 0 while the player cannot move
-
 struct RcRunValues_t
 {
-	float	pause;
-	float	loading;
-	float	canmove;
+	bool	loading;
+	bool	paused;
+	bool	dead;
+	bool	frozen;
+	bool	newmap;		// the first frame the map is drawn after it loaded: the script tests the map while it loads
 	int		cutscene;
 	float	igt;
 	char	map[41];
-	char	menumap[41];
 	char	music[41];
 };
 
@@ -278,23 +288,31 @@ static void RcCopyName( char *pszOut, const char *pszIn )
 
 static bool RcReadRun( RcRunValues_t *v )
 {
-	static char *s_pHw;
-
-	if ( !s_pHw )
-		s_pHw = (char *)GetModuleHandleA( "hw.dll" );	// the software engine sw.dll has other offsets: no timer
-
-	if ( !s_pHw || !g_RcAutosplit.cutscene )
+	if ( !g_RcAutosplit.cutscene )
 		return false;
 
-	v->pause = *(float *)( s_pHw + RC_HW_PAUSE );
-	v->loading = *(float *)( s_pHw + RC_HW_LOADING );
-	v->canmove = *(float *)( s_pHw + RC_HW_CANMOVE );
-	RcCopyName( v->map, s_pHw + RC_HW_MAP );
-	RcCopyName( v->menumap, s_pHw + RC_HW_MENUMAP );
+	const char *pszLevel = gEngfuncs.pfnGetLevelName();	// "maps/c_nightmare.bsp", empty out of a game
+	if ( !pszLevel )
+		pszLevel = "";
+	if ( !strncmp( pszLevel, "maps/", 5 ) )
+		pszLevel += 5;
+	RcCopyName( v->map, pszLevel );
 
 	v->cutscene = *(int *)g_RcAutosplit.cutscene;
 	v->igt = *(float *)g_RcAutosplit.igt;
 	RcCopyName( v->music, (const char *)g_RcAutosplit.music );
+
+	v->loading = !v->map[0] || v->igt == 0 || !s_bRunSpawned;
+	v->newmap = false;
+	if ( s_bRunVidInit && !v->loading )
+	{
+		v->newmap = true;
+		s_bRunVidInit = false;
+	}
+
+	v->paused = !v->loading && s_bRunViewPaused;
+	v->dead = !v->loading && gHUD.m_Health.m_iHealth <= 0;
+	v->frozen = pmove && ( ( pmove->flags & FL_FROZEN ) || pmove->maxspeed <= 0 );
 	return true;
 }
 
@@ -313,10 +331,10 @@ static bool RcRunStartMap( const char *pszMap )
 	return false;
 }
 
-// cryoffear.asl start
+// cryoffear.asl start, which tests the first map of a campaign while it loads: here on the frame it is first drawn
 static bool RcRunStart( const RcRunValues_t &v )
 {
-	if ( v.loading == 0 )
+	if ( v.newmap )
 	{
 		if ( !strcmp( v.map, "c_nightmare.bsp" ) || !strcmp( v.map, "c_doc_city.bsp" ) || !strcmp( v.map, "c_the_stairway1.bsp" ) )
 			return true;
@@ -328,10 +346,11 @@ static bool RcRunStart( const RcRunValues_t &v )
 	return !strcmp( v.music, "coopstart.mp3" );
 }
 
-// cryoffear.asl reset
-static bool RcRunReset( const RcRunValues_t &v, float flOldIgt )
+// cryoffear.asl reset: a start map loaded again (the script sees its decal counter drop to 0 then), the co-op
+// countdown, the intro
+static bool RcRunReset( const RcRunValues_t &v )
 {
-	if ( RcRunStartMap( v.map ) && flOldIgt != 0 && v.igt == 0 )
+	if ( v.newmap && RcRunStartMap( v.map ) )
 		return true;
 
 	return !strcmp( v.music, "Starting in 3 seconds" ) || !strcmp( v.map, "c_intro.bsp" );
@@ -340,13 +359,13 @@ static bool RcRunReset( const RcRunValues_t &v, float flOldIgt )
 // cryoffear.asl isLoading
 static bool RcRunPaused( const RcRunValues_t &v )
 {
-	if ( v.pause != 0 || v.loading == 0 )
+	if ( v.paused || v.loading )
 		return true;
 
-	if ( v.cutscene && ( v.canmove == 0 || !strcmp( v.map, "c_subway2st3.bsp" ) || !strcmp( v.map, "c_trainscene.bsp" ) ) )
+	if ( v.cutscene && ( v.frozen || !strcmp( v.map, "c_subway2st3.bsp" ) || !strcmp( v.map, "c_trainscene.bsp" ) ) )
 		return true;
 
-	return !strcmp( v.menumap, "c_loadgame.bsp" ) || !strcmp( v.menumap, "c_difficulty_settings.bsp" ) || !strcmp( v.menumap, "c_game_menu1.bsp" );
+	return !strcmp( v.map, "c_loadgame.bsp" ) || !strcmp( v.map, "c_difficulty_settings.bsp" ) || !strcmp( v.map, "c_game_menu1.bsp" );
 }
 
 // the endings cryoffear.asl splits on; the timer stops there
@@ -410,11 +429,39 @@ static void RcTimerReset_f( void )
 	RcRunClear();
 }
 
-static void RcRunPublish( void )
+static void RcRunPublish( const RcRunValues_t *v )
 {
 	g_RcRunTimer.state = !s_bRunActive ? 0 : ( s_bRunEnded ? 3 : ( s_bRunHeld ? 2 : 1 ) );
 	g_RcRunTimer.time = s_flRunTime;
 	g_RcRunTimer.counting = s_bRunCounting;
+
+	if ( v )
+	{
+		strncpy( g_RcRunTimer.map, v->map, sizeof( g_RcRunTimer.map ) - 1 );
+		g_RcRunTimer.loading = v->loading;
+		g_RcRunTimer.paused = v->paused;
+		g_RcRunTimer.dead = v->dead;
+		g_RcRunTimer.cutscene = v->cutscene != 0;
+		g_RcRunTimer.frozen = v->frozen;
+		if ( v->newmap )
+			g_RcRunTimer.newmap++;
+	}
+}
+
+// rc_timer_debug: what the timer sees, to check it against the game
+static void RcTimerDebug_f( void )
+{
+	RcRunValues_t v;
+
+	if ( !RcReadRun( &v ) )
+	{
+		gEngfuncs.Con_Printf( "rc_timer_debug: no game state yet\n" );
+		return;
+	}
+
+	gEngfuncs.Con_Printf( "map \"%s\" loading %d paused %d dead %d cutscene %d frozen %d decals %g music \"%s\"\n",
+		v.map, v.loading, v.paused, v.dead, v.cutscene, v.frozen, v.igt, v.music );
+	gEngfuncs.Con_Printf( "timer: state %d time %.3f counting %d auto %g\n", g_RcRunTimer.state, s_flRunTime, s_bRunCounting, rc_timer_auto->value );
 }
 
 static void RcRunFrame( void )
@@ -433,14 +480,11 @@ static void RcRunFrame( void )
 	RcRunValues_t v;
 	if ( !RcReadRun( &v ) )
 	{
-		RcRunPublish();
+		RcRunPublish( NULL );
 		return;
 	}
 
 	bool bAuto = rc_timer_auto->value != 0;
-
-	float flOldIgt = s_flRunLastIgt;
-	s_flRunLastIgt = v.igt;
 
 	if ( s_bRunActive )
 	{
@@ -454,8 +498,8 @@ static void RcRunFrame( void )
 		s_bRunCounting = bCounting;
 
 		// rc_timer_auto: the script's reset and end. A run that has counted nothing is not reset: the bind above
-		// starts one while c_nightmare loads, when the script's reset (the decal counter dropping to 0) comes next
-		if ( bAuto && s_flRunTime > 0 && RcRunReset( v, flOldIgt ) )
+		// starts one while c_nightmare loads, and the reset for the start map comes when it is drawn
+		if ( bAuto && s_flRunTime > 0 && RcRunReset( v ) )
 			RcRunClear();
 		else if ( bAuto && !s_bRunEnded && RcRunEnd( v ) )
 			s_bRunEnded = true;
@@ -464,7 +508,7 @@ static void RcRunFrame( void )
 	if ( bAuto && !s_bRunActive && RcRunStart( v ) )
 		RcRunNew();
 
-	RcRunPublish();
+	RcRunPublish( &v );
 }
 
 static void RcDrawTimer( void )
@@ -669,11 +713,26 @@ void RcSpeedrun_Init( void )
 	gEngfuncs.pfnAddCommand( "rc_timer_start", RcTimerStart_f );
 	gEngfuncs.pfnAddCommand( "rc_timer_stop", RcTimerStop_f );
 	gEngfuncs.pfnAddCommand( "rc_timer_reset", RcTimerReset_f );
+	gEngfuncs.pfnAddCommand( "rc_timer_debug", RcTimerDebug_f );
 
-	g_RcRunTimer.version = 1;
+	g_RcRunTimer.version = 2;
 	strncpy( g_RcRunTimer.recof, RECOF_VERSION, sizeof( g_RcRunTimer.recof ) - 1 );
 	strcpy( g_RcRunTimer.magic, "ReCoF_RUN" );
 	strcat( g_RcRunTimer.magic, "TIMER" );
+}
+
+// from V_CalcRefdef: the engine's pause, and the map drawn since it loaded
+void RcSpeedrun_View( int paused )
+{
+	s_bRunViewPaused = paused != 0;
+	s_bRunSpawned = true;
+}
+
+// from CHud::VidInit: a map is loading
+void RcSpeedrun_VidInit( void )
+{
+	s_bRunVidInit = true;
+	s_bRunSpawned = false;
 }
 
 void RcSpeedrun_Frame( void )

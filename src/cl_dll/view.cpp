@@ -2098,6 +2098,7 @@ extern "C" void V_CalcEmpty_guess( void )
 void DLLEXPORT V_CalcRefdef( struct ref_params_s *pparams )
 {
 	RcProfScope prof( RCP_VIEW );	// ReCoF
+	RcSpeedrun_View( pparams->paused );	// ReCoF (B312): the run timer's pause and drawn map
 
 	// intermission / finale rendering
 /*	if ( pparams->intermission )
