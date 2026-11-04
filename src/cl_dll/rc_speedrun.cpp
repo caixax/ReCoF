@@ -3,7 +3,9 @@
 // RebuiltSimon, the Cry of Fear speedrun tool, is GPL 3, so nothing here comes from its source: the panel, the
 // numbers and their cvars are made again from what it shows, with rc_ names (B310, B311). The run timer (B312)
 // counts the time the LiveSplit script cryoffear.asl counts, from the same values: real time, without pauses,
-// loads, menus and the cutscenes that take the control away.
+// loads, menus and the cutscenes that take the control away. rc_timer_start, rc_timer_stop and rc_timer_reset
+// work it by hand as BunnymodXT's bxt_timer_* do, and the ReCoF autosplitter for LiveSplit (B313) reads it
+// through g_RcRunTimer, so LiveSplit's game time is the game's.
 
 #include "hud.h"
 #include "cl_util.h"
@@ -60,12 +62,30 @@ static int		s_iRcInfoWidth;		// its widest line in pixels
 static cvar_t	*rc_hud_timer;
 static cvar_t	*rc_hud_timer_pos;
 static cvar_t	*rc_hud_timer_color;
+static cvar_t	*rc_timer_auto;
 static bool		s_bRunActive;		// a run was started and not reset, as LiveSplit's timer
 static bool		s_bRunEnded;		// the run reached an ending; its time stays
+static bool		s_bRunHeld;			// rc_timer_stop: the time stays until rc_timer_start
 static bool		s_bRunCounting;		// the last frame counted
 static double	s_flRunTime;		// seconds counted
 static float	s_flRunLastIgt;		// cryoffear.asl "igt" on the last frame
 static LARGE_INTEGER	s_liRunLast;	// when the last frame ran, 0 before the first
+
+// what the ReCoF autosplitter reads (B313), found in client.dll by its tag as g_RcAutosplit is. A block of its
+// own, so the script addition in docs/speedrun.md, which looks for g_RcAutosplit with its version 1, still finds
+// it. The time is a double at an 8 byte boundary, written in one store
+struct RcRunTimer_t
+{
+	char	magic[16];		// "ReCoF_RUNTIMER", written at start-up (the whole tag is in no other place)
+	int		version;		// 1
+	int		state;			// 0 reset, 1 running, 2 stopped by rc_timer_stop, 3 ended at an ending
+	double	time;			// seconds counted
+	int		runId;			// one more each time a run starts from zero
+	int		counting;		// the time advanced on the last frame
+	char	recof[16];		// RECOF_VERSION
+};
+
+RcRunTimer_t g_RcRunTimer;
 
 //-----------------------------------------------------------------------------
 // helpers
@@ -344,6 +364,59 @@ static bool RcRunEnd( const RcRunValues_t &v )
 	return !strcmp( v.map, "c_doc_ending.bsp" );
 }
 
+static void RcRunNew( void )
+{
+	s_bRunActive = true;
+	s_bRunEnded = false;
+	s_bRunHeld = false;
+	s_bRunCounting = false;
+	s_flRunTime = 0;
+	g_RcRunTimer.runId++;
+}
+
+static void RcRunClear( void )
+{
+	s_bRunActive = false;
+	s_bRunEnded = false;
+	s_bRunHeld = false;
+	s_bRunCounting = false;
+	s_flRunTime = 0;
+}
+
+// rc_timer_start: starts a run from zero after a reset, or goes on with a stopped one, as bxt_timer_start. Runners
+// bind it as Half-Life runners do: bind DEL "map c_nightmare;rc_timer_reset;rc_timer_start"
+static void RcTimerStart_f( void )
+{
+	if ( !s_bRunActive )
+	{
+		RcRunNew();
+		return;
+	}
+
+	s_bRunHeld = false;
+	s_bRunEnded = false;
+}
+
+// rc_timer_stop: the time stays until rc_timer_start
+static void RcTimerStop_f( void )
+{
+	if ( s_bRunActive )
+		s_bRunHeld = true;
+}
+
+// rc_timer_reset: back to zero and not running
+static void RcTimerReset_f( void )
+{
+	RcRunClear();
+}
+
+static void RcRunPublish( void )
+{
+	g_RcRunTimer.state = !s_bRunActive ? 0 : ( s_bRunEnded ? 3 : ( s_bRunHeld ? 2 : 1 ) );
+	g_RcRunTimer.time = s_flRunTime;
+	g_RcRunTimer.counting = s_bRunCounting;
+}
+
 static void RcRunFrame( void )
 {
 	LARGE_INTEGER now, freq;
@@ -359,7 +432,12 @@ static void RcRunFrame( void )
 
 	RcRunValues_t v;
 	if ( !RcReadRun( &v ) )
+	{
+		RcRunPublish();
 		return;
+	}
+
+	bool bAuto = rc_timer_auto->value != 0;
 
 	float flOldIgt = s_flRunLastIgt;
 	s_flRunLastIgt = v.igt;
@@ -368,33 +446,25 @@ static void RcRunFrame( void )
 	{
 		// a frame counts its time when it and the one before count, so a map load that blocks between two frames
 		// never counts; a frame over a second is taken for one that was missed
-		bool bCounting = !s_bRunEnded && !RcRunPaused( v );
+		bool bCounting = !s_bRunEnded && !s_bRunHeld && !RcRunPaused( v );
 
 		if ( bCounting && s_bRunCounting && dt < 1.0 )
 			s_flRunTime += dt;
 
 		s_bRunCounting = bCounting;
 
-		if ( RcRunReset( v, flOldIgt ) )
-		{
-			s_bRunActive = false;
-			s_bRunEnded = false;
-			s_bRunCounting = false;
-			s_flRunTime = 0;
-		}
-		else if ( !s_bRunEnded && RcRunEnd( v ) )
-		{
+		// rc_timer_auto: the script's reset and end. A run that has counted nothing is not reset: the bind above
+		// starts one while c_nightmare loads, when the script's reset (the decal counter dropping to 0) comes next
+		if ( bAuto && s_flRunTime > 0 && RcRunReset( v, flOldIgt ) )
+			RcRunClear();
+		else if ( bAuto && !s_bRunEnded && RcRunEnd( v ) )
 			s_bRunEnded = true;
-		}
 	}
 
-	if ( !s_bRunActive && RcRunStart( v ) )
-	{
-		s_bRunActive = true;
-		s_bRunEnded = false;
-		s_bRunCounting = false;
-		s_flRunTime = 0;
-	}
+	if ( bAuto && !s_bRunActive && RcRunStart( v ) )
+		RcRunNew();
+
+	RcRunPublish();
 }
 
 static void RcDrawTimer( void )
@@ -405,32 +475,27 @@ static void RcDrawTimer( void )
 	int x, y;
 	int color[3] = { 255, 255, 255 };
 
-	RcParsePos( rc_hud_timer_pos, 0.02f, 0.5f, &x, &y );
+	RcParsePos( rc_hud_timer_pos, 0.0f, 0.5f, &x, &y );
 	RcParseColor( rc_hud_timer_color, color, 3 );
 
+	// MM:SS:MS, and HH:MM:SS:MS from an hour on
 	int ms = (int)( s_flRunTime * 1000 );
 	int h = ms / 3600000;
-	int m = ms / 60000 % 60;
-	int s = ms / 1000 % 60;
 	char szPart[16];
 
 	if ( h )
 	{
-		sprintf( szPart, "%d", h );
+		sprintf( szPart, "%02d", h );
 		x = RcDrawDigits( x, y, szPart, color );
 		x = RcDrawSeparator( x, y, true, color );
-		sprintf( szPart, "%02d", m );
-	}
-	else
-	{
-		sprintf( szPart, "%d", m );
 	}
 
+	sprintf( szPart, "%02d", ms / 60000 % 60 );
 	x = RcDrawDigits( x, y, szPart, color );
 	x = RcDrawSeparator( x, y, true, color );
-	sprintf( szPart, "%02d", s );
+	sprintf( szPart, "%02d", ms / 1000 % 60 );
 	x = RcDrawDigits( x, y, szPart, color );
-	x = RcDrawSeparator( x, y, false, color );
+	x = RcDrawSeparator( x, y, true, color );
 	sprintf( szPart, "%03d", ms % 1000 );
 	RcDrawDigits( x, y, szPart, color );
 }
@@ -599,8 +664,17 @@ void RcSpeedrun_Init( void )
 	rc_info_speed = gEngfuncs.pfnRegisterVariable( "rc_info_speed", "1", FCVAR_ARCHIVE );
 
 	rc_hud_timer = gEngfuncs.pfnRegisterVariable( "rc_hud_timer", "0", FCVAR_ARCHIVE );
-	rc_hud_timer_pos = gEngfuncs.pfnRegisterVariable( "rc_hud_timer_pos", ".02 .5", FCVAR_ARCHIVE );
+	rc_hud_timer_pos = gEngfuncs.pfnRegisterVariable( "rc_hud_timer_pos", "0 .5", FCVAR_ARCHIVE );
 	rc_hud_timer_color = gEngfuncs.pfnRegisterVariable( "rc_hud_timer_color", "255 255 255", FCVAR_ARCHIVE );
+	rc_timer_auto = gEngfuncs.pfnRegisterVariable( "rc_timer_auto", "1", FCVAR_ARCHIVE );
+	gEngfuncs.pfnAddCommand( "rc_timer_start", RcTimerStart_f );
+	gEngfuncs.pfnAddCommand( "rc_timer_stop", RcTimerStop_f );
+	gEngfuncs.pfnAddCommand( "rc_timer_reset", RcTimerReset_f );
+
+	g_RcRunTimer.version = 1;
+	strncpy( g_RcRunTimer.recof, RECOF_VERSION, sizeof( g_RcRunTimer.recof ) - 1 );
+	strcpy( g_RcRunTimer.magic, "ReCoF_RUN" );
+	strcat( g_RcRunTimer.magic, "TIMER" );
 }
 
 void RcSpeedrun_Frame( void )
