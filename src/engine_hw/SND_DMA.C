@@ -245,6 +245,10 @@ qboolean S_QuerySoundSetting( const char *pszCvar, qboolean bDefault )
 S_Init
 ================
 */
+// ReCoF (B306): rc_snd_restart (snd_win.c); the name is a const array so VC6 puts it in .rdata, not .data
+static const char rc_szSndRestart[] = "rc_snd_restart";
+void S_RcRestart_f( void );
+
 void S_Init( void )
 {
 	qboolean	fUseA3D_guess;
@@ -269,6 +273,7 @@ void S_Init( void )
 	Cmd_AddCommand( "soundinfo", S_SoundInfo_f );
 	Cmd_AddCommand( "s_enable_a3d", S_EnableA3D_guess );
 	Cmd_AddCommand( "s_disable_a3d", S_DisableA3D_guess );
+	Cmd_AddCommand( (char *)rc_szSndRestart, S_RcRestart_f );	// ReCoF (B306)
 
 	Cvar_RegisterVariable( &s_buffersize );
 	Cvar_RegisterVariable( &s_rolloff );

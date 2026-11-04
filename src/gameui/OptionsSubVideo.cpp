@@ -213,13 +213,14 @@ void COptionsSubVideo::SetCurrentResolutionComboItem()
 //-----------------------------------------------------------------------------
 void COptionsSubVideo::OnApplyChanges()
 {
-	bool bChanged = m_pBrightnessSlider->HasBeenModified() || m_pGammaSlider->HasBeenModified();
-
 	m_pBrightnessSlider->ApplyChanges();
 	m_pGammaSlider->ApplyChanges();
 	m_pVsync->ApplyChanges();	// ReCoF (B304): takes effect at once, without the video restart
 
-	ApplyVidSettings( bChanged );
+	// ReCoF (B306): retail passed a brightness or gamma change on as a reason to restart the engine (and in
+	// single player to save and load the game again), although gl_brightness and gl_gamma rebuild the
+	// lightmaps on the next frame (gl_lightmap.cpp LightmapsNeedsUpdate)
+	ApplyVidSettings( false );
 }
 
 //-----------------------------------------------------------------------------

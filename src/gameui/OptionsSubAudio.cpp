@@ -77,12 +77,19 @@ void COptionsSubAudio::OnResetData()
 //-----------------------------------------------------------------------------
 void COptionsSubAudio::OnApplyChanges()
 {
+	// ReCoF (B306): EAX and A3D are read when the sound device starts; rc_snd_restart (hw.dll snd_win.c) starts it
+	// again, where retail waited for the next start of the game
+	bool bRcDevice = m_pEAXCheckButton_guess->HasBeenModified() || m_pA3DCheckButton_guess->HasBeenModified();
+
 	m_pEAXCheckButton_guess->ApplyChanges();
 	m_pA3DCheckButton_guess->ApplyChanges();
 	m_pSFXSlider->ApplyChanges();
 	m_pHEVSlider->ApplyChanges();
 	m_pMP3Slider->ApplyChanges();
 	m_pSoundQualityCombo->ApplyChanges();
+
+	if ( bRcDevice )
+		engine->pfnClientCmd( "rc_snd_restart\n" );
 }
 
 //-----------------------------------------------------------------------------

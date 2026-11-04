@@ -398,6 +398,6 @@ void ApplyPostEffects()
 
 void InitPostEffects()
 {
-	v_posteffects = gEngfuncs.pfnRegisterVariable( "gl_posteffects", "1", 0 );
+	v_posteffects = gEngfuncs.pfnRegisterVariable( "gl_posteffects", "1", FCVAR_ARCHIVE );	// ReCoF (B306): the Advanced page sets it, so it is kept
 	v_grayscale = gEngfuncs.pfnRegisterVariable( "gl_grayscale", "0", 0 );
 }

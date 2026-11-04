@@ -1710,6 +1710,27 @@ void S_DisableA3D_guess( void )
 
 /*
 ==============
+S_RcRestart_f
+
+ReCoF (B306): console command rc_snd_restart. Starts the sound device again with the steps s_disable_a3d uses,
+through SNDDMA_Init, which reads s_a3d and s_eax again, so the Audio options apply without restarting the game
+===============
+*/
+void S_RcRestart_f( void )
+{
+	if ( !sound_started )
+		return;
+
+	sound_started = 0;
+	SNDDMA_Shutdown();
+	Q_memset( (void *)shm, 0, sizeof( dma_t ) );
+
+	snd_isa3d_guess = 0;
+	sound_started = SNDDMA_Init();
+}
+
+/*
+==============
 S_EnableA3D_guess
 
 Console command s_enable_a3d

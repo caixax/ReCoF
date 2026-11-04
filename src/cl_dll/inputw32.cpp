@@ -821,6 +821,13 @@ void IN_JoyMove ( float frametime, usercmd_t *cmd )
 		joy_advancedinit = 1;
 	}
 
+	// ReCoF (B306): the stick was only looked for when the game started; turning the option on looks again, so a
+	// stick plugged in later works without a restart
+	static float s_flRcJoystick;
+	if (in_joystick->value && !s_flRcJoystick && !joy_avail)
+		IN_StartupJoystick();
+	s_flRcJoystick = in_joystick->value;
+
 	// verify joystick is available and that the user wants to use it
 	if (!joy_avail || !in_joystick->value)
 	{
