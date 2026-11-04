@@ -33,8 +33,8 @@ struct RcAutosplit_t
 	char	magic[16];	// "ReCoF_AUTOSPLIT", written at start-up (the whole tag is in no other place)
 	int		version;	// 1
 	void	*cutscene;	// 4 bytes, retail +0x18ED64: gHUD.m_BlackBar_guess.m_iOn_guess
-	void	*igt;		// 4 bytes, retail +0x1BE920: decaltextures[0] + 8 (0 until a map's decals load)
-	void	*music;		// 40 bytes, retail +0x5440C8: READ_STRING's buffer + 0x58
+	void	*igt;		// 4 bytes, retail +0x1BE920: lastDrawTime (glows.cpp), 0 from a map's start to its first frame
+	void	*music;		// 40 bytes, retail +0x5440C8: READ_STRING's buffer, the last string a message carried
 	void	*savestate;	// 4 bytes, retail +0x18A3E0: gHUD.m_flSaveHackTime_guess
 };
 

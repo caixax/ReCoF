@@ -44,8 +44,8 @@ ReCoF builds client.dll with a newer compiler than retail (docs/toolchains.md), 
 | 0 | tag | the 16 bytes `ReCoF_AUTOSPLIT` and a zero byte |
 | 16 | version | 1 (an int) |
 | 20 | cutscene | 4 bytes, retail client.dll +0x18ED64 (`gHUD.m_BlackBar_guess.m_iOn_guess`, nonzero while the cutscene bars show) |
-| 24 | igt | 4 bytes, retail client.dll +0x1BE920 (`decaltextures[0]` + 8, nonzero once a map's decals are loaded) |
-| 28 | music | 40 bytes, retail client.dll +0x5440C8 (`READ_STRING`'s buffer + 0x58) |
+| 24 | igt | 4 bytes, retail client.dll +0x1BE920 (`lastDrawTime` in glows.cpp, the client time of the last frame drawn, 0 from a map's start to its first frame) |
+| 28 | music | 40 bytes, retail client.dll +0x5440C8 (`READ_STRING`'s buffer, the last string a message carried: a music name, "Saved", the co-op countdown) |
 | 32 | savestate | 4 bytes, retail client.dll +0x18A3E0 (`gHUD.m_flSaveHackTime_guess`, nonzero while a tape recorder save is pending) |
 
 The fields at 20 to 32 are 32-bit pointers to the bytes, which stay at the same place for the life of the process. The script below adds ReCoF support to the existing `cryoffear.asl` without changing its retail behavior: it looks for the tag in client.dll a few times after the game starts, and when it finds one it reads the four values through the block instead of the fixed addresses. The original script has no license, so ReCoF ships only this addition.

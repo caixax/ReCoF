@@ -260,11 +260,11 @@ static int RcDrawSeparator( int x, int y, bool bColon, const int *color )
 // the run timer (B312). It keeps cryoffear.asl's rules but reads the game's real state. The script's hw.dll
 // addresses only happen to follow that state in retail: its "loading" is the text of light style 21, its "can move"
 // the name of the 27th physics entity of the server's player move, its "paused" a field of player 16 in the first
-// client frame, and in ReCoF they say loading or paused all the time, so the timer never counted. Here: paused is
-// the engine's cl.paused (the view's ref_params paused); loading is no map, a map whose decals are not loaded (the
-// script's decal counter) or a map not drawn yet since HUD_VidInit; the player cannot move when frozen (FL_FROZEN)
-// or without speed; dead is no health; the maps and menus are the level name; the music, the decal counter and the
-// cutscene bars come through g_RcAutosplit as before. The script's test of combase.dll on the death screen is left
+// client frame. Here: paused is the engine's cl.paused (the view's ref_params paused); loading is no map, the
+// script's "igt" at 0 (lastDrawTime, the client time of the last frame drawn, which a new map sets to 0) or a map
+// not drawn yet since HUD_VidInit; the player cannot move when frozen (FL_FROZEN) or without speed; dead is no
+// health; the maps and menus are the level name; the music (the last string a message carried), the last draw time
+// and the cutscene bars come through g_RcAutosplit. The script's test of combase.dll on the death screen is left
 // out, so the timer keeps counting there.
 //-----------------------------------------------------------------------------
 struct RcRunValues_t

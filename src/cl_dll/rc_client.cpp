@@ -73,8 +73,7 @@ static cvar_t		*rc_cross_right_line;
 // find them by the tag instead of by address (docs/speedrun.md, "ReCoF autosplitter block"). Each
 // pointer gives the bytes retail has at the listed address; hw.dll keeps its retail addresses.
 //-----------------------------------------------------------------------------
-struct decaltexture_s;
-extern decaltexture_s decaltextures[];	// gl_decals.cpp
+extern float lastDrawTime;				// glows.cpp
 char *READ_STRING( void );				// parsemsg.cpp
 
 RcAutosplit_t g_RcAutosplit;			// rc_client.h
@@ -121,8 +120,11 @@ void RcClient_Init( void )
 {
 	g_RcAutosplit.version = 1;
 	g_RcAutosplit.cutscene = &gHUD.m_BlackBar_guess.m_iOn_guess;
-	g_RcAutosplit.igt = (char *)decaltextures + 8;
-	g_RcAutosplit.music = READ_STRING() + 0x58;	// no message is being read here, so this only returns the buffer
+	// B312: retail's code at these addresses (read in client.dll 1.6a) is lastDrawTime and the start of READ_STRING's
+	// buffer; ReCoF's first block pointed at decaltextures[0] + 8 and at the buffer + 0x58, from wrong names in the
+	// old retail address map, and the values never changed
+	g_RcAutosplit.igt = &lastDrawTime;
+	g_RcAutosplit.music = READ_STRING();	// no message is being read here, so this only returns the buffer
 	g_RcAutosplit.savestate = &gHUD.m_flSaveHackTime_guess;
 	strcpy( g_RcAutosplit.magic, "ReCoF_AUTO" );
 	strcat( g_RcAutosplit.magic, "SPLIT" );
