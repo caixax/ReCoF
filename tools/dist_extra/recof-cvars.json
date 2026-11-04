@@ -310,6 +310,14 @@
       "group": "Startup",
       "label_en": "Skip the intro videos",
       "desc_en": "Starts without the two videos before the menu (the engine's -novid)."
+    },
+    {
+      "name": "noborder",
+      "type": "flag",
+      "default": "0",
+      "group": "Startup",
+      "label_en": "Borderless window",
+      "desc_en": "Starts in a window without a title bar or borders. At the desktop resolution it covers the screen like full screen, without switching the display mode, so alt-tab is instant. Options, Video can also switch to it while the game runs."
     }
   ]
 }

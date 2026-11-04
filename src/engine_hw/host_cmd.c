@@ -4071,6 +4071,42 @@ static const char rc_szNotarget[] = "notarget";
 static const char rc_szFly[] = "fly";
 static const char rc_szNoclip[] = "noclip";
 
+// ReCoF (B307): rc_vidmode <width> <height> <0 full screen, 1 window, 2 borderless window> changes the video mode
+// while the game runs; the Video options use it instead of restarting the engine. The client then lays out its
+// panels again for the new size (rc_vidrebuild, cl_dll/rc_client.cpp), and a single player game that may be
+// saved is saved and loaded, as the retail restart did, so the HUD and the panels get their state back the way
+// a loaded game does. When it may not be saved (a dead player and the like) nothing is loaded
+static const char rc_szVidMode[] = "rc_vidmode";
+static const char rc_szVidRebuild[] = "rc_vidrebuild";
+static const char rc_szSaveQuick[] = "save quick\n";
+static const char rc_szLoadQuick[] = "load quick\n";
+
+int VideoMode_RcApply( int width, int height, int mode );	// sys_getmodes.cpp
+
+void Host_RcVidMode_f( void )
+{
+	if ( cls.state == ca_dedicated || Cmd_Argc() != 4 )
+		return;
+
+	if ( !VideoMode_RcApply( Q_atoi( Cmd_Argv( 1 ) ), Q_atoi( Cmd_Argv( 2 ) ), Q_atoi( Cmd_Argv( 3 ) ) ) )
+		return;
+
+	vid.recalc_refdef = 1;
+	Cmd_ExecuteString( (char *)rc_szVidRebuild, src_command );
+
+	if ( sv.active && svs.maxclients == 1 && cls.state == ca_active )
+	{
+		g_bSaveAllowed_guess = true;
+		if ( Host_ValidSave() )
+		{
+			Cbuf_AddText( (char *)rc_szSaveQuick );
+			Cbuf_Execute();
+			Cbuf_AddText( (char *)rc_szLoadQuick );
+		}
+		g_bSaveAllowed_guess = false;
+	}
+}
+
 /*
 ==================
 Host_InitCommands
@@ -4110,6 +4146,7 @@ void Host_InitCommands( void )
 	Cmd_AddCommand( (char *)rc_szNotarget, Host_Notarget_f );
 	Cmd_AddCommand( (char *)rc_szFly, Host_Fly_f );
 	Cmd_AddCommand( (char *)rc_szNoclip, Host_Noclip_f );
+	Cmd_AddCommand( (char *)rc_szVidMode, Host_RcVidMode_f );	// ReCoF (B307)
 	Cmd_AddCommand( "pause", Host_TogglePause_f );
 	Cmd_AddCommand( "setpause", Host_Pause_f );
 	Cmd_AddCommand( "unpause", Host_Unpause_f );

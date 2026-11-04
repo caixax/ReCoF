@@ -102,6 +102,38 @@ static void IN_RcDucktapUp( void ) { KeyUp( &in_rcducktap ); }
 //-----------------------------------------------------------------------------
 // called from InitInput
 //-----------------------------------------------------------------------------
+// ReCoF (B307): rc_vidmode (hw.dll host_cmd.c) changed the video mode while the game runs, and calls this before
+// it saves and loads the game again. What the client laid out for the old size is made again:
+//  - the screen info behind ScreenWidth, ScreenHeight, XRES and YRES (CHud::VidInit read it once);
+//  - the VGUI1 viewport, whose panels take their positions from the screen size when they are built. A new one
+//    replaces it; the old one is taken off the root and hidden but not deleted, because VGUI1 keeps focus and
+//    mouse pointers into its panels;
+//  - the post process screen texture and the water's screen sized textures.
+// CHud::VidInit is not run: it resets level state, and the load that follows runs it
+void *VGui_GetPanel();					// vgui_int.cpp
+void RcResizeScreenTexture( void );		// gl_postprocess.cpp
+void RcWaterResize( void );				// hud_msg.cpp
+
+static void RcVidRebuild_f( void )
+{
+	gHUD.m_scrinfo.iSize = sizeof( gHUD.m_scrinfo );
+	GetScreenInfo( &gHUD.m_scrinfo );
+
+	vgui::Panel *root = (vgui::Panel *)VGui_GetPanel();
+	if ( gViewPort )
+	{
+		root->removeChild( gViewPort );
+		gViewPort->setVisible( false );
+	}
+
+	TeamFortressViewport *viewport = new TeamFortressViewport( 0, 0, ScreenWidth, ScreenHeight );	// sets gViewPort
+	viewport->setParent( root );
+	viewport->Initialize();
+
+	RcResizeScreenTexture();
+	RcWaterResize();
+}
+
 void RcClient_Init( void )
 {
 	g_RcAutosplit.version = 1;
@@ -114,6 +146,7 @@ void RcClient_Init( void )
 
 	gEngfuncs.pfnAddCommand( "+rc_ducktap", IN_RcDucktapDown );
 	gEngfuncs.pfnAddCommand( "-rc_ducktap", IN_RcDucktapUp );
+	gEngfuncs.pfnAddCommand( "rc_vidrebuild", RcVidRebuild_f );	// B307
 
 	// not archived: rc_hlmovement turns it on, and a saved 1 would keep it on in the next game without it
 	rc_autojump = gEngfuncs.pfnRegisterVariable( "rc_autojump", "0", 0 );

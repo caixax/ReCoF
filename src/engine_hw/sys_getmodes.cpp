@@ -30,6 +30,7 @@ void	VideoMode_GetVideoModes( struct vmode_s **liststart, int *count );
 void	VideoMode_GetCurrentVideoMode( int *wide, int *tall, int *bpp );
 void	VideoMode_GetCurrentRenderer( char *name, int namelen, int *windowed );
 int		VideoMode_IsWindowed( void );
+int		VideoMode_RcApply( int width, int height, int mode );	// ReCoF (B307)
 }
 
 #include "../launcher/iregistry.h"
@@ -94,6 +95,8 @@ public:
 	virtual int			MaxBitsPerPixel( void );
 	virtual void		ReleaseFullScreen( void );
 	virtual void		ChangeDisplaySettingsToFullscreen( void );
+
+	void				RcSetMode( int index, int mode );	// ReCoF (B307)
 
 protected:
 	void				AdjustWindowForMode( void );
@@ -385,6 +388,29 @@ void CVideoMode_Common::AdjustWindowForMode( void )
 	VOX_Init();
 
 	UpdateWindowPosition();
+}
+
+// ReCoF (B307): switches to mode index of the list, full screen (0), a window (1) or a borderless window (2),
+// keeping the window, its DC and the GL context. The window gets the style CreateGameWindow would have given
+// it, then AdjustWindowForMode sets the display mode, vid.width and vid.height, the window's size and position
+// and the window variables, as it does when the game comes back from alt-tab
+void CVideoMode_Common::RcSetMode( int index, int mode )
+{
+	HWND hWnd = game->GetMainWindow();
+
+	if ( !m_bWindowed && mode )
+		ChangeDisplaySettings( NULL, 0 );	// the desktop's display mode again
+
+	m_nGameMode = index;
+	m_bWindowed = mode ? true : false;
+
+	LONG style = GetWindowLong( hWnd, GWL_STYLE ) & ~WS_OVERLAPPEDWINDOW;
+	if ( mode == 1 )
+		style |= WS_OVERLAPPEDWINDOW & ~( WS_THICKFRAME | WS_MAXIMIZEBOX );
+	SetWindowLong( hWnd, GWL_STYLE, style );
+	SetWindowPos( hWnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED );
+
+	AdjustWindowForMode();
 }
 
 void CVideoMode_Common::Shutdown( void )
@@ -867,22 +893,74 @@ bool VideoMode_Direct3DWindowed::Init( void *pvInstance )
 
 IVideoMode *videomode;
 
+// ReCoF (B305): ScreenWindowed 2 is a borderless window, a window without a title bar or borders, which at the
+// desktop size covers the screen like full screen without changing the display mode (retail reads any value
+// but 0 as windowed). -noborder picks it. The names are const arrays, which VC6 puts in .rdata; a plain string
+// literal would go to .data and move the variables after it (docs/speedrun.md)
+static const char rc_szScreenWindowed[] = "ScreenWindowed";
+static const char rc_szNoBorder[] = "-noborder";
+
+bool VideoMode_RcBorderless( void )
+{
+	return registry->ReadInt( rc_szScreenWindowed, 0 ) == 2;
+}
+
+// ReCoF (B307): rc_vidmode (host_cmd.c). The mode must be in the list; a window is never larger than the desktop,
+// as in CVideoMode_Common::Init. The registry keeps the choice for the next start
+static const char rc_szScreenWidth[] = "ScreenWidth";
+static const char rc_szScreenHeight[] = "ScreenHeight";
+
+int VideoMode_RcApply( int width, int height, int mode )
+{
+	if ( !videomode )
+		return 0;
+
+	if ( mode )
+	{
+		width = min( width, GetSystemMetrics( SM_CXSCREEN ) );
+		height = min( height, GetSystemMetrics( SM_CYSCREEN ) );
+	}
+
+	int i;
+	for ( i = 0; i < videomode->GetModeCount(); i++ )
+	{
+		if ( videomode->GetMode( i )->width == width && videomode->GetMode( i )->height == height )
+			break;
+	}
+
+	if ( i == videomode->GetModeCount() )
+		return 0;
+
+	registry->WriteInt( rc_szScreenWidth, width );
+	registry->WriteInt( rc_szScreenHeight, height );
+	registry->WriteInt( rc_szScreenWindowed, mode );
+	( (CVideoMode_Common *)videomode )->RcSetMode( i, mode );
+	return 1;
+}
+
 void VideoMode_Create( void )
 {
 	bool windowed = false;
 
-	windowed = registry->ReadInt( "ScreenWindowed", 0 ) ? true : false;
+	int mode = registry->ReadInt( "ScreenWindowed", 0 );	// ReCoF (B305): 0, 1 or 2
+	windowed = mode ? true : false;
 
-	if ( COM_CheckParm( "-sw" ) || COM_CheckParm( "-startwindowed" ) || COM_CheckParm( "-windowed" ) || COM_CheckParm( "-window" ) )
+	if ( COM_CheckParm( (char *)rc_szNoBorder ) )	// ReCoF (B305)
 	{
 		windowed = true;
+		mode = 2;
+	}
+	else if ( COM_CheckParm( "-sw" ) || COM_CheckParm( "-startwindowed" ) || COM_CheckParm( "-windowed" ) || COM_CheckParm( "-window" ) )
+	{
+		windowed = true;
+		mode = 1;
 	}
 	else if ( COM_CheckParm( "-full" ) || COM_CheckParm( "-fullscreen" ) )
 	{
 		windowed = false;
 	}
 
-	registry->WriteInt( "ScreenWindowed", windowed ? 1 : 0 );
+	registry->WriteInt( "ScreenWindowed", windowed ? mode : 0 );
 
 	videomode = new CVideoMode_OpenGL( windowed );
 }
@@ -926,7 +1004,7 @@ void VideoMode_GetCurrentRenderer( char *name, int namelen, int *windowed )
 	strncpy( name, videomode->GetName(), namelen );
 
 	if ( windowed )
-		*windowed = videomode->IsWindowedMode() ? 1 : 0;
+		*windowed = videomode->IsWindowedMode() ? ( VideoMode_RcBorderless() ? 2 : 1 ) : 0;	// ReCoF (B305): 2 borderless
 }
 
 int VideoMode_IsWindowed( void )

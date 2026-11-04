@@ -580,6 +580,29 @@ void CTaskbar::RunFrame()
 {
 	InvalidateLayout();
 
+	// ReCoF (B307): the video mode can change while the game runs (rc_vidmode). The taskbar lays itself out
+	// again every frame, but an open dialog keeps its place; one the new screen cuts off moves to the centre
+	static int s_iRcWide, s_iRcTall;
+	int wide, tall;
+	surface()->GetScreenSize( wide, tall );
+	if ( s_iRcWide && ( wide != s_iRcWide || tall != s_iRcTall ) )
+	{
+		for ( int i = 0; i < GetChildCount(); i++ )
+		{
+			VPANEL panel = GetChild( i )->GetVPanel();
+			if ( !ipanel()->IsPopup( panel ) )
+				continue;
+
+			int x, y, w, h;
+			ipanel()->GetPos( panel, x, y );
+			ipanel()->GetSize( panel, w, h );
+			if ( x < 0 || y < 0 || x + w > wide || y + h > tall )
+				ipanel()->SetPos( panel, w < wide ? ( wide - w ) / 2 : 0, h < tall ? ( tall - h ) / 2 : 0 );
+		}
+	}
+	s_iRcWide = wide;
+	s_iRcTall = tall;
+
 	if ( !m_bPlatformMenuInitialized )
 	{
 		// check to see if the platform is ready to load yet

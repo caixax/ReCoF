@@ -22,6 +22,19 @@
 
 using namespace vgui;
 
+// ReCoF (B305): the display mode a row of the Windowed list stands for: 0 full screen, 1 a window, 2 a borderless
+// window (ScreenWindowed in the registry, hw.dll sys_getmodes.cpp)
+static int RcWindowMode( const char *text )
+{
+	if ( strstr( text, "Borderless" ) )
+		return 2;
+
+	if ( strstr( text, "window" ) )
+		return 1;
+
+	return 0;
+}
+
 inline bool IsWideScreen( int width, int height )
 {
 	// 16:9 or 16:10 is widescreen :)
@@ -66,13 +79,19 @@ COptionsSubVideo::COptionsSubVideo( vgui::Panel *parent ) : PropertyPage( parent
 		m_pAspectRatio->ActivateItem( iNormalItemID );
 	}
 
-	m_pWindowed = new ComboBox( this, "Windowed", 2, false );
+	m_pWindowed = new ComboBox( this, "Windowed", 3, false );
 	m_pWindowed->AddItem( "Run in a window", NULL );
+	m_pWindowed->AddItem( "Borderless window", NULL );	// ReCoF (B305)
 	m_pWindowed->AddItem( "Full screen", NULL );
 
 	SetCurrentRendererComboItem();
 
 	LoadControlSettings( "Resource\\OptionsSubVideo.res" );
+
+	// ReCoF (B307): the mode changes at once now, so the note that the game restarts is hidden
+	Panel *pRestartNote = FindChildByName( "Label5" );
+	if ( pRestartNote )
+		pRestartNote->SetVisible( false );
 
 	// ReCoF (B304): rc_vsync, in the empty right column next to the window mode; the layout file does not
 	// know it, so it is placed here. The page listens to it, so a change turns on the Apply button
@@ -170,13 +189,18 @@ void COptionsSubVideo::SetCurrentRendererComboItem()
 {
 	m_iStartRenderer = 1;
 
-	if ( m_CurrentSettings.windowed )
+	// ReCoF (B305): rows 0 window, 1 borderless window, 2 full screen
+	if ( m_CurrentSettings.windowed == 2 )
+	{
+		m_pWindowed->ActivateItemByRow( 1 );
+	}
+	else if ( m_CurrentSettings.windowed )
 	{
 		m_pWindowed->ActivateItemByRow( 0 );
 	}
 	else
 	{
-		m_pWindowed->ActivateItemByRow( 1 );
+		m_pWindowed->ActivateItemByRow( 2 );
 	}
 }
 
@@ -269,14 +293,7 @@ void COptionsSubVideo::ApplyVidSettings( bool bForceRefresh )
 		char sz[ 256 ];
 		m_pWindowed->GetText( sz, 256 );
 
-		if ( strstr( sz, "window" ) )
-		{
-			m_CurrentSettings.windowed = 1;
-		}
-		else
-		{
-			m_CurrentSettings.windowed = 0;
-		}
+		m_CurrentSettings.windowed = RcWindowMode( sz );	// ReCoF (B305)
 	}
 
 	if ( memcmp( &m_OrigSettings, &m_CurrentSettings, sizeof( CVidSettings ) ) == 0 && !bForceRefresh )
@@ -286,17 +303,14 @@ void COptionsSubVideo::ApplyVidSettings( bool bForceRefresh )
 
 	CVidSettings *p = &m_CurrentSettings;
 
+	// ReCoF (B305, B307): one command changes the mode while the game runs and keeps it in the registry (hw.dll
+	// host_cmd.c rc_vidmode). Retail wrote the registry with _setvideomode and _setrenderer and restarted the
+	// engine, which in single player also saved and loaded the game
 	char szCmd[ 256 ];
-	// Set mode
-	sprintf( szCmd, "_setvideomode %i %i %i\n", p->w, p->h, p->bpp );
+	sprintf( szCmd, "rc_vidmode %i %i %i\n", p->w, p->h, p->windowed );
 	engine->pfnClientCmd( szCmd );
 
-	// Set renderer
-	sprintf( szCmd, "_setrenderer %s %s\n", p->renderer, p->windowed ? "windowed" : "fullscreen" );
-	engine->pfnClientCmd( szCmd );
-
-	// Force restart of entire engine
-	engine->pfnFilteredClientCmd();
+	m_OrigSettings = m_CurrentSettings;	// the next Apply compares with the mode now in use
 }
 
 //-----------------------------------------------------------------------------
@@ -337,14 +351,7 @@ void COptionsSubVideo::OnTextChanged( Panel *pPanel, const char *pszText )
 		char sz[ 256 ];
 		m_pWindowed->GetText( sz, 256 );
 
-		if ( strstr( sz, "window" ) )
-		{
-			windowed_guess = 1;
-		}
-		else
-		{
-			windowed_guess = 0;
-		}
+		windowed_guess = RcWindowMode( sz );	// ReCoF (B305)
 
 		if ( windowed_guess != m_CurrentSettings.windowed )
 		{

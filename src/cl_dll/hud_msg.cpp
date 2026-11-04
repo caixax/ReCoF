@@ -494,6 +494,14 @@ void CHud :: MsgFunc_InitHUD( const char *pszName, int iSize, void *pbuf )
 	}
 }
 
+// ReCoF (B307): the water's screen sized textures again after a video mode change (rc_client.cpp RcVidRebuild_f),
+// with the call InitHUD makes
+void RcWaterResize( void )
+{
+	if ( g_TextureManager_guess.IsHardware_guess() && g_CgContext_guess.IsInitialized_guess() )
+		g_CgWater_guess.Init_guess();
+}
+
 //LRC
 void CHud :: MsgFunc_SetFog( const char *pszName, int iSize, void *pbuf )
 {

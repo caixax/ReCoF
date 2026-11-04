@@ -461,6 +461,8 @@ void CGame::SleepUntilInput( int time )
 	MsgWaitForMultipleObjects( 1, &m_hEvent_guess, FALSE, time, QS_KEY );
 }
 
+bool VideoMode_RcBorderless( void );	// ReCoF (B305): sys_getmodes.cpp
+
 //-----------------------------------------------------------------------------
 // Purpose: Registers the window class and creates the game window
 //-----------------------------------------------------------------------------
@@ -499,7 +501,7 @@ bool CGame::CreateGameWindow( void )
 
 	style = WS_POPUP | WS_CLIPSIBLINGS;
 
-	if ( videomode->IsWindowedMode() )
+	if ( videomode->IsWindowedMode() && !VideoMode_RcBorderless() )	// ReCoF (B305): a borderless window keeps WS_POPUP
 	{
 		style |= WS_OVERLAPPEDWINDOW;
 		style &= ~WS_THICKFRAME;

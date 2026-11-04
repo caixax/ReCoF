@@ -99,6 +99,20 @@ int UseRectangleTextures()
 	return FALSE;
 }
 
+// ReCoF (B307): the rectangle screen texture has the screen's size; after a video mode change (rc_vidrebuild) it
+// is allocated again at the new size under the same name. The 256x256 tiles of the other path do not depend on
+// the screen
+void RcResizeScreenTexture()
+{
+	if (!g_screen_texture || !UseRectangleTextures())
+		return;
+
+	gl.glEnable(GL_TEXTURE_RECTANGLE_NV);
+	gl.glBindTexture(GL_TEXTURE_RECTANGLE_NV, g_screen_texture);
+	gl.glTexImage2D(GL_TEXTURE_RECTANGLE_NV, 0, 3, ScreenWidth, ScreenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	gl.glDisable(GL_TEXTURE_RECTANGLE_NV);
+}
+
 
 void InitScreenTexture()
 {
