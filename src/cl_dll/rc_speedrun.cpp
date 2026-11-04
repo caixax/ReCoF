@@ -70,6 +70,7 @@ static bool		s_bRunCounting;		// the last frame counted
 static double	s_flRunTime;		// seconds counted
 static LARGE_INTEGER	s_liRunLast;	// when the last frame ran, 0 before the first
 static bool		s_bRunViewPaused;	// cl.paused on the last view (V_CalcRefdef)
+static int		s_iRunViewHealth = 100;	// the engine's health of the player on the last view (clientdata)
 static bool		s_bRunVidInit;		// a map started loading and has not been drawn yet
 static bool		s_bRunSpawned;		// the map was drawn once since it loaded
 
@@ -263,7 +264,8 @@ static int RcDrawSeparator( int x, int y, bool bColon, const int *color )
 // client frame. Here: paused is the engine's cl.paused (the view's ref_params paused); loading is no map, the
 // script's "igt" at 0 (lastDrawTime, the client time of the last frame drawn, which a new map sets to 0) or a map
 // not drawn yet since HUD_VidInit; the player cannot move when frozen (FL_FROZEN) or without speed; dead is no
-// health; the maps and menus are the level name; the music (the last string a message carried), the last draw time
+// health in the engine's client data (the view's ref_params health: the HUD's number keeps the last map's value
+// until the server sends one); the maps and menus are the level name; the music (the last string a message carried), the last draw time
 // and the cutscene bars come through g_RcAutosplit. The script's test of combase.dll on the death screen is left
 // out, so the timer keeps counting there.
 //-----------------------------------------------------------------------------
@@ -311,7 +313,7 @@ static bool RcReadRun( RcRunValues_t *v )
 	}
 
 	v->paused = !v->loading && s_bRunViewPaused;
-	v->dead = !v->loading && gHUD.m_Health.m_iHealth <= 0;
+	v->dead = !v->loading && s_iRunViewHealth <= 0;
 	v->frozen = pmove && ( ( pmove->flags & FL_FROZEN ) || pmove->maxspeed <= 0 );
 	return true;
 }
@@ -721,10 +723,11 @@ void RcSpeedrun_Init( void )
 	strcat( g_RcRunTimer.magic, "TIMER" );
 }
 
-// from V_CalcRefdef: the engine's pause, and the map drawn since it loaded
-void RcSpeedrun_View( int paused )
+// from V_CalcRefdef: the engine's pause and the player's health, and the map drawn since it loaded
+void RcSpeedrun_View( int paused, int health )
 {
 	s_bRunViewPaused = paused != 0;
+	s_iRunViewHealth = health;
 	s_bRunSpawned = true;
 }
 

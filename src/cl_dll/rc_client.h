@@ -22,9 +22,9 @@ void RcSpeedrun_Init( void );
 void RcSpeedrun_Frame( void );
 void RcSpeedrun_Redraw( void );
 
-// the run timer's view of the game: the engine's pause flag and the map drawn (from V_CalcRefdef), a map loading
-// (from CHud::VidInit)
-void RcSpeedrun_View( int paused );
+// the run timer's view of the game: the engine's pause flag, the player's health and the map drawn (from
+// V_CalcRefdef), a map loading (from CHud::VidInit)
+void RcSpeedrun_View( int paused, int health );
 void RcSpeedrun_VidInit( void );
 
 // the values the LiveSplit autosplitter reads in client.dll, found by the tag (rc_client.cpp, docs/speedrun.md)
