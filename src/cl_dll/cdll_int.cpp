@@ -272,6 +272,7 @@ void DLLEXPORT HUD_Frame( double time )
 	RcProfScope prof( RCP_CLFRAME );	// ReCoF
 
 	RcVsyncFrame();	// ReCoF (B304)
+	RcSpeedrun_Frame();	// ReCoF (B310, B312): the run timer and the information panel
 
 	ServersThink( time );
 

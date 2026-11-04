@@ -15,6 +15,26 @@ int RcHLMovement( void );
 // the custom crosshair, the movement mode tag and the speedometer (called from CHud::Redraw)
 void RcClient_Redraw( float flTime, int intermission );
 
+// rc_speedrun.cpp (B310, B311, B312): the speedometer and the other HUD numbers, the information panel and the run
+// timer. Init registers their cvars (from RcClient_Init), Frame runs the timer and writes the panel's lines (from
+// HUD_Frame), Redraw draws (from RcClient_Redraw)
+void RcSpeedrun_Init( void );
+void RcSpeedrun_Frame( void );
+void RcSpeedrun_Redraw( void );
+
+// the values the LiveSplit autosplitter reads in client.dll, found by the tag (rc_client.cpp, docs/speedrun.md)
+struct RcAutosplit_t
+{
+	char	magic[16];	// "ReCoF_AUTOSPLIT", written at start-up (the whole tag is in no other place)
+	int		version;	// 1
+	void	*cutscene;	// 4 bytes, retail +0x18ED64: gHUD.m_BlackBar_guess.m_iOn_guess
+	void	*igt;		// 4 bytes, retail +0x1BE920: decaltextures[0] + 8 (0 until a map's decals load)
+	void	*music;		// 40 bytes, retail +0x5440C8: READ_STRING's buffer + 0x58
+	void	*savestate;	// 4 bytes, retail +0x18A3E0: gHUD.m_flSaveHackTime_guess
+};
+
+extern RcAutosplit_t g_RcAutosplit;
+
 // rc_crosshair: 0 hides the Cry of Fear crosshair (asked by CHudAmmo::Draw)
 int RcCrosshairOn( void );
 

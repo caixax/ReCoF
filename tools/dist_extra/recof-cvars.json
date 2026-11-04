@@ -106,6 +106,38 @@
       "desc_en": "The statistics and grade at the end of the game get a dark backdrop, and a click before they are fully shown is ignored. Off is retail, where an early click skipped them or left them half shown. The console command rc_print_score prints them once the game has ended."
     },
     {
+      "name": "rc_info",
+      "type": "bool",
+      "default": "0",
+      "group": "HUD",
+      "label_en": "Information panel",
+      "desc_en": "RebuiltSimon's panel at the top right: ReCoF and its version, Simon's health, stamina and speed, and a clock."
+    },
+    {
+      "name": "rc_hud_timer",
+      "type": "bool",
+      "default": "0",
+      "group": "HUD",
+      "label_en": "Run timer",
+      "desc_en": "A run timer on the left that counts as the LiveSplit autosplitter does: it starts with a new game and stops for pauses, loads, menus and cutscenes."
+    },
+    {
+      "name": "rc_hud_health",
+      "type": "bool",
+      "default": "0",
+      "group": "HUD",
+      "label_en": "Health number",
+      "desc_en": "Shows Simon's health in HUD digits at the left, as RebuiltSimon does."
+    },
+    {
+      "name": "rc_hud_stamina",
+      "type": "bool",
+      "default": "0",
+      "group": "HUD",
+      "label_en": "Stamina number",
+      "desc_en": "Shows Simon's stamina in HUD digits at the left, as RebuiltSimon does."
+    },
+    {
       "name": "rc_rawinput",
       "type": "int",
       "default": "2",

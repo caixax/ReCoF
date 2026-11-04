@@ -35,14 +35,7 @@ static kbutton_t	in_rcducktap;
 static cvar_t		*rc_autojump;
 static cvar_t		*rc_ducktap_priority;
 static cvar_t		*rc_jump_priority;
-static cvar_t		*rc_speedometer;
-static cvar_t		*rc_speedometer_jump;
-static cvar_t		*rc_speedometer_3d;
-static cvar_t		*rc_speedometer_pos;
-static cvar_t		*rc_speedometer_color;
 static int			s_bDucktapReleased;	// +rc_ducktap released duck on the frame before
-static vec3_t		s_vecLastVelocity;	// speedometer: the velocity of the frame before
-static int			s_iJumpSpeed;		// speedometer: the speed at the last takeoff
 static cvar_t		*rc_rawinput;
 static cvar_t		*rc_vsync;	// B304
 static HWND			s_hRawWnd;			// raw input 1: the game window, once hooked
@@ -84,17 +77,7 @@ struct decaltexture_s;
 extern decaltexture_s decaltextures[];	// gl_decals.cpp
 char *READ_STRING( void );				// parsemsg.cpp
 
-struct RcAutosplit_t
-{
-	char	magic[16];	// "ReCoF_AUTOSPLIT", written at start-up (the whole tag is in no other place)
-	int		version;	// 1
-	void	*cutscene;	// 4 bytes, retail +0x18ED64: gHUD.m_BlackBar_guess.m_iOn_guess
-	void	*igt;		// 4 bytes, retail +0x1BE920: decaltextures[0] + 8 (0 until a map's decals load)
-	void	*music;		// 40 bytes, retail +0x5440C8: READ_STRING's buffer + 0x58
-	void	*savestate;	// 4 bytes, retail +0x18A3E0: gHUD.m_flSaveHackTime_guess
-};
-
-RcAutosplit_t g_RcAutosplit;
+RcAutosplit_t g_RcAutosplit;			// rc_client.h
 
 static void IN_RcDucktapDown( void ) { KeyDown( &in_rcducktap ); }
 static void IN_RcDucktapUp( void ) { KeyUp( &in_rcducktap ); }
@@ -153,11 +136,7 @@ void RcClient_Init( void )
 	rc_ducktap_priority = gEngfuncs.pfnRegisterVariable( "rc_ducktap_priority", "1", FCVAR_ARCHIVE );
 	rc_jump_priority = gEngfuncs.pfnRegisterVariable( "rc_jump_priority", "0", FCVAR_ARCHIVE );
 
-	rc_speedometer = gEngfuncs.pfnRegisterVariable( "rc_speedometer", "0", FCVAR_ARCHIVE );
-	rc_speedometer_jump = gEngfuncs.pfnRegisterVariable( "rc_speedometer_jump", "1", FCVAR_ARCHIVE );
-	rc_speedometer_3d = gEngfuncs.pfnRegisterVariable( "rc_speedometer_3d", "0", FCVAR_ARCHIVE );
-	rc_speedometer_pos = gEngfuncs.pfnRegisterVariable( "rc_speedometer_pos", ".5 .9", FCVAR_ARCHIVE );
-	rc_speedometer_color = gEngfuncs.pfnRegisterVariable( "rc_speedometer_color", "255 255 255", FCVAR_ARCHIVE );
+	RcSpeedrun_Init();	// rc_speedrun.cpp: the speedometer, the HUD numbers, the information panel and the run timer
 
 	rc_rawinput = gEngfuncs.pfnRegisterVariable( "rc_rawinput", "2", FCVAR_ARCHIVE );
 	rc_vsync = gEngfuncs.pfnRegisterVariable( "rc_vsync", "0", FCVAR_ARCHIVE );	// B304
@@ -234,26 +213,6 @@ void RcClient_CreateMove( usercmd_t *cmd )
 		if ( !bOnGround && pmove->waterlevel <= 1 )
 			cmd->buttons &= ~IN_JUMP;
 	}
-}
-
-//-----------------------------------------------------------------------------
-// speedometer helpers
-//-----------------------------------------------------------------------------
-static float RcSpeed( const float *v )
-{
-	if ( rc_speedometer_3d->value )
-		return sqrt( v[0] * v[0] + v[1] * v[1] + v[2] * v[2] );
-
-	return sqrt( v[0] * v[0] + v[1] * v[1] );
-}
-
-static void RcDrawCentered( int x, int y, const char *text, const float *color )
-{
-	int w, h;
-
-	gEngfuncs.pfnDrawConsoleStringLen( text, &w, &h );
-	gEngfuncs.pfnDrawSetTextColor( color[0], color[1], color[2] );
-	gEngfuncs.pfnDrawConsoleString( x - w / 2, y, (char *)text );
 }
 
 //-----------------------------------------------------------------------------
@@ -426,14 +385,14 @@ static void RcDrawCross( void )
 void RcScoreFrame( void );		// Credits_guess.cpp (B309)
 
 //-----------------------------------------------------------------------------
-// called from CHud::Redraw: the end of game score check, the custom crosshair, the movement mode tag and the
-// speedometer
+// called from CHud::Redraw: the end of game score check, the custom crosshair, the movement mode tag, and the
+// speedometer, information panel and run timer of rc_speedrun.cpp
 //-----------------------------------------------------------------------------
 void RcClient_Redraw( float flTime, int intermission )
 {
 	RcScoreFrame();
 
-	if ( intermission || !rc_speedometer )
+	if ( intermission || !rc_cross )
 		return;
 
 	RcDrawCross();
@@ -445,41 +404,7 @@ void RcClient_Redraw( float flTime, int intermission )
 		gEngfuncs.pfnDrawConsoleString( 8, 8, (char *)"HL movement" );
 	}
 
-	if ( !rc_speedometer->value || !pmove )
-		return;
-
-	const float *v = pmove->velocity;
-
-	// the takeoff speed, measured as RebuiltSimon does: when the vertical speed leaves 0 or turns upward
-	if ( ( v[2] != 0 && s_vecLastVelocity[2] == 0 ) || ( v[2] > 0 && s_vecLastVelocity[2] < 0 ) )
-		s_iJumpSpeed = (int)RcSpeed( s_vecLastVelocity );
-
-	VectorCopy( v, s_vecLastVelocity );
-
-	float x = 0.5, y = 0.9;
-	float color[3] = { 255, 255, 255 };
-
-	sscanf( rc_speedometer_pos->string, "%f %f", &x, &y );
-	sscanf( rc_speedometer_color->string, "%f %f %f", &color[0], &color[1], &color[2] );
-
-	for ( int i = 0; i < 3; i++ )
-		color[i] /= 255.0;
-
-	char text[32];
-	int px = (int)( x * ScreenWidth );
-	int py = (int)( y * ScreenHeight );
-
-	sprintf( text, "%d", (int)RcSpeed( v ) );
-	RcDrawCentered( px, py, text, color );
-
-	if ( rc_speedometer_jump->value )
-	{
-		int w, h;
-		gEngfuncs.pfnDrawConsoleStringLen( text, &w, &h );
-
-		sprintf( text, "%d", s_iJumpSpeed );
-		RcDrawCentered( px, py + h + 2, text, color );
-	}
+	RcSpeedrun_Redraw();
 }
 
 //-----------------------------------------------------------------------------

@@ -1830,6 +1830,10 @@
         {
           "name": "cl_dll/rc_gpumodel",
           "source": "src/cl_dll/rc_gpumodel.cpp"
+        },
+        {
+          "name": "cl_dll/rc_speedrun",
+          "source": "src/cl_dll/rc_speedrun.cpp"
         }
       ],
       "link": {
@@ -2029,7 +2033,8 @@
           "cl_dll/rc_client",
           "cl_dll/rc_prof",
           "cl_dll/rc_glsl",
-          "cl_dll/rc_gpumodel"
+          "cl_dll/rc_gpumodel",
+          "cl_dll/rc_speedrun"
         ]
       }
     },
