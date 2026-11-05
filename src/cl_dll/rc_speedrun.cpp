@@ -298,13 +298,22 @@ static bool RcReadRun( RcRunValues_t *v )
 		pszLevel = "";
 	if ( !strncmp( pszLevel, "maps/", 5 ) )
 		pszLevel += 5;
-	RcCopyName( v->map, pszLevel );
+
+	// the map is the last one loaded, as the script's is (a name in the engine's model cache): the level name is
+	// empty for a frame during a level change, which the script's rules take for a save being loaded, so that
+	// c_nightmare to c_start did not split (third in-game test, ReCoFSplit.log). The level name itself tells loading
+	static char s_szMap[41];
+	char szLevel[41];
+	RcCopyName( szLevel, pszLevel );
+	if ( szLevel[0] )
+		strcpy( s_szMap, szLevel );
+	strcpy( v->map, s_szMap );
 
 	v->cutscene = *(int *)g_RcAutosplit.cutscene;
 	v->igt = *(float *)g_RcAutosplit.igt;
 	RcCopyName( v->music, (const char *)g_RcAutosplit.music );
 
-	v->loading = !v->map[0] || v->igt == 0 || !s_bRunSpawned;
+	v->loading = !szLevel[0] || v->igt == 0 || !s_bRunSpawned;
 	v->newmap = false;
 	if ( s_bRunVidInit && !v->loading )
 	{

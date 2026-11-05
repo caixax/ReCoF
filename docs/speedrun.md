@@ -92,7 +92,7 @@ The run timer has a block of its own, so the addition above, which looks for thi
 | 32 | run | one more each time a run starts from zero (an int) |
 | 36 | counting | 1 when the time advanced on the last frame (an int) |
 | 40 | version | the ReCoF version, 16 characters |
-| 56 | map | the map being played, as `c_nightmare.bsp`, 48 characters; empty out of a game |
+| 56 | map | the last map loaded, as `c_nightmare.bsp`, 48 characters; it stays through a level change, as the script's map does; empty before the first map |
 | 104 | loading | 1 while a map loads or is not drawn yet since it loaded |
 | 108 | paused | 1 while the game is paused (the engine's `cl.paused`) |
 | 112 | dead | 1 when the player has no health |
