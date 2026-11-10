@@ -115,6 +115,9 @@ NEW CONSOLE OPTIONS (default in brackets)
   rc_lightshader [1]       dynamic lights on the world through a shader; 0 = retail light pass
   rc_dlightcull [1]        0 = retail, draw lights that cannot reach the screen
   rc_vsync [0]             1 = vertical sync on; Options, Video sets it too
+  rc_smoothframes [0]      experimental: 1 = extra pictures between the game's 100
+                           frames a second on monitors above 100 Hz, the view turned
+                           by the mouse at once; cl_showfps shows both rates
   rc_spray_size [0]        size of your spray on the wall in units (0 = a unit a
                            picture pixel); Options, Spray sets it too
   rc_crosshair [1]         0 = no red crosshair (the ammo display stays)

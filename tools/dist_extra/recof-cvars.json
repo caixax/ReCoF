@@ -190,10 +190,10 @@
     {
       "name": "rc_smoothframes",
       "type": "bool",
-      "default": "1",
+      "default": "0",
       "group": "Performance",
-      "label_en": "Smooth frames",
-      "desc_en": "On monitors faster than 100 Hz, draws extra pictures between the game's 100 frames a second, with the view turned by the mouse and moved ahead by your speed, so turning and moving look smooth. The game itself still runs 100 frames a second. With cl_showfps 1 the counter shows both, for example 300 fps (100 logic)."
+      "label_en": "Smooth frames (experimental)",
+      "desc_en": "Experimental. On monitors faster than 100 Hz, draws extra pictures between the game's 100 frames a second, with the view turned by the mouse and moved ahead by your speed, so turning and moving look smooth. The game itself still runs 100 frames a second. With cl_showfps 1 the counter shows both, for example 300 fps (100 logic)."
     },
     {
       "name": "rc_smoothframes_fps",

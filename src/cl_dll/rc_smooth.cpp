@@ -1,5 +1,5 @@
 // ReCoF smooth frames (B315): pictures drawn between the game's frames, with the view turned by the mouse and
-// moved ahead by the player's velocity
+// moved ahead by the player's velocity. Experimental, off by default (rc_smoothframes 0)
 //
 // The game runs 100 frames a second (Host_FilterTime caps fps_max at 100 without developer) and drew one picture
 // per frame, so on a monitor faster than 100 Hz the view moved in 10 ms steps. hw.dll's _Host_Frame (host.c) now
@@ -216,7 +216,7 @@ void RcSmooth_Init( void )
 {
 	gEngfuncs.pfnAddCommand( "rc_smoothframes_debug", RcSmoothDebug_f );
 
-	rc_smoothframes = gEngfuncs.pfnRegisterVariable( "rc_smoothframes", "1", FCVAR_ARCHIVE );
+	rc_smoothframes = gEngfuncs.pfnRegisterVariable( "rc_smoothframes", "0", FCVAR_ARCHIVE );	// experimental
 	rc_smoothframes_fps = gEngfuncs.pfnRegisterVariable( "rc_smoothframes_fps", "0", FCVAR_ARCHIVE );
 
 	s_pFpsMax = gEngfuncs.pfnGetCvarPointer( "fps_max" );
