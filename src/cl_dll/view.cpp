@@ -1038,8 +1038,18 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 			oldz = pparams->simorg[2];
 		if (pparams->simorg[2] - oldz > 18)
 			oldz = pparams->simorg[2]- 18;
-		pparams->vieworg[2] += oldz - pparams->simorg[2];
-		view->origin[2] += oldz - pparams->simorg[2];
+
+		// ReCoF (B315): a smooth frame (rc_smooth.cpp, no time passes) goes on easing for the time since the game frame
+		float flStepZ = oldz;
+		if ( RcSmooth_RenderOnly() )
+		{
+			flStepZ += RcSmooth_Ahead() * 150;
+			if ( flStepZ > pparams->simorg[2] )
+				flStepZ = pparams->simorg[2];
+		}
+
+		pparams->vieworg[2] += flStepZ - pparams->simorg[2];
+		view->origin[2] += flStepZ - pparams->simorg[2];
 	}
 	else
 	{
@@ -1269,7 +1279,9 @@ void V_CalcNormalRefdef ( struct ref_params_s *pparams )
 			else
 			{
 				dl->color = Vector( flRed + 1.15f, flGreen + 0.2f, flGreen + 0.1f );
-				MuzzleFlash_guess( view, 0, true, 0.3 );
+				// ReCoF (B315): it adds a flash model and lights each call; the game frame's stay for a smooth frame
+				if ( !RcSmooth_RenderOnly() )
+					MuzzleFlash_guess( view, 0, true, 0.3 );
 			}
 		}
 	}
@@ -2095,9 +2107,30 @@ extern "C" void V_CalcEmpty_guess( void )
 {
 }
 
+extern int iPlayerMode_guess;	// entity.cpp
+
+// ReCoF (B315): the player's own first person view, which a smooth frame may move ahead by the player's velocity
+// (rc_smooth.cpp): not the wheelchair, boat, telescope, attached or spectator tank cameras, a camera entity or a model
+// attachment, third person, the player modes that move the camera, or a dead player
+static int V_IsOwnView( struct ref_params_s *pparams )
+{
+	if ( iWheelchair_guess || iBoat_guess || pTelescopeEnt_guess || ( pAttachCamEnt_guess && bAttachCam_guess ) || bUnknown104CE4A3_guess )
+		return 0;
+
+	if ( gHUD.m_SpecTank_on || CL_IsThirdPerson() || IsViewEntityActive_guess() || pparams->viewentity > pparams->maxclients )
+		return 0;
+
+	if ( ( iModelAttachEnt_guess != -1 && iModelAttachNum_guess != -1 ) || ( iPlayerMode_guess > 0 && iPlayerMode_guess <= 5 ) )
+		return 0;
+
+	return pparams->health > 0;
+}
+
 void DLLEXPORT V_CalcRefdef( struct ref_params_s *pparams )
 {
 	RcProfScope prof( RCP_VIEW );	// ReCoF
+	int bFirstPass = !pparams->nextView;	// ReCoF (B315): the head shield's second pass is not a picture of its own
+	vec3_t vecWheelchair = vecWheelchairOrigin_guess;	// ReCoF (B315)
 	RcSpeedrun_View( pparams->paused, pparams->health );	// ReCoF (B312): the run timer's pause, health and drawn map
 
 	// intermission / finale rendering
@@ -2140,6 +2173,34 @@ void DLLEXPORT V_CalcRefdef( struct ref_params_s *pparams )
 	}
 
 	V_CalcNormalRefdef ( pparams );
+
+	// ReCoF (B315): in a smooth frame (rc_smooth.cpp) the wheelchair's origin, which V_CalcNormalRefdef lowers in place,
+	// stays as the game frame left it, and the camera and the weapon models move ahead by the player's velocity
+	if ( RcSmooth_RenderOnly() )
+		vecWheelchairOrigin_guess = vecWheelchair;
+
+	if ( bFirstPass )
+	{
+		float move[3];
+
+		if ( RcSmooth_View( pparams, V_IsOwnView( pparams ), move ) )
+		{
+			cl_entity_t *view = gEngfuncs.GetViewModel();
+
+			VectorAdd( pparams->vieworg, move, pparams->vieworg );
+			VectorAdd( v_origin, move, v_origin );
+
+			if ( view )
+				VectorAdd( view->origin, move, view->origin );
+
+			// the left hand item of type 3 follows the weapon model; the others are drawn at v_origin
+			if ( g_iHeadShieldType_guess == 3 )
+			{
+				VectorAdd( g_HeadShieldEnt.origin, move, g_HeadShieldEnt.origin );
+				VectorAdd( g_HeadShieldEnt.curstate.origin, move, g_HeadShieldEnt.curstate.origin );
+			}
+		}
+	}
 
 	// buz
 	render_origin = pparams->vieworg;
@@ -2624,6 +2685,12 @@ void AddViewmodelBob_guess( struct ref_params_s *pparams, Vector &origin, Vector
 	view->origin = view->origin + vup * ( flCos * 0.5f );
 }
 
+// ReCoF (B315): a game frame's lag, for the smooth frames after it (weapon model, left hand item)
+static Vector s_vecLagForward[2];
+static Vector s_vecLagDifference[2];
+static float s_flLagSpeed[2];
+static float s_flLagForce[2];
+
 void CalcViewModelLag_guess( float frametime, Vector &origin, Vector &angles, Vector &original_angles, cl_entity_t *view, bool bLeft )
 {
 	if ( gHUD.m_bIronSights_guess )
@@ -2659,6 +2726,24 @@ void CalcViewModelLag_guess( float frametime, Vector &origin, Vector &angles, Ve
 		// Make sure it doesn't grow out of control!!!
 		VectorNormalize( vecLastFacing_guess );
 		VectorMA( origin, flForce, vDifference * -1.0f, origin );
+
+		// ReCoF (B315)
+		s_vecLagForward[bLeft] = forward;
+		s_vecLagDifference[bLeft] = vDifference;
+		s_flLagSpeed[bLeft] = flSpeed;
+		s_flLagForce[bLeft] = flForce;
+	}
+	else if ( RcSmooth_RenderOnly() )
+	{
+		// ReCoF (B315): a smooth frame (rc_smooth.cpp, frametime 0) has no lag step of its own. It shows the game
+		// frame's lag with the turn since that frame added and the catching up for the time since then taken off,
+		// which comes to what the next game frame computes as the frame ends
+		float flCatch = 1.0f - s_flLagSpeed[bLeft] * RcSmooth_Ahead();
+		if ( flCatch < 0 )
+			flCatch = 0;
+
+		Vector vDifference = ( forward - s_vecLagForward[bLeft] ) + s_vecLagDifference[bLeft] * flCatch;
+		VectorMA( origin, s_flLagForce[bLeft], vDifference * -1.0f, origin );
 	}
 
 	AngleVectors( original_angles, forward, right, up );

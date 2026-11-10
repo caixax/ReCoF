@@ -3178,6 +3178,11 @@ int CL_FxBlend( cl_entity_t *ent )
 
 	offset = ( (int)ent->curstate.number ) * 363.0;	// Use ent index to de-sync these fx
 
+	// ReCoF (B315): the fades below step on every draw, not with time; a smooth frame (host_frametime 0, client.dll
+	// rc_smooth.cpp) leaves them for the frames, so gun smoke and the like fade as fast as before
+	if ( !host_frametime && ent->curstate.renderfx >= kRenderFxFadeSlow && ent->curstate.renderfx <= kRenderFxSolidFast )
+		return ent->curstate.renderamt;
+
 	switch ( ent->curstate.renderfx )
 	{
 	case kRenderFxPulseSlowWide:

@@ -486,6 +486,24 @@ void IN_MouseMove ( float frametime, usercmd_t *cmd)
 */
 }
 
+// ReCoF (B315): the mouse of a smooth frame (rc_smooth.cpp), drawn between two game frames: the IN_MouseMove the next
+// game frame calls through IN_Move, when the mouse only turns the view, so the angles that frame sends are the sum of
+// the same counts as without smooth frames. Strafing with the mouse, or moving with it without mouse look, changes the
+// command instead, and the spectator tank's limits come later in CL_CreateMove, so those wait for the game frame
+void IN_SmoothMouseMove( void )
+{
+	usercmd_t cmd;
+
+	if ( iMouseInUse || !mouseactive )
+		return;
+
+	if ( !( in_mlook.state & 1 ) || ( in_strafe.state & 1 ) || lookstrafe->value || gHUD.m_SpecTank_on )
+		return;
+
+	memset( &cmd, 0, sizeof( cmd ) );
+	IN_MouseMove( 0, &cmd );
+}
+
 /*
 ===========
 IN_Accumulate

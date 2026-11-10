@@ -221,6 +221,7 @@ int DLLEXPORT HUD_Redraw( float time, int intermission )
 	RcProfScope prof( RCP_HUD );
 
 	gHUD.Redraw( time, intermission );
+	RcSmooth_Redraw();	// ReCoF (B315): cl_showfps with smooth frames, also when CHud::Redraw returns early
 
 	return 1;
 }
@@ -271,6 +272,7 @@ void DLLEXPORT HUD_Frame( double time )
 {
 	RcProfScope prof( RCP_CLFRAME );	// ReCoF
 	RcCrash_Frame();	// ReCoF (B314): the hang watchdog's heartbeat
+	RcSmooth_GameFrame();	// ReCoF (B315): smooth frames count the game frames
 
 	RcVsyncFrame();	// ReCoF (B304)
 	RcSpeedrun_Frame();	// ReCoF (B310, B312): the run timer and the information panel

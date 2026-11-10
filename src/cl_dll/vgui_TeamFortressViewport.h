@@ -621,6 +621,7 @@ public:
 	bool SlotInput( int iSlot );
 
 	virtual void paintBackground();
+	virtual void solveTraverse();	// ReCoF (B315)
 
 	CSchemeManager *GetSchemeManager( void ) { return &m_SchemeManager; }
 	ScorePanel *GetScoreBoard( void ) { return m_pScoreBoard; }

@@ -32,6 +32,7 @@
 #include "gl_renderer.h" // buz
 #include "CgWater_guess.h"
 #include "rc_prof.h"	// ReCoF
+#include "rc_client.h"	// ReCoF
 
 #define DLLEXPORT __declspec( dllexport )
 
@@ -601,7 +602,9 @@ void DrawFXObjects( void )
 
 		if (curFX->type_guess == 1)
 		{
-			if (curFX->frame_guess < pSplashTexture->numframes - 1)
+			// ReCoF (B315): the splash and the drop below step per draw; smooth frames (rc_smooth.cpp) draw them
+			// where the game frame left them
+			if (curFX->frame_guess < pSplashTexture->numframes - 1 && !RcSmooth_RenderOnly())
 				curFX->frame_guess++;
 
 			alpha = 0.4;
@@ -620,17 +623,25 @@ void DrawFXObjects( void )
 			float frac = (gEngfuncs.GetClientTime() - curFX->birthTime) / curFX->life;
 			frac = min(1, frac);
 
-			curFX->start_guess[2] -= (int)(frac * 512);
-			curFX->origin[2] = curFX->start_guess[2];
-
-			int contents = gEngfuncs.PM_PointContents( curFX->origin, NULL );
-			if (curFX->origin[2] <= curFX->start_guess[2] - 512 || contents == CONTENTS_SOLID || contents == CONTENTS_WATER)
+			if ( RcSmooth_RenderOnly() )
 			{
-				gEngfuncs.pfnPlaySoundByNameAtLocation( "ambience/drip.wav", 1.0, curFX->origin );
-				alpha = 0;
+				int contents = gEngfuncs.PM_PointContents( curFX->origin, NULL );
+				alpha = ( contents == CONTENTS_SOLID || contents == CONTENTS_WATER ) ? 0 : curFX->alpha - curFX->alpha * frac;
 			}
 			else
-				alpha = curFX->alpha - curFX->alpha * frac;
+			{
+				curFX->start_guess[2] -= (int)(frac * 512);
+				curFX->origin[2] = curFX->start_guess[2];
+
+				int contents = gEngfuncs.PM_PointContents( curFX->origin, NULL );
+				if (curFX->origin[2] <= curFX->start_guess[2] - 512 || contents == CONTENTS_SOLID || contents == CONTENTS_WATER)
+				{
+					gEngfuncs.pfnPlaySoundByNameAtLocation( "ambience/drip.wav", 1.0, curFX->origin );
+					alpha = 0;
+				}
+				else
+					alpha = curFX->alpha - curFX->alpha * frac;
+			}
 		}
 		else
 		{

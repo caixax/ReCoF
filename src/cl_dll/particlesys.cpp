@@ -16,6 +16,7 @@
 #include "StudioModelRenderer.h"
 #include "GameStudioModelRenderer.h"
 #include "particlemgr.h"
+#include "rc_client.h"	// ReCoF
 
 extern engine_studio_api_t IEngineStudio;
 extern CGameStudioModelRenderer g_StudioRenderer;
@@ -854,7 +855,18 @@ bool ParticleSystem::UpdateParticle(particle *part, float frametime)
 {
 //	gEngfuncs.Con_Printf("UpdParticle %f: age %f, life %f\n", frametime, part->age, part->age_death);
 	if (frametime == 0)
+	{
+		// ReCoF (B315): a smooth frame (rc_smooth.cpp) moves the weapon model with the view, so the particles bound
+		// to it go with it
+		if ( RcSmooth_RenderOnly() && part->m_iEntIndex && m_iViewModel_guess )
+		{
+			cl_entity_t *view = gEngfuncs.GetViewModel();
+			if ( view )
+				part->origin = view->attachment[m_iAttachment_guess];
+		}
+
 		return true;
+	}
 
 	if (m_iState_guess == 1 && gEngfuncs.GetClientTime() > m_flDieTime_guess)
 		return false;

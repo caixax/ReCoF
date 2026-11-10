@@ -396,7 +396,8 @@ int CHud :: Redraw( float flTime, int intermission )
 		gViewPort->m_pCutsceneSkip_guess->setVisible( false );
 	}
 
-	if ( !strcmp( gEngfuncs.pfnGetLevelName(), "maps/video_stress_test.bsp" ) )
+	// ReCoF (B315): the test map's counter times the game frames, not the smooth frames between them
+	if ( !RcSmooth_RenderOnly() && !strcmp( gEngfuncs.pfnGetLevelName(), "maps/video_stress_test.bsp" ) )
 	{
 		static float flLastFPSTime = 0;
 		float flCurTime = gEngfuncs.GetClientTime();
@@ -815,7 +816,8 @@ void CHud :: DrawBlurTest( float frametime )
 	if ( m_flDamageTime_guess > gEngfuncs.GetClientTime() )
 		bDamaged = true;
 
-	if ( ( cv_blurtest->value || gHUD.m_iBlur_guess || iUnknown1054506C_guess > 2 || bDamaged ) && frametime )
+	// ReCoF (B315): no time passes in a smooth frame (rc_smooth.cpp), which draws the blur as the game frame did
+	if ( ( cv_blurtest->value || gHUD.m_iBlur_guess || iUnknown1054506C_guess > 2 || bDamaged ) && ( frametime || RcSmooth_RenderOnly() ) )
 	{
 		CaptureBlurTexture_guess( ScreenWidth, ScreenHeight, 0, 0 );
 

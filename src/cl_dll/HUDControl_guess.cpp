@@ -17,6 +17,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include "rc_client.h"	// ReCoF
 
 // a method of CHud in 1.6a (called with ecx = &gHUD): the key bound to a command, read from config.cfg
 
@@ -1375,6 +1376,7 @@ void CHUDControl::LogoUpdate_guess()
 void CHUDControl::RenderMessages_guess()
 {
 	float flTime = gEngfuncs.GetClientTime();
+	int bStep = !RcSmooth_RenderOnly();	// ReCoF (B315): the hint bar slides and fades in game frames only
 
 	// control hint bar
 	if ( m_bHint_guess )
@@ -1388,13 +1390,13 @@ void CHUDControl::RenderMessages_guess()
 			if ( !m_pHintBar_guess->isVisible() )
 				m_pHintBar_guess->setVisible( true );
 
-			if ( m_iHintAlpha_guess > 0 )
+			if ( m_iHintAlpha_guess > 0 && bStep )
 				m_iHintAlpha_guess -= 10;
 			if ( m_iHintAlpha_guess < 0 )
 				m_iHintAlpha_guess = 0;
 
 			m_pHintLabel_guess->getPos( x, y );
-			if ( y < 0 )
+			if ( y < 0 && bStep )
 				y += 2;
 			if ( y > 0 )
 				y = 0;
@@ -1406,7 +1408,7 @@ void CHUDControl::RenderMessages_guess()
 		}
 		else
 		{
-			if ( m_iHintAlpha_guess < 255 )
+			if ( m_iHintAlpha_guess < 255 && bStep )
 				m_iHintAlpha_guess += 10;
 			if ( m_iHintAlpha_guess > 255 )
 				m_iHintAlpha_guess = 255;
@@ -1414,7 +1416,7 @@ void CHUDControl::RenderMessages_guess()
 			m_pHintLabel_guess->setFgColor( 255, 255, 255, m_iHintAlpha_guess );
 
 			m_pHintLabel_guess->getPos( x, y );
-			if ( y > -48 )
+			if ( y > -48 && bStep )
 				y -= 2;
 			if ( y < -48 )
 				y = -48;

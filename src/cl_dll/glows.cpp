@@ -18,6 +18,7 @@
 #include "event_api.h"
 #include "pm_defs.h"
 #include "pmtrace.h"
+#include "rc_client.h"	// ReCoF
 
 
 #define MAX_GLOWS	16
@@ -101,6 +102,14 @@ void DrawGlows()
 	float time = gEngfuncs.GetClientTime();
 	float frametime = time - lastDrawTime;
 	lastDrawTime = time;
+
+	// ReCoF (B315): HUD_AddEntity fills the list in game frames only, and it is emptied below; a smooth frame
+	// (rc_smooth.cpp) draws the game frame's list again
+	static int s_iFrameGlows;
+	if ( RcSmooth_RenderOnly() )
+		numglows = s_iFrameGlows;
+	else
+		s_iFrameGlows = numglows;
 
 	if (!numglows)
 		return;

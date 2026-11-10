@@ -23,6 +23,7 @@
 #include "gl_dlight.h" // buz
 #include "rc_prof.h"	// ReCoF
 #include "rc_gpumodel.h"	// ReCoF (B287 step 4)
+#include "rc_client.h"	// ReCoF
 
 
 extern vec3_t	render_origin;
@@ -1244,6 +1245,18 @@ void RendererDrawNormal()
 	if (newframe)
 	{
 		GL_MtexStateSaver stateSaver;
+
+		// ReCoF (B315): HUD_AddEntity stores the skybox sprites in game frames only, and the list is emptied below; a
+		// smooth frame (rc_smooth.cpp) draws the game frame's list again, in its first pass as the game frame does
+		extern int g_DrawHeadShied;
+		static int s_iFrameSkyEnts;
+		if ( !g_DrawHeadShied )
+		{
+			if ( RcSmooth_RenderOnly() )
+				numskyents = s_iFrameSkyEnts;
+			else
+				s_iFrameSkyEnts = numskyents;
+		}
 	//	CONPRINT("newframe!\n");
 
 		DrawBump();

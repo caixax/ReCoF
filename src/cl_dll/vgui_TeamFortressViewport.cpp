@@ -97,6 +97,7 @@
 #include "Credits_guess.h"
 #include "RECBInventory_guess.h"
 #include "VGUIExtraMenu_guess.h"
+#include "rc_client.h"	// ReCoF
 
 
 extern int g_iVisibleMouse;
@@ -2509,6 +2510,16 @@ void TeamFortressViewport::GetAllPlayersInfo( void )
 		if ( g_PlayerInfoList[i].thisplayer )
 			m_pScoreBoard->m_iPlayerNum = i;  // !!!HACK: this should be initialized elsewhere... maybe gotten from the engine
 	}
+}
+
+// ReCoF (B315): the menus step their fades, slides and scrolling in solve(), once per draw, and every client panel is
+// a child of the viewport; a smooth frame (rc_smooth.cpp) leaves the solve to the game frames, so they keep their speed
+void TeamFortressViewport::solveTraverse()
+{
+	if ( RcSmooth_RenderOnly() )
+		return;
+
+	Panel::solveTraverse();
 }
 
 void TeamFortressViewport::paintBackground()

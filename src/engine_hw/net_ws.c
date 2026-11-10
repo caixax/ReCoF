@@ -2208,7 +2208,9 @@ void NET_DrawTextFields( int graphvalue, int x, int y, netbandwidthgraph_t *grap
 		avg = 0.0;
 	}
 
-	*framerate = *framerate * 0.5 + 0.5 * host_frametime;
+	// ReCoF (B315): a smooth frame (host_frametime 0, client.dll rc_smooth.cpp) would halve it each time
+	if ( host_frametime > 0 )
+		*framerate = *framerate * 0.5 + 0.5 * host_frametime;
 
 	y -= scr_graphheight.value;
 

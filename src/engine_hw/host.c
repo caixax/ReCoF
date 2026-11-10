@@ -887,6 +887,16 @@ Returns false if the time is too short to run a frame
 // LiveSplit autosplitter reads (docs/speedrun.md)
 static const char rc_szNoSleep[] = "-rc_nosleep";
 
+// ReCoF (B315): smooth frames. While the next frame is not due, client.dll's RcSmooth_Frame may draw the screen once
+// more (rc_smoothframes, cl_dll rc_smooth.cpp), with the view turned by the mouse and moved ahead by the player's
+// velocity. Nothing of the game runs in such a picture: cl.time stays, and RcSmooth_Frame sets cl.oldtime (the double
+// after cl.time) to cl.time and host_frametime to 0 around it, so what moves with them (particles, screen shakes,
+// the center print, the client's view effects) waits for the next frame. It gets SCR_UpdateScreen rather than
+// Host_UpdateScreen, so a movie (startmovie) records only the frames. The name is a const array so VC6 puts it in
+// .rdata
+extern HMODULE hClientDLL;
+static const char rc_szSmoothFrame[] = "RcSmooth_Frame";
+
 qboolean Host_FilterTime( float time )
 {
 	float	fps;
@@ -1211,7 +1221,15 @@ void _Host_Frame( float time )
 
 	// decide the simulation time
 	if ( !Host_FilterTime( time ) )
+	{
+		// ReCoF (B315): a picture between two frames
+		void ( *pfnSmoothFrame )( void ( * )( void ), double *, double * ) = ( void ( * )( void ( * )( void ), double *, double * ) )GetProcAddress( hClientDLL, rc_szSmoothFrame );
+
+		if ( pfnSmoothFrame )
+			pfnSmoothFrame( SCR_UpdateScreen, &cl.time, &host_frametime );
+
 		return;			// don't run too fast, or packets will flood out
+	}
 
 	SystemWrapper_RunFrame( host_frametime );
 

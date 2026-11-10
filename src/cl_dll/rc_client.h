@@ -65,4 +65,16 @@ void RcRawMouseShutdown( void );
 // B304 rc_vsync: sets the swap interval when rc_vsync or the GL context changes (called from HUD_Frame)
 void RcVsyncFrame( void );
 
+// rc_smooth.cpp (B315): smooth frames, pictures drawn between the game frames (rc_smoothframes). Init registers the
+// cvars (from RcClient_Init), GameFrame counts the game frames (from HUD_Frame), View notes a game frame's view or gives
+// a picture's camera move (from V_CalcRefdef), Redraw draws cl_showfps (from HUD_Redraw). RenderOnly is the number
+// of the picture being drawn, 0 in a game frame, for code that changes something on every draw rather than with time;
+// Ahead is the seconds since the game frame's view in such a picture
+void RcSmooth_Init( void );
+void RcSmooth_GameFrame( void );
+int RcSmooth_View( struct ref_params_s *pparams, int bMove, float *move );
+void RcSmooth_Redraw( void );
+int RcSmooth_RenderOnly( void );
+float RcSmooth_Ahead( void );
+
 #endif // RC_CLIENT_H

@@ -139,6 +139,7 @@ void RcClient_Init( void )
 	rc_jump_priority = gEngfuncs.pfnRegisterVariable( "rc_jump_priority", "0", FCVAR_ARCHIVE );
 
 	RcSpeedrun_Init();	// rc_speedrun.cpp: the speedometer, the HUD numbers, the information panel and the run timer
+	RcSmooth_Init();	// rc_smooth.cpp (B315): smooth frames
 
 	rc_rawinput = gEngfuncs.pfnRegisterVariable( "rc_rawinput", "2", FCVAR_ARCHIVE );
 	rc_vsync = gEngfuncs.pfnRegisterVariable( "rc_vsync", "0", FCVAR_ARCHIVE );	// B304

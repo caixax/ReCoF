@@ -25,6 +25,7 @@
 #include <stdio.h>
 
 #include "parsemsg.h"
+#include "rc_client.h"	// ReCoF
 
 DECLARE_MESSAGE(m_Geiger, Geiger )
 
@@ -67,6 +68,10 @@ int CHudGeiger::Draw (float flTime)
 	float flvol;
 	int rg[3];
 	int i;
+
+	// ReCoF (B315): a click is rolled per draw; smooth frames (rc_smooth.cpp) leave it to the game frames
+	if ( RcSmooth_RenderOnly() )
+		return 1;
 	
 	if (m_iGeigerRange < 1000 && m_iGeigerRange > 0)
 	{
