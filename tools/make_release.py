@@ -49,19 +49,30 @@ FILES = [
     ("cryoffear/cl_dlls/GameUI.dll", "GameUI.dll", "menus"),
 ]
 
-README = """ReCoF {version} (test build)
+# the title and the warning of README-ReCoF-TEST.txt, by channel
+README_HEAD = {
+    "beta": """ReCoF {version} (test build)
 
 WARNING: for testing only. These files have not been confirmed to work in game
 yet. Use them in a copy of the game, never in your Steam installation. If you
 use them anyway, you do so at your own risk.
+""",
+    "stable": """ReCoF {version}
 
+WARNING: not every change has been confirmed in game yet. Use these files in a
+copy of the game, never in your Steam installation. If you use them anyway, you
+do so at your own risk.
+""",
+}
+
+README = """{head}
 ReCoF is Cry of Fear 1.6a rebuilt from the DeCoF source with bug fixes and
 improvements. Speedrun techniques are kept; balance fixes can be switched back
 to retail with the console command rc_retail_gameplay 1.
 
 HOW TO TEST
 With the ReCoF Launcher: install or update ReCoF from it (this build is on the
-beta channel), or use Maintenance, Install from a file, with recof-{version}.zip,
+{channel} channel), or use Maintenance, Install from a file, with recof-{version}.zip,
 recof-manifest.json and recof-manifest.json.sig in one folder.
 
 By hand:
@@ -213,7 +224,8 @@ def main():
     # the commit of the last source change, which is what the binaries were built from
     commit = subprocess.run(["git", "-C", ROOT, "log", "-1", "--format=%h", "--", "src"],
                             stdout=subprocess.PIPE, text=True).stdout.strip()
-    text = README.format(version=version, buildid=args.buildid, commit=commit)
+    head = README_HEAD[args.channel].format(version=version)
+    text = README.format(head=head, version=version, buildid=args.buildid, commit=commit, channel=args.channel)
     for rel, what in staged:
         text += "  %s  %s (%s)\n" % (sha256(os.path.join(stage, *rel.split("/"))), rel.replace("/", "\\"), what)
     with open(os.path.join(stage, "README-ReCoF-TEST.txt"), "w", encoding="ascii", newline="\r\n") as f:
