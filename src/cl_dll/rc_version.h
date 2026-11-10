@@ -5,6 +5,6 @@
 #ifndef RC_VERSION_H
 #define RC_VERSION_H
 
-#define RECOF_VERSION	"0.1.6"
+#define RECOF_VERSION	"0.2.0"
 
 #endif // RC_VERSION_H
