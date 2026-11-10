@@ -17,9 +17,12 @@
 // every picture, rather than with time, asks RcSmooth_RenderOnly() and leaves it for the game frames.
 //
 // Pacing: the pictures split each game frame evenly, at the monitor's refresh rate or faster (rc_smoothframes_fps
-// sets another rate), and one is drawn only when it should end before the next game frame is due, judged from the
-// slowest recent picture with a margin, so the game frames keep their timing and the msec of the player's commands.
-// cl_showfps then shows the pictures and the game frames each second: "240 fps (100 logic)".
+// sets another rate), and one is drawn only when it should end before the next game frame is due, so the game frames
+// keep their timing and the msec of the player's commands. How long a picture takes is judged from the game frame's
+// own picture, measured every frame, and from the slowest recent picture in between, which is forgotten with time; a
+// picture that still ends too late stops them for a while, longer each time it happens again soon.
+// cl_showfps then shows the pictures and the game frames each second: "300 fps (100 logic)", and
+// rc_smoothframes_debug prints why pictures are left out.
 
 #include "hud.h"
 #include "cl_util.h"
@@ -43,8 +46,10 @@ void IN_SmoothMouseMove( void );	// inputw32.cpp
 #define RC_SMOOTH_MAX		15			// pictures between two game frames at most
 #define RC_SMOOTH_MARGIN	0.0005		// seconds left free before the next game frame
 #define RC_SMOOTH_EARLY		0.0005		// a picture due this soon is drawn now (the engine's loop sleeps 1 ms at a time)
-#define RC_SMOOTH_FIRST		0.002		// the time a picture is thought to take before one was measured
-#define RC_SMOOTH_DECAY		0.97		// how fast the slowest recent picture is forgotten, per picture
+#define RC_SMOOTH_DECAY		0.98		// per game frame: the slowest recent picture is half forgotten in a third of a second
+#define RC_SMOOTH_BACKOFF	0.25		// seconds without pictures after one ends too late, doubled when it happens again
+#define RC_SMOOTH_BACKOFF_MAX	8.0		// within RC_SMOOTH_AGAIN seconds, up to this
+#define RC_SMOOTH_AGAIN		10.0
 
 static cvar_t	*rc_smoothframes;
 static cvar_t	*rc_smoothframes_fps;
@@ -64,8 +69,39 @@ static double	s_flCallEnd;			// when the last RcSmooth_Frame returned
 static double	s_flFrameStart;			// when the game frame started, at the latest
 static double	s_flFrameView;			// when the game frame's picture computed the view
 static double	s_flRenderStart;		// when the current picture started
-static double	s_flRenderCost;			// the slowest recent picture, forgotten slowly
+static double	s_flRenderCost;			// the slowest recent picture, forgotten with time
+static double	s_flFramePicture;		// the game frame's own picture, from its view to the end of its HUD
+static double	s_flBackoff;			// the last pause after a picture that ended too late, 0 for none
+static double	s_flBackoffUntil;		// no pictures before this
+static double	s_flLastLate;			// when a picture last ended too late
 static int		s_iSlot;				// the next picture of this game frame, 1 to n
+
+// rc_smoothframes_debug: what happened over the last second
+enum
+{
+	RCS_OFF = 0,	// game frames with rc_smoothframes 0
+	RCS_NOVIEW,		// game frames that drew no game view (menus, loading)
+	RCS_PAUSED,		// paused, intermission, demo
+	RCS_RATE,		// the monitor (or rc_smoothframes_fps) is no faster than the game frames
+	RCS_NOTIME,		// pictures left out: not enough time before the next game frame
+	RCS_BACKOFF,	// pictures left out: pausing after one ended too late
+	RCS_LATE,		// pictures that ended too late
+	RCS_COUNT
+};
+
+struct RcSmoothStats_t
+{
+	int		iFrames;
+	int		iPictures;
+	int		iWhy[RCS_COUNT];
+	double	flLogic;		// the longest time from a game frame's start to its view
+	double	flFramePicture;	// the longest game frame's picture (view to the end of the HUD)
+	double	flPicture;		// the longest picture in between
+};
+
+static RcSmoothStats_t	s_Stats;		// this second
+static RcSmoothStats_t	s_LastStats;	// the last whole second
+static double			s_flStatsStart;
 
 static double	s_flRefreshTime;		// when the monitor's refresh rate was read
 static int		s_iRefresh;				// that rate, 0 when unknown
@@ -142,8 +178,12 @@ static void RcSmoothRefresh( double now )
 		s_iRefresh = mode.dmDisplayFrequency;
 }
 
+static void RcSmoothDebug_f( void );
+
 void RcSmooth_Init( void )
 {
+	gEngfuncs.pfnAddCommand( "rc_smoothframes_debug", RcSmoothDebug_f );
+
 	rc_smoothframes = gEngfuncs.pfnRegisterVariable( "rc_smoothframes", "1", FCVAR_ARCHIVE );
 	rc_smoothframes_fps = gEngfuncs.pfnRegisterVariable( "rc_smoothframes_fps", "0", FCVAR_ARCHIVE );
 
@@ -179,11 +219,23 @@ float RcSmooth_Ahead( void )
 // counter in the last picture
 void RcSmooth_GameFrame( void )
 {
+	double now = RcSmoothNow();
+
 	s_iGameFrames++;
 	s_iCountGame++;
 
+	s_flRenderCost *= RC_SMOOTH_DECAY;
+
+	s_Stats.iFrames++;
+	if ( now - s_flStatsStart >= 1.0 || now < s_flStatsStart )
+	{
+		s_LastStats = s_Stats;
+		memset( &s_Stats, 0, sizeof( s_Stats ) );
+		s_flStatsStart = now;
+	}
+
 	if ( rc_smoothframes && rc_smoothframes->value )
-		RcSmoothRefresh( RcSmoothNow() );
+		RcSmoothRefresh( now );
 
 	if ( s_pShowFps && s_pShowFps->string )
 		s_pShowFps->value = (float)atof( s_pShowFps->string );
@@ -197,31 +249,42 @@ extern "C" __declspec( dllexport ) void RcSmooth_Frame( void ( *pfnUpdateScreen 
 	double now = RcSmoothNow();
 
 	// a game frame ran since the last call: it started after that call returned
+	int bNewFrame = 0;
 	if ( s_iSeenFrames != s_iGameFrames )
 	{
 		s_iSeenFrames = s_iGameFrames;
 		s_flFrameStart = s_flCallEnd;
 		s_iSlot = 1;
+		bNewFrame = 1;
 	}
 
 	s_flCallEnd = now;
 
-	if ( !rc_smoothframes || !rc_smoothframes->value || !pfnUpdateScreen || !pClTime || !pHostFrameTime )
-		return;
-
-	// only after a game frame that drew the game's view, which a picture draws again
-	if ( s_iViewFrames != s_iGameFrames || !s_bViewSmooth )
-		return;
-
 	double flFrame = RcSmoothFrameTime();
-	int iRate = ( rc_smoothframes_fps->value > 0 ) ? (int)rc_smoothframes_fps->value : s_iRefresh;
+	int iRate = ( rc_smoothframes_fps && rc_smoothframes_fps->value > 0 ) ? (int)rc_smoothframes_fps->value : s_iRefresh;
 
 	// n pictures split the game frame into n + 1 even parts, at least as many as the monitor shows
 	int n = (int)ceil( flFrame * iRate - 0.01 ) - 1;
-	if ( n < 1 )
-		return;
 	if ( n > RC_SMOOTH_MAX )
 		n = RC_SMOOTH_MAX;
+
+	// only after a game frame that drew the game's view, which a picture draws again
+	int iWhy = -1;
+	if ( !rc_smoothframes || !rc_smoothframes->value || !pfnUpdateScreen || !pClTime || !pHostFrameTime )
+		iWhy = RCS_OFF;
+	else if ( s_iViewFrames != s_iGameFrames )
+		iWhy = RCS_NOVIEW;
+	else if ( !s_bViewSmooth )
+		iWhy = RCS_PAUSED;
+	else if ( n < 1 )
+		iWhy = RCS_RATE;
+
+	if ( iWhy >= 0 )
+	{
+		if ( bNewFrame )
+			s_Stats.iWhy[iWhy]++;
+		return;
+	}
 
 	double flSlot = flFrame / ( n + 1 );
 
@@ -232,10 +295,20 @@ extern "C" __declspec( dllexport ) void RcSmooth_Frame( void ( *pfnUpdateScreen 
 	while ( s_iSlot <= n && now >= s_flFrameView + s_iSlot * flSlot - RC_SMOOTH_EARLY )
 		s_iSlot++;
 
-	// the next game frame must not wait for this picture
-	double flCost = s_flRenderCost > 0 ? s_flRenderCost : RC_SMOOTH_FIRST;
-	if ( s_flFrameStart + flFrame - now < flCost + RC_SMOOTH_MARGIN )
+	if ( now < s_flBackoffUntil && now >= s_flBackoffUntil - RC_SMOOTH_BACKOFF_MAX )
+	{
+		s_Stats.iWhy[RCS_BACKOFF]++;
 		return;
+	}
+
+	// the next game frame must not wait for this picture, which should take about as long as the game frame's own
+	// picture, or as the slowest recent one
+	double flCost = ( s_flRenderCost > s_flFramePicture ) ? s_flRenderCost : s_flFramePicture;
+	if ( s_flFrameStart + flFrame - now < flCost + RC_SMOOTH_MARGIN )
+	{
+		s_Stats.iWhy[RCS_NOTIME]++;
+		return;
+	}
 
 	IN_SmoothMouseMove();
 
@@ -271,9 +344,31 @@ extern "C" __declspec( dllexport ) void RcSmooth_Frame( void ( *pfnUpdateScreen 
 	double end = RcSmoothNow();
 	double cost = end - now;
 
-	s_flRenderCost *= RC_SMOOTH_DECAY;
+	s_Stats.iPictures++;
+	if ( cost > s_Stats.flPicture )
+		s_Stats.flPicture = cost;
+
+	// a picture longer than a whole game frame was held up by something else (a load, another program); taken as one
+	// game frame, it is forgotten within a second or so
+	if ( cost > flFrame )
+		cost = flFrame;
 	if ( cost > s_flRenderCost )
 		s_flRenderCost = cost;
+
+	// it ended after the next game frame was due, so that frame started late: no pictures for a while, longer when it
+	// happens again soon
+	if ( end > s_flFrameStart + flFrame )
+	{
+		s_Stats.iWhy[RCS_LATE]++;
+
+		if ( s_flBackoff && end - s_flLastLate < RC_SMOOTH_AGAIN && end >= s_flLastLate )
+			s_flBackoff = ( s_flBackoff * 2 < RC_SMOOTH_BACKOFF_MAX ) ? s_flBackoff * 2 : RC_SMOOTH_BACKOFF_MAX;
+		else
+			s_flBackoff = RC_SMOOTH_BACKOFF;
+
+		s_flLastLate = end;
+		s_flBackoffUntil = end + s_flBackoff;
+	}
 
 	s_flCallEnd = end;
 	s_iCountSmooth++;
@@ -291,6 +386,12 @@ int RcSmooth_View( struct ref_params_s *pparams, int bMove, float *move )
 	{
 		s_iViewFrames = s_iGameFrames;
 		s_flFrameView = RcSmoothNow();
+		s_flFramePicture = 0;
+
+		// the game frame started after the last RcSmooth_Frame returned
+		if ( s_flCallEnd && s_flFrameView - s_flCallEnd > s_Stats.flLogic && s_flFrameView - s_flCallEnd < 1.0 )
+			s_Stats.flLogic = s_flFrameView - s_flCallEnd;
+
 		s_bViewSmooth = !pparams->paused && !pparams->intermission && !pparams->spectator && !pparams->demoplayback &&
 			!( gEngfuncs.pDemoAPI && gEngfuncs.pDemoAPI->IsRecording() );
 		s_bViewMove = bMove;
@@ -331,6 +432,15 @@ void RcSmooth_Redraw( void )
 	double now = RcSmoothNow();
 	double span = now - s_flCountStart;
 
+	// the game frame's own picture, from its view to here; what follows (the menus, the buffer swap) is in the margin
+	// and in the measured pictures
+	if ( !s_iRenderOnly && s_iViewFrames == s_iGameFrames && now >= s_flFrameView )
+	{
+		s_flFramePicture = now - s_flFrameView;
+		if ( s_flFramePicture > s_Stats.flFramePicture )
+			s_Stats.flFramePicture = s_flFramePicture;
+	}
+
 	if ( span >= 0.5 || span < 0 )
 	{
 		if ( span >= 0.5 && span < 2.0 )
@@ -363,4 +473,30 @@ void RcSmooth_Redraw( void )
 
 	gEngfuncs.pfnDrawSetTextColor( 1.0f, 1.0f, 1.0f );
 	gEngfuncs.pfnDrawConsoleString( 2, 2, szText );
+}
+
+// rc_smoothframes_debug: the last second of smooth frames, and why pictures were left out
+static void RcSmoothDebug_f( void )
+{
+	const RcSmoothStats_t &s = s_LastStats;
+	double flFrame = RcSmoothFrameTime();
+	int iRate = ( rc_smoothframes_fps && rc_smoothframes_fps->value > 0 ) ? (int)rc_smoothframes_fps->value : s_iRefresh;
+	int n = (int)ceil( flFrame * iRate - 0.01 ) - 1;
+	if ( n > RC_SMOOTH_MAX )
+		n = RC_SMOOTH_MAX;
+	if ( n < 0 )
+		n = 0;
+
+	gEngfuncs.Con_Printf( "rc_smoothframes %s, monitor %i Hz, target %i, game frame %.1f ms, %i pictures in each\n",
+		( rc_smoothframes && rc_smoothframes->value ) ? "on" : "off", s_iRefresh, iRate, flFrame * 1000, n );
+	gEngfuncs.Con_Printf( "last second: %i game frames, %i pictures in between\n", s.iFrames, s.iPictures );
+	gEngfuncs.Con_Printf( "game frames without pictures: %i off, %i no game view, %i paused or demo, %i monitor too slow\n",
+		s.iWhy[RCS_OFF], s.iWhy[RCS_NOVIEW], s.iWhy[RCS_PAUSED], s.iWhy[RCS_RATE] );
+	gEngfuncs.Con_Printf( "pictures left out: %i no time before the next game frame, %i pausing; %i ended too late\n",
+		s.iWhy[RCS_NOTIME], s.iWhy[RCS_BACKOFF], s.iWhy[RCS_LATE] );
+	gEngfuncs.Con_Printf( "longest: game logic %.2f ms, game frame's picture %.2f ms, picture in between %.2f ms\n",
+		s.flLogic * 1000, s.flFramePicture * 1000, s.flPicture * 1000 );
+	gEngfuncs.Con_Printf( "a picture is taken to need %.2f ms now (slowest recent %.2f ms)%s\n",
+		( ( s_flRenderCost > s_flFramePicture ) ? s_flRenderCost : s_flFramePicture ) * 1000, s_flRenderCost * 1000,
+		( RcSmoothNow() < s_flBackoffUntil ) ? ", pausing after a late one" : "" );
 }
