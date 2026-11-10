@@ -713,9 +713,24 @@ int RunListenServer( void *instance, char *basedir, char *cmdline, char *postRes
 	return result;
 }
 
+// ReCoF (B314): CEngineAPI::Run sends every crash of the main thread here through its SE translator, before any
+// unhandled exception filter could see it, and Steam's breakpad then wrote a dump and left the game frozen. When
+// client.dll's crash report is installed (rc_crash.cpp), it takes the crash: it reports it and ends the process.
+// The names are const arrays so VC6 puts them in .rdata
+static const char rc_szClientDll[] = "client.dll";
+static const char rc_szCrashReport[] = "RcCrash_Report";
+
 void MiniDumpFunction_guess( unsigned int nExceptionCode, EXCEPTION_POINTERS *pException )
 {
 	char	comment[256];
+	HMODULE	hClient = GetModuleHandle( rc_szClientDll );
+
+	if ( hClient )
+	{
+		void ( *pfnReport )( EXCEPTION_POINTERS * ) = ( void ( * )( EXCEPTION_POINTERS * ) )GetProcAddress( hClient, rc_szCrashReport );
+		if ( pfnReport )
+			pfnReport( pException );	// returns only with -rc_nocrashhandler
+	}
 
 	_snprintf( comment, sizeof( comment ), "hl: %s\n", com_gamedir );
 	SteamAPI_SetMiniDumpComment( comment );

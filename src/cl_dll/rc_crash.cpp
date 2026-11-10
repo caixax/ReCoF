@@ -1,9 +1,11 @@
 // ReCoF crash and hang reports (B314)
 //
-// Retail leaves crashes to Steam's breakpad (the engine registers it in sys_dll2.cpp, the client in InitInput). It
-// writes a minidump into Steam\dumps without a word and leaves the game window frozen on its last frame, and
-// nothing notices a game that stops running frames. Here, from the client:
-//  - an unhandled exception filter, installed after the client's SteamAPI_Init so it replaces breakpad's, hands
+// Retail leaves crashes to Steam's breakpad (the engine registers it in sys_dll2.cpp, the client in InitInput). The
+// engine's CEngineAPI::Run catches every crash of the main thread with an SE translator that calls Steam's
+// SteamAPI_WriteMiniDump, which writes a minidump into Steam\dumps without a word and leaves the game window frozen
+// on its last frame; and nothing notices a game that stops running frames. Here, from the client:
+//  - RcCrash_Report, which that translator now calls first (hw.dll sys_dll2.cpp), and an unhandled exception
+//    filter for the other threads, installed after the client's SteamAPI_Init so it replaces breakpad's, hand
 //    the crash to a reporter thread made at start-up (the crashed thread may have no stack left). The reporter puts
 //    the desktop back, writes crashes\crash-<time>.dmp and .txt next to cof.exe, shows the report in a message box
 //    (Ctrl+C copies its text) and ends the process;
@@ -446,28 +448,42 @@ static DWORD WINAPI RcReporterThread( LPVOID )
 	return 0;
 }
 
-static LONG WINAPI RcCrashFilter( EXCEPTION_POINTERS *pPointers )
+// hands a crash to the reporter thread and never returns; the reporter ends the process
+static void RcCrashTake( EXCEPTION_POINTERS *pPointers )
 {
-	if ( IsDebuggerPresent() )
-		return EXCEPTION_CONTINUE_SEARCH;
-
 	// the reporter itself crashed: end with what was written
 	if ( GetCurrentThreadId() == s_dwReporterThread )
 		TerminateProcess( GetCurrentProcess(), pPointers->ExceptionRecord->ExceptionCode );
 
-	// a second crash on another thread waits for the first report, which ends the process
+	// a second crash on another thread waits for the first report
 	if ( InterlockedExchange( &s_lCrashing, 1 ) )
-	{
 		Sleep( INFINITE );
-		return EXCEPTION_EXECUTE_HANDLER;
-	}
 
 	// this thread may be out of stack: the reporter thread does the work
 	s_pCrashPointers = pPointers;
 	s_dwCrashThread = GetCurrentThreadId();
 	SetEvent( s_hCrashEvent );
 	Sleep( INFINITE );
+}
+
+// crashes of every thread but the main one, whose crashes the engine catches first (RcCrash_Report)
+static LONG WINAPI RcCrashFilter( EXCEPTION_POINTERS *pPointers )
+{
+	if ( IsDebuggerPresent() )
+		return EXCEPTION_CONTINUE_SEARCH;
+
+	RcCrashTake( pPointers );
 	return EXCEPTION_EXECUTE_HANDLER;
+}
+
+// crashes of the main thread: CEngineAPI::Run (hw.dll sys_dll2.cpp) catches them with an SE translator, which
+// calls this when it is exported and returns to Steam's crash handler only when the reports are off
+extern "C" __declspec( dllexport ) void RcCrash_Report( EXCEPTION_POINTERS *pPointers )
+{
+	if ( !s_bInstalled || IsDebuggerPresent() )
+		return;
+
+	RcCrashTake( pPointers );
 }
 
 //-----------------------------------------------------------------------------
