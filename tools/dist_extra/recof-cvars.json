@@ -203,7 +203,7 @@
       "max": 1000,
       "group": "Performance",
       "label_en": "Smooth frames rate",
-      "desc_en": "The rate smooth frames aim for, in pictures a second. 0 follows the monitor's refresh rate."
+      "desc_en": "The rate smooth frames aim for, in pictures a second. 0, or anything up to the game's 100, follows the monitor's refresh rate. It does not turn smooth frames on or off: Smooth frames does."
     },
     {
       "name": "rc_dlightcull",

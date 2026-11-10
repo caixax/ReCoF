@@ -17,7 +17,7 @@
 // every picture, rather than with time, asks RcSmooth_RenderOnly() and leaves it for the game frames.
 //
 // Pacing: the pictures split each game frame evenly, at the monitor's refresh rate or faster (rc_smoothframes_fps
-// sets another rate), and one is drawn only when it should end before the next game frame is due, so the game frames
+// sets another rate when it is above the game frames' rate), and one is drawn only when it should end before the next game frame is due, so the game frames
 // keep their timing and the msec of the player's commands. How long a picture takes is judged from the slowest recent
 // picture in between, which is forgotten with time (the game frame's own picture is no guide: it also sets up the
 // models' new poses and the lights, which the pictures reuse), and from RC_SMOOTH_FIRST when none was drawn lately; a
@@ -188,6 +188,16 @@ static void RcSmoothRefresh( double now )
 
 static void RcSmoothDebug_f( void );
 
+// the rate the pictures aim for: rc_smoothframes_fps when it is above the game frames' rate, else the monitor's. A
+// value up to the game's rate would leave no picture, and players take the cvar for a switch and set it to 1
+static int RcSmoothRate( double flFrame )
+{
+	if ( rc_smoothframes_fps && rc_smoothframes_fps->value * flFrame > 1.0 )
+		return (int)rc_smoothframes_fps->value;
+
+	return s_iRefresh;
+}
+
 // how long the next picture is taken to need: the slowest recent picture, forgotten with time, or RC_SMOOTH_FIRST when
 // none was drawn lately
 static double RcSmoothCost( double now )
@@ -279,6 +289,7 @@ extern "C" __declspec( dllexport ) void RcSmooth_Frame( void ( *pfnUpdateScreen 
 	s_flCallEnd = now;
 
 	double flFrame = RcSmoothFrameTime();
+	int iRate = RcSmoothRate( flFrame );
 
 	if ( bNewFrame && s_flFrameStart > 0 )
 	{
@@ -290,7 +301,6 @@ extern "C" __declspec( dllexport ) void RcSmooth_Frame( void ( *pfnUpdateScreen 
 			s_Stats.flLeftMax = flLeft;
 		s_Stats.iLeft++;
 	}
-	int iRate = ( rc_smoothframes_fps && rc_smoothframes_fps->value > 0 ) ? (int)rc_smoothframes_fps->value : s_iRefresh;
 
 	// n pictures split the game frame into n + 1 even parts, at least as many as the monitor shows
 	int n = (int)ceil( flFrame * iRate - 0.01 ) - 1;
@@ -509,7 +519,7 @@ static void RcSmoothDebug_f( void )
 {
 	const RcSmoothStats_t &s = s_LastStats;
 	double flFrame = RcSmoothFrameTime();
-	int iRate = ( rc_smoothframes_fps && rc_smoothframes_fps->value > 0 ) ? (int)rc_smoothframes_fps->value : s_iRefresh;
+	int iRate = RcSmoothRate( flFrame );
 	int n = (int)ceil( flFrame * iRate - 0.01 ) - 1;
 	if ( n > RC_SMOOTH_MAX )
 		n = RC_SMOOTH_MAX;
