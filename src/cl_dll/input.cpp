@@ -1567,6 +1567,8 @@ void InitInput (void)
 	if ( SteamAPI_Init() )
 		bSteamInit_guess = true;
 
+	RcCrash_Init();	// ReCoF (B314): crash and hang reports, in place of the Steam crash handler set up above
+
 	iDonator_guess = 0;
 
 	bool bGroup2 = false;

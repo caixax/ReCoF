@@ -1834,6 +1834,10 @@
         {
           "name": "cl_dll/rc_speedrun",
           "source": "src/cl_dll/rc_speedrun.cpp"
+        },
+        {
+          "name": "cl_dll/rc_crash",
+          "source": "src/cl_dll/rc_crash.cpp"
         }
       ],
       "link": {
@@ -2034,7 +2038,8 @@
           "cl_dll/rc_prof",
           "cl_dll/rc_glsl",
           "cl_dll/rc_gpumodel",
-          "cl_dll/rc_speedrun"
+          "cl_dll/rc_speedrun",
+          "cl_dll/rc_crash"
         ]
       }
     },

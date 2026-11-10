@@ -133,6 +133,9 @@ NEW CONSOLE OPTIONS (default in brackets)
   rc_vidmode w h m         change resolution and display mode without a restart
                            (m: 0 full screen, 1 window, 2 borderless window);
                            Options, Video uses it
+  rc_crashtest 1 / 2       crash or hang the game on purpose, to see the reports
+  Crashes and hangs: a message box with the details (Ctrl+C copies it), and a report
+  and a dump in crashes\ next to cof.exe; -rc_nocrashhandler turns that off
   Launch options: -novid (skip the intro videos), -noborder (borderless window),
   -rc_aff (pin to the first core as retail), -rc_nosleep (retail frame limiter
   that spins a whole core)

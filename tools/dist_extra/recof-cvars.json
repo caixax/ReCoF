@@ -358,6 +358,14 @@
       "group": "Startup",
       "label_en": "Borderless window",
       "desc_en": "Starts in a window without a title bar or borders. At the desktop resolution it covers the screen like full screen, without switching the display mode, so alt-tab is instant. Options, Video can also switch to it while the game runs."
+    },
+    {
+      "name": "rc_nocrashhandler",
+      "type": "flag",
+      "default": "0",
+      "group": "Startup",
+      "label_en": "No crash reports",
+      "desc_en": "Leaves crashes to Steam's handler, as in retail. By default a crash closes the game with a message box and writes a report and a dump in the crashes folder next to cof.exe."
     }
   ]
 }

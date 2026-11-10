@@ -270,6 +270,7 @@ Called by engine every frame that client .dll is loaded
 void DLLEXPORT HUD_Frame( double time )
 {
 	RcProfScope prof( RCP_CLFRAME );	// ReCoF
+	RcCrash_Frame();	// ReCoF (B314): the hang watchdog's heartbeat
 
 	RcVsyncFrame();	// ReCoF (B304)
 	RcSpeedrun_Frame();	// ReCoF (B310, B312): the run timer and the information panel
