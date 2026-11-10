@@ -20,8 +20,9 @@
 // sets another rate when it is above the game frames' rate), and one is drawn only when it should end before the next game frame is due, so the game frames
 // keep their timing and the msec of the player's commands. How long a picture takes is judged from the slowest recent
 // picture in between, which is forgotten with time (the game frame's own picture is no guide: it also sets up the
-// models' new poses and the lights, which the pictures reuse), and from RC_SMOOTH_FIRST when none was drawn lately; a
-// picture that still ends too late stops them for a while, longer each time it happens again soon.
+// models' new poses and the lights, which the pictures reuse), and from RC_SMOOTH_FIRST when none was drawn lately, with
+// a margin of a quarter of that and 0.5 ms; a picture that still ends too late adds the time it overran to the margin,
+// which is forgotten within a second or two, so the pictures never stop for long.
 // With rc_smoothframes on, cl_showfps shows the pictures and the game frames each second, "300 fps (100 logic)", and
 // rc_smoothframes_debug prints why pictures are left out.
 
@@ -45,15 +46,14 @@
 void IN_SmoothMouseMove( void );	// inputw32.cpp
 
 #define RC_SMOOTH_MAX		15			// pictures between two game frames at most
-#define RC_SMOOTH_MARGIN	0.0005		// seconds left free before the next game frame
+#define RC_SMOOTH_MARGIN	0.0005		// seconds left free before the next game frame, besides RC_SMOOTH_SHARE of the picture
+#define RC_SMOOTH_SHARE		0.25
 #define RC_SMOOTH_EARLY		0.0005		// a picture due this soon is drawn now (the engine's loop sleeps 1 ms at a time)
 #define RC_SMOOTH_FIRST		0.002		// what a picture is taken to need when none was drawn in the last RC_SMOOTH_RECENT s
 #define RC_SMOOTH_RECENT	0.5
 #define RC_SMOOTH_LEAST		0.0005		// the least a picture is taken to need
 #define RC_SMOOTH_DECAY		0.98		// per game frame: the slowest recent picture is half forgotten in a third of a second
-#define RC_SMOOTH_BACKOFF	0.25		// seconds without pictures after one ends too late, doubled when it happens again
-#define RC_SMOOTH_BACKOFF_MAX	8.0		// within RC_SMOOTH_AGAIN seconds, up to this
-#define RC_SMOOTH_AGAIN		10.0
+#define RC_SMOOTH_LATE_DECAY	0.99	// per game frame: the margin a late picture added is half forgotten in 0.7 s
 
 static cvar_t	*rc_smoothframes;
 static cvar_t	*rc_smoothframes_fps;
@@ -76,9 +76,7 @@ static double	s_flRenderStart;		// when the current picture started
 static double	s_flRenderCost;			// the slowest recent picture, forgotten with time
 static double	s_flLastPicture;		// when the last picture ended
 static double	s_flFramePicture;		// the game frame's own picture, from its view to the end of its HUD (rc_smoothframes_debug)
-static double	s_flBackoff;			// the last pause after a picture that ended too late, 0 for none
-static double	s_flBackoffUntil;		// no pictures before this
-static double	s_flLastLate;			// when a picture last ended too late
+static double	s_flLateMargin;			// what pictures that ended too late overran, forgotten with time
 static int		s_iSlot;				// the next picture of this game frame, 1 to n
 
 // rc_smoothframes_debug: what happened over the last second
@@ -89,7 +87,6 @@ enum
 	RCS_PAUSED,		// paused, intermission, demo
 	RCS_RATE,		// the monitor (or rc_smoothframes_fps) is no faster than the game frames
 	RCS_NOTIME,		// pictures left out: not enough time before the next game frame
-	RCS_BACKOFF,	// pictures left out: pausing after one ended too late
 	RCS_LATE,		// pictures that ended too late
 	RCS_COUNT
 };
@@ -208,6 +205,13 @@ static double RcSmoothCost( double now )
 	return ( s_flRenderCost > RC_SMOOTH_LEAST ) ? s_flRenderCost : RC_SMOOTH_LEAST;
 }
 
+// the time that must be left before the next game frame to draw a picture: what it is taken to need, and the margin
+static double RcSmoothNeed( double now )
+{
+	double flCost = RcSmoothCost( now );
+	return flCost * ( 1.0 + RC_SMOOTH_SHARE ) + RC_SMOOTH_MARGIN + s_flLateMargin;
+}
+
 void RcSmooth_Init( void )
 {
 	gEngfuncs.pfnAddCommand( "rc_smoothframes_debug", RcSmoothDebug_f );
@@ -253,6 +257,7 @@ void RcSmooth_GameFrame( void )
 	s_iCountGame++;
 
 	s_flRenderCost *= RC_SMOOTH_DECAY;
+	s_flLateMargin *= RC_SMOOTH_LATE_DECAY;
 
 	s_Stats.iFrames++;
 	if ( now - s_flStatsStart >= 1.0 || now < s_flStatsStart )
@@ -334,15 +339,8 @@ extern "C" __declspec( dllexport ) void RcSmooth_Frame( void ( *pfnUpdateScreen 
 	while ( s_iSlot <= n && now >= s_flFrameView + s_iSlot * flSlot - RC_SMOOTH_EARLY )
 		s_iSlot++;
 
-	if ( now < s_flBackoffUntil && now >= s_flBackoffUntil - RC_SMOOTH_BACKOFF_MAX )
-	{
-		s_Stats.iWhy[RCS_BACKOFF]++;
-		return;
-	}
-
 	// the next game frame must not wait for this picture
-	double flCost = RcSmoothCost( now );
-	if ( s_flFrameStart + flFrame - now < flCost + RC_SMOOTH_MARGIN )
+	if ( s_flFrameStart + flFrame - now < RcSmoothNeed( now ) )
 	{
 		s_Stats.iWhy[RCS_NOTIME]++;
 		return;
@@ -394,19 +392,15 @@ extern "C" __declspec( dllexport ) void RcSmooth_Frame( void ( *pfnUpdateScreen 
 		s_flRenderCost = cost;
 	s_flLastPicture = end;
 
-	// it ended after the next game frame was due, so that frame started late: no pictures for a while, longer when it
-	// happens again soon
+	// it ended after the next game frame was due, so that frame started late: the margin grows by the overrun for a
+	// while (at most half a game frame)
 	if ( end > s_flFrameStart + flFrame )
 	{
 		s_Stats.iWhy[RCS_LATE]++;
 
-		if ( s_flBackoff && end - s_flLastLate < RC_SMOOTH_AGAIN && end >= s_flLastLate )
-			s_flBackoff = ( s_flBackoff * 2 < RC_SMOOTH_BACKOFF_MAX ) ? s_flBackoff * 2 : RC_SMOOTH_BACKOFF_MAX;
-		else
-			s_flBackoff = RC_SMOOTH_BACKOFF;
-
-		s_flLastLate = end;
-		s_flBackoffUntil = end + s_flBackoff;
+		s_flLateMargin += end - ( s_flFrameStart + flFrame );
+		if ( s_flLateMargin > flFrame * 0.5 )
+			s_flLateMargin = flFrame * 0.5;
 	}
 
 	s_flCallEnd = end;
@@ -531,13 +525,13 @@ static void RcSmoothDebug_f( void )
 	gEngfuncs.Con_Printf( "last second: %i game frames, %i pictures in between\n", s.iFrames, s.iPictures );
 	gEngfuncs.Con_Printf( "game frames without pictures: %i off, %i no game view, %i paused or demo, %i monitor too slow\n",
 		s.iWhy[RCS_OFF], s.iWhy[RCS_NOVIEW], s.iWhy[RCS_PAUSED], s.iWhy[RCS_RATE] );
-	gEngfuncs.Con_Printf( "pictures left out: %i no time before the next game frame, %i pausing; %i ended too late\n",
-		s.iWhy[RCS_NOTIME], s.iWhy[RCS_BACKOFF], s.iWhy[RCS_LATE] );
+	gEngfuncs.Con_Printf( "pictures left out: %i no time before the next game frame; %i ended too late\n",
+		s.iWhy[RCS_NOTIME], s.iWhy[RCS_LATE] );
 	gEngfuncs.Con_Printf( "longest: game logic %.2f ms, game frame's picture %.2f ms, picture in between %.2f ms\n",
 		s.flLogic * 1000, s.flFramePicture * 1000, s.flPicture * 1000 );
 	gEngfuncs.Con_Printf( "time left when a game frame was over: %.2f to %.2f ms (%i frames)\n",
 		s.flLeftMin * 1000, s.flLeftMax * 1000, s.iLeft );
 	double now = RcSmoothNow();
-	gEngfuncs.Con_Printf( "a picture is taken to need %.2f ms now, plus %.2f ms kept free%s\n", RcSmoothCost( now ) * 1000,
-		RC_SMOOTH_MARGIN * 1000, ( now < s_flBackoffUntil ) ? ", pausing after a late one" : "" );
+	gEngfuncs.Con_Printf( "a picture is taken to need %.2f ms now, %.2f ms with the margin (%.2f ms of it after late ones)\n",
+		RcSmoothCost( now ) * 1000, RcSmoothNeed( now ) * 1000, s_flLateMargin * 1000 );
 }
