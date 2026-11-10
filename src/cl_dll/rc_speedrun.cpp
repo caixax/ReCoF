@@ -62,7 +62,6 @@ static int		s_iRcInfoWidth;		// its widest line in pixels
 static cvar_t	*rc_hud_timer;
 static cvar_t	*rc_hud_timer_pos;
 static cvar_t	*rc_hud_timer_color;
-static cvar_t	*rc_timer_auto;
 static bool		s_bRunActive;		// a run was started and not reset, as LiveSplit's timer
 static bool		s_bRunEnded;		// the run reached an ending; its time stays
 static bool		s_bRunHeld;			// rc_timer_stop: the time stays until rc_timer_start
@@ -327,46 +326,6 @@ static bool RcReadRun( RcRunValues_t *v )
 	return true;
 }
 
-// the first maps of the campaigns the script knows
-static bool RcRunStartMap( const char *pszMap )
-{
-	static const char *s_pszMaps[] = { "c_nightmare.bsp", "c_doc_city.bsp", "c_rumpel1.bsp", "c_hallo_iambulletproof.bsp",
-		"c_arvuti.bsp", "c_the_stairway1.bsp" };
-
-	for ( int i = 0; i < ARRAYSIZE( s_pszMaps ); i++ )
-	{
-		if ( !strcmp( pszMap, s_pszMaps[i] ) )
-			return true;
-	}
-
-	return false;
-}
-
-// cryoffear.asl start, which tests the first map of a campaign while it loads: here on the frame it is first drawn
-static bool RcRunStart( const RcRunValues_t &v )
-{
-	if ( v.newmap )
-	{
-		if ( !strcmp( v.map, "c_nightmare.bsp" ) || !strcmp( v.map, "c_doc_city.bsp" ) || !strcmp( v.map, "c_the_stairway1.bsp" ) )
-			return true;
-
-		if ( v.cutscene == 0 && ( !strcmp( v.map, "c_rumpel1.bsp" ) || !strcmp( v.map, "c_hallo_iambulletproof.bsp" ) || !strcmp( v.map, "c_arvuti.bsp" ) ) )
-			return true;
-	}
-
-	return !strcmp( v.music, "coopstart.mp3" );
-}
-
-// cryoffear.asl reset: a start map loaded again (the script sees its decal counter drop to 0 then), the co-op
-// countdown, the intro
-static bool RcRunReset( const RcRunValues_t &v )
-{
-	if ( v.newmap && RcRunStartMap( v.map ) )
-		return true;
-
-	return !strcmp( v.music, "Starting in 3 seconds" ) || !strcmp( v.map, "c_intro.bsp" );
-}
-
 // cryoffear.asl isLoading
 static bool RcRunPaused( const RcRunValues_t &v )
 {
@@ -472,7 +431,7 @@ static void RcTimerDebug_f( void )
 
 	gEngfuncs.Con_Printf( "map \"%s\" loading %d paused %d dead %d cutscene %d frozen %d decals %g music \"%s\"\n",
 		v.map, v.loading, v.paused, v.dead, v.cutscene, v.frozen, v.igt, v.music );
-	gEngfuncs.Con_Printf( "timer: state %d time %.3f counting %d auto %g\n", g_RcRunTimer.state, s_flRunTime, s_bRunCounting, rc_timer_auto->value );
+	gEngfuncs.Con_Printf( "timer: state %d time %.3f counting %d\n", g_RcRunTimer.state, s_flRunTime, s_bRunCounting );
 }
 
 static void RcRunFrame( void )
@@ -495,8 +454,6 @@ static void RcRunFrame( void )
 		return;
 	}
 
-	bool bAuto = rc_timer_auto->value != 0;
-
 	if ( s_bRunActive )
 	{
 		// a frame counts its time when it and the one before count, so a map load that blocks between two frames
@@ -508,16 +465,12 @@ static void RcRunFrame( void )
 
 		s_bRunCounting = bCounting;
 
-		// rc_timer_auto: the script's reset and end. A run that has counted nothing is not reset: the bind above
-		// starts one while c_nightmare loads, and the reset for the start map comes when it is drawn
-		if ( bAuto && s_flRunTime > 0 && RcRunReset( v ) )
-			RcRunClear();
-		else if ( bAuto && !s_bRunEnded && RcRunEnd( v ) )
+		// the run stops by itself at the endings the script splits on, as BunnymodXT's timer stops at the end of
+		// Half-Life. It starts and resets only by hand (rc_timer_start, rc_timer_reset): the user did not want it
+		// to start whenever a campaign's first map loads, as the script's start did (rc_timer_auto, removed)
+		if ( !s_bRunEnded && RcRunEnd( v ) )
 			s_bRunEnded = true;
 	}
-
-	if ( bAuto && !s_bRunActive && RcRunStart( v ) )
-		RcRunNew();
 
 	RcRunPublish( &v );
 }
@@ -720,7 +673,6 @@ void RcSpeedrun_Init( void )
 	rc_hud_timer = gEngfuncs.pfnRegisterVariable( "rc_hud_timer", "0", FCVAR_ARCHIVE );
 	rc_hud_timer_pos = gEngfuncs.pfnRegisterVariable( "rc_hud_timer_pos", "0 .5", FCVAR_ARCHIVE );
 	rc_hud_timer_color = gEngfuncs.pfnRegisterVariable( "rc_hud_timer_color", "255 255 255", FCVAR_ARCHIVE );
-	rc_timer_auto = gEngfuncs.pfnRegisterVariable( "rc_timer_auto", "1", FCVAR_ARCHIVE );
 	gEngfuncs.pfnAddCommand( "rc_timer_start", RcTimerStart_f );
 	gEngfuncs.pfnAddCommand( "rc_timer_stop", RcTimerStop_f );
 	gEngfuncs.pfnAddCommand( "rc_timer_reset", RcTimerReset_f );

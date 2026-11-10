@@ -102,8 +102,8 @@ NEW CONSOLE OPTIONS (default in brackets)
   rc_hud_timer [0]         run timer on the left, timed as the LiveSplit script
                            (no pauses, loads or cutscenes)
   rc_timer_start, rc_timer_stop, rc_timer_reset
-                           work the run timer by hand, as bxt_timer_*; rc_timer_auto [1]
-                           starts, resets and stops it as the LiveSplit script does
+                           start, stop and reset the run timer, as bxt_timer_*; it
+                           stops by itself at the endings
   rc_rawinput [2]          raw mouse input, no Windows acceleration: 2 = read on a
                            thread of its own as RInput does, 1 = read on the game
                            window, 0 = retail
