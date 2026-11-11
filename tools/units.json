@@ -666,6 +666,10 @@
         {
           "name": "dlls/CoF_MP5ModeSaveRestore_guess",
           "source": "src/dlls/CoF_MP5ModeSaveRestore_guess.cpp"
+        },
+        {
+          "name": "dlls/rc_cheats",
+          "source": "src/dlls/rc_cheats.cpp"
         }
       ],
       "toolchain": "msvc1444",
@@ -870,7 +874,8 @@
           "dlls/triggers",
           "dlls/util",
           "dlls/weapons",
-          "dlls/world"
+          "dlls/world",
+          "dlls/rc_cheats"
         ]
       }
     },
@@ -1536,6 +1541,34 @@
         {
           "name": "cl_dll/rc_smooth",
           "source": "src/cl_dll/rc_smooth.cpp"
+        },
+        {
+          "name": "cl_dll/rc_discord",
+          "source": "src/cl_dll/rc_discord.cpp"
+        },
+        {
+          "name": "cl_dll/rc_practice",
+          "source": "src/cl_dll/rc_practice.cpp"
+        },
+        {
+          "name": "external/discord-rpc/discord_rpc",
+          "source": "src/external/discord-rpc/discord_rpc.cpp"
+        },
+        {
+          "name": "external/discord-rpc/rpc_connection",
+          "source": "src/external/discord-rpc/rpc_connection.cpp"
+        },
+        {
+          "name": "external/discord-rpc/serialization",
+          "source": "src/external/discord-rpc/serialization.cpp"
+        },
+        {
+          "name": "external/discord-rpc/connection_win",
+          "source": "src/external/discord-rpc/connection_win.cpp"
+        },
+        {
+          "name": "external/discord-rpc/discord_register_win",
+          "source": "src/external/discord-rpc/discord_register_win.cpp"
         }
       ],
       "link": {
@@ -1738,7 +1771,14 @@
           "cl_dll/rc_gpumodel",
           "cl_dll/rc_speedrun",
           "cl_dll/rc_crash",
-          "cl_dll/rc_smooth"
+          "cl_dll/rc_smooth",
+          "cl_dll/rc_discord",
+          "cl_dll/rc_practice",
+          "external/discord-rpc/discord_rpc",
+          "external/discord-rpc/rpc_connection",
+          "external/discord-rpc/serialization",
+          "external/discord-rpc/connection_win",
+          "external/discord-rpc/discord_register_win"
         ]
       }
     },

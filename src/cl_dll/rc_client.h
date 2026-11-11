@@ -77,4 +77,18 @@ void RcSmooth_Redraw( void );
 int RcSmooth_RenderOnly( void );
 float RcSmooth_Ahead( void );
 
+// rc_discord.cpp (B316): Discord Rich Presence. Init registers rc_discord (from RcClient_Init), Frame follows the game
+// (from HUD_Frame), Shutdown takes the presence down (from HUD_Shutdown)
+void RcDiscord_Init( void );
+void RcDiscord_Frame( void );
+void RcDiscord_Shutdown( void );
+
+// rc_practice.cpp (B317): rc_wallhack, rc_novis's r_novis and rc_disable_vgui. Init registers them (from
+// RcClient_Init), Frame keeps r_novis with rc_novis (from HUD_Frame); Wallhack returns 1 with the alpha and the blend
+// while the wallhack is on (gl_renderer.cpp), DisableVgui whether the VGUI panels are hidden (the viewport)
+void RcPractice_Init( void );
+void RcPractice_Frame( void );
+int RcWallhack( float *pflAlpha, int *pbAdditive );
+int RcDisableVgui( void );
+
 #endif // RC_CLIENT_H

@@ -2514,6 +2514,34 @@ void TeamFortressViewport::GetAllPlayersInfo( void )
 
 // ReCoF (B315): the menus step their fades, slides and scrolling in solve(), once per draw, and every client panel is
 // a child of the viewport; a smooth frame (rc_smooth.cpp) leaves the solve to the game frames, so they keep their speed
+// ReCoF (B317): rc_disable_vgui hides every client panel, which are all children of the viewport, for this paint;
+// the viewport's own paintBackground still draws the view and the HUD the client draws itself
+void TeamFortressViewport::paintTraverse( bool repaint )
+{
+	if ( !RcDisableVgui() )
+	{
+		Panel::paintTraverse( repaint );
+		return;
+	}
+
+	Panel *pHidden[256];
+	int iHidden = 0;
+	for ( int i = 0; i < getChildCount() && iHidden < 256; i++ )
+	{
+		Panel *pChild = getChild( i );
+		if ( pChild && pChild->isVisible() )
+		{
+			pChild->setVisible( false );
+			pHidden[iHidden++] = pChild;
+		}
+	}
+
+	Panel::paintTraverse( repaint );
+
+	for ( int i = 0; i < iHidden; i++ )
+		pHidden[i]->setVisible( true );
+}
+
 void TeamFortressViewport::solveTraverse()
 {
 	if ( RcSmooth_RenderOnly() )

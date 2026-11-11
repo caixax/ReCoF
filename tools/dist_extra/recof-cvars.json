@@ -384,6 +384,14 @@
       "group": "Startup",
       "label_en": "No crash reports",
       "desc_en": "Leaves crashes to Steam's handler, as in retail. By default a crash closes the game with a message box and writes a report and a dump in the crashes folder next to cof.exe."
+    },
+    {
+      "name": "rc_discord",
+      "type": "bool",
+      "default": "1",
+      "group": "Other",
+      "label_en": "Discord status",
+      "desc_en": "While Discord is open, your profile shows that you are playing ReCoF, its version and the map you are on."
     }
   ]
 }

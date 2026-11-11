@@ -70,6 +70,14 @@ cvar_t	rc_infinite_stamina = {"rc_infinite_stamina","0", FCVAR_SERVER };
 cvar_t	rc_hlmovement = {"rc_hlmovement","0", FCVAR_SERVER };
 // ReCoF: 1 skips the black fade of the doors that move the player to the other side (retail and default: 0)
 cvar_t	rc_door_skip = {"rc_door_skip","0", FCVAR_SERVER };
+// ReCoF (B317), BunnymodXT's bxt_disable_changelevel: 1 keeps level changes from starting, for routing
+cvar_t	rc_disable_changelevel = {"rc_disable_changelevel","0" };
+// ReCoF (B317), BunnymodXT's bxt_render_far_entities: with sv_cheats 1, the server sends every entity of the map,
+// not only those the player could see, so rc_wallhack shows them; the game itself does not change
+cvar_t	rc_render_far_entities = {"rc_render_far_entities","0" };
+// ReCoF (B317), BunnymodXT's bxt_novis: with sv_cheats 1, the whole map is drawn (the engine's r_novis, set by the
+// client) and every entity is sent, as rc_render_far_entities
+cvar_t	rc_novis = {"rc_novis","0" };
 cvar_t	cof_walksteptime = {"cof_walksteptime","410", FCVAR_SERVER };
 cvar_t	cof_runsteptime = {"cof_runsteptime","375", FCVAR_SERVER };
 cvar_t	cof_sprintsteptime = {"cof_sprintsteptime","300", FCVAR_SERVER };
@@ -549,6 +557,9 @@ void GameDLLInit( void )
 	CVAR_REGISTER (&rc_infinite_stamina);
 	CVAR_REGISTER (&rc_hlmovement);
 	CVAR_REGISTER (&rc_door_skip);
+	CVAR_REGISTER (&rc_disable_changelevel);
+	CVAR_REGISTER (&rc_render_far_entities);
+	CVAR_REGISTER (&rc_novis);
 	CVAR_REGISTER (&cof_walksteptime);
 	CVAR_REGISTER (&cof_runsteptime);
 	CVAR_REGISTER (&cof_sprintsteptime);

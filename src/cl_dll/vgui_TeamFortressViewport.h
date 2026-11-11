@@ -622,6 +622,9 @@ public:
 
 	virtual void paintBackground();
 	virtual void solveTraverse();	// ReCoF (B315)
+protected:
+	virtual void paintTraverse( bool repaint );	// ReCoF (B317)
+public:
 
 	CSchemeManager *GetSchemeManager( void ) { return &m_SchemeManager; }
 	ScorePanel *GetScoreBoard( void ) { return m_pScoreBoard; }

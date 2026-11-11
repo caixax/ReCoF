@@ -44,6 +44,9 @@ extern cvar_t	rc_ducktap;			// ReCoF: 1 brings back the Half-Life ducktap
 extern cvar_t	rc_infinite_stamina;	// ReCoF: 1 gives infinite stamina
 extern cvar_t	rc_hlmovement;		// ReCoF: 1 gives Half-Life 1 movement
 extern cvar_t	rc_door_skip;		// ReCoF: 1 skips the fade of the inter_door doors
+extern cvar_t	rc_disable_changelevel;	// ReCoF (B317): 1 keeps level changes from starting
+extern cvar_t	rc_render_far_entities;	// ReCoF (B317): 1 sends every entity (sv_cheats 1)
+extern cvar_t	rc_novis;				// ReCoF (B317): 1 draws the whole map and sends every entity (sv_cheats 1)
 
 extern cvar_t	*g_psv_gravity;
 extern cvar_t	*g_psv_aim;

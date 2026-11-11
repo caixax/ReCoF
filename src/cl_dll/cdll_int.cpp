@@ -273,6 +273,8 @@ void DLLEXPORT HUD_Frame( double time )
 	RcProfScope prof( RCP_CLFRAME );	// ReCoF
 	RcCrash_Frame();	// ReCoF (B314): the hang watchdog's heartbeat
 	RcSmooth_GameFrame();	// ReCoF (B315): smooth frames count the game frames
+	RcDiscord_Frame();	// ReCoF (B316): Discord Rich Presence
+	RcPractice_Frame();	// ReCoF (B317): rc_novis
 
 	RcVsyncFrame();	// ReCoF (B304)
 	RcSpeedrun_Frame();	// ReCoF (B310, B312): the run timer and the information panel

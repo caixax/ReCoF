@@ -499,6 +499,44 @@ e->angles[0] = -e->angles[0];	// stupid quake bug
  World drawing
 =================
 */
+// ReCoF (B317): rc_wallhack (rc_practice.cpp). The world's surfaces are not drawn by the first pass but collected
+// here, linked through texturechain (the first pass would have put them on their texture's chain), and drawn last
+// with their textures and no lightmap, blended and without writing depth, so the models, sprites and brush entities
+// that come after show through them
+static int			s_bWallhack;
+static float		s_flWallhackAlpha;
+static int			s_bWallhackAdditive;
+static msurface_t	*s_pWallhackChain;
+
+texture_t *R_TextureAnimation( texture_t *base );	// gl_rsurf.cpp
+
+static void RcDrawWallhack( void )
+{
+	if ( !s_pWallhackChain )
+		return;
+
+	gl.glEnable( GL_BLEND );
+	gl.glBlendFunc( GL_SRC_ALPHA, s_bWallhackAdditive ? GL_ONE : GL_ONE_MINUS_SRC_ALPHA );
+	gl.glDepthMask( GL_FALSE );
+	gl.glDepthFunc( GL_LEQUAL );
+	gl.glColor4f( 1, 1, 1, s_flWallhackAlpha );
+
+	SetTexPointer( 0, TC_TEXTURE );
+	SetTexEnvs( ENVSTATE_MUL );
+
+	for ( msurface_t *s = s_pWallhackChain; s; s = s->texturechain )
+	{
+		texture_t *t = R_TextureAnimation( s->texinfo->texture );
+		Bind2DTexture( GL_TEXTURE0_ARB, t->gl_texturenum );
+		DrawPolyFromArray( s );
+	}
+
+	gl.glColor4f( 1, 1, 1, 1 );
+	gl.glDisable( GL_BLEND );
+	gl.glDepthMask( GL_TRUE );
+	s_pWallhackChain = NULL;
+}
+
 void RecursiveDrawWorld (mnode_t *node)
 {
 	int			c, side;
@@ -577,6 +615,14 @@ void RecursiveDrawWorld (mnode_t *node)
 				// don't backface underwater surfaces, because they warp
 				if ( !(surf->flags & SURF_UNDERWATER) && ( (dot < 0) ^ !!(surf->flags & SURF_PLANEBACK)) )
 					continue;		// wrong side
+
+				// ReCoF (B317): rc_wallhack draws the world in a pass of its own (RcDrawWallhack)
+				if ( s_bWallhack && !( surf->flags & ( SURF_DRAWSKY | SURF_DRAWTURB ) ) )
+				{
+					surf->texturechain = s_pWallhackChain;
+					s_pWallhackChain = surf;
+					continue;
+				}
 
 				DrawPolyFirstPass(surf);
 			}
@@ -694,6 +740,8 @@ void DrawBump()
 	currententity = gEngfuncs.GetEntityByIndex(0);
 
 	RcProf_Push( RCP_WORLD_FIRST );
+	s_bWallhack = RcWallhack( &s_flWallhackAlpha, &s_bWallhackAdditive );	// ReCoF (B317)
+	s_pWallhackChain = NULL;
 	PrepareFirstPass();
 	RcBatchBegin();	// ReCoF (B195)
 	RecursiveDrawWorld (world->nodes);
@@ -742,11 +790,16 @@ void DrawBump()
 	}
 	RcProf_Pop();
 
+	// ReCoF (B317): the see-through world goes over everything opaque, before the models
+	if ( s_bWallhack )
+		RcDrawWallhack();
+
 	gl.glDepthFunc(GL_LEQUAL);
 
 	DisableVertexArray();
 	RcProf_Push( RCP_WORLD_DECALS );
-	DrawDecals();
+	if ( !s_bWallhack )	// ReCoF (B317): decals would float where the world's depth is missing
+		DrawDecals();
 	RcProf_Pop();
 
 /*	// Draw transparent brush entities

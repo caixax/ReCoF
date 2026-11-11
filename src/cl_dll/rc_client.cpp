@@ -140,6 +140,8 @@ void RcClient_Init( void )
 
 	RcSpeedrun_Init();	// rc_speedrun.cpp: the speedometer, the HUD numbers, the information panel and the run timer
 	RcSmooth_Init();	// rc_smooth.cpp (B315): smooth frames
+	RcDiscord_Init();	// rc_discord.cpp (B316): Discord Rich Presence
+	RcPractice_Init();	// rc_practice.cpp (B317): wallhack, novis, disable_vgui
 
 	rc_rawinput = gEngfuncs.pfnRegisterVariable( "rc_rawinput", "2", FCVAR_ARCHIVE );
 	rc_vsync = gEngfuncs.pfnRegisterVariable( "rc_vsync", "0", FCVAR_ARCHIVE );	// B304

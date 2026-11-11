@@ -958,6 +958,8 @@ called each time a player uses a "cmd" command
 extern float g_flWeaponCheat;
 
 // Use CMD_ARGV,  CMD_ARGV, and CMD_ARGC to get pointers the character string command.
+bool RcCheatCommand( edict_t *pEntity, const char *pcmd );	// ReCoF (B317), rc_cheats.cpp
+
 void ClientCommand( edict_t *pEntity )
 {
 	const char *pcmd = CMD_ARGV(0);
@@ -987,6 +989,10 @@ void ClientCommand( edict_t *pEntity )
 
 	// Is the client spawned yet?
 	if ( !pEntity->pvPrivateData )
+		return;
+
+	// ReCoF (B317): the practice commands (rc_ch_*, rc_set_angles)
+	if ( RcCheatCommand( pEntity, pcmd ) )
 		return;
 
 	entvars_t *pev = &pEntity->v;
@@ -3073,6 +3079,17 @@ void SetupVisibility( edict_t *pViewEntity, edict_t *pClient, unsigned char **pv
 
 	*pvs = ENGINE_SET_PVS ( (float *)&org );
 	*pas = ENGINE_SET_PAS ( (float *)&org );
+
+	// ReCoF (B317): rc_render_far_entities and rc_novis send every entity; with no PVS the engine's visibility test
+	// passes for all (SV_CheckVisibility)
+	if ( rc_render_far_entities.value || rc_novis.value )
+	{
+		static cvar_t *s_pCheats;
+		if ( !s_pCheats )
+			s_pCheats = CVAR_GET_POINTER( "sv_cheats" );
+		if ( s_pCheats && s_pCheats->value )
+			*pvs = NULL;
+	}
 }
 
 #include "entity_state.h"

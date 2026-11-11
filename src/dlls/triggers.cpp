@@ -37,6 +37,7 @@
 //#include "hgrunt.h"
 //#include "islave.h"
 #include "rushscript.h" // buz
+#include "game.h"	// ReCoF (B317): rc_disable_changelevel
 
 #define	SF_TRIGGER_PUSH_START_OFF	2//spawnflag that makes trigger_push spawn turned OFF
 #define SF_TRIGGER_HURT_TARGETONCE	1// Only fire hurt target once
@@ -3443,6 +3444,10 @@ void CChangeLevel :: ChangeLevelNow( CBaseEntity *pActivator )
 
 	// Don't work in deathmatch
 	if ( g_pGameRules && g_pGameRules->IsDeathmatch() )
+		return;
+
+	// ReCoF (B317): rc_disable_changelevel, for routing
+	if ( rc_disable_changelevel.value )
 		return;
 
 	// Some people are firing these multiple times in a frame, disable

@@ -1656,6 +1656,7 @@ void ShutdownInput (void)
 
 void DLLEXPORT HUD_Shutdown( void )
 {
+	RcDiscord_Shutdown();	// ReCoF (B316)
 	ShutdownInput();
 	IrrKlangDestroy_guess();
 }
