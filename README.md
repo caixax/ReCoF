@@ -10,6 +10,11 @@ ReCoF fixes the bugs of **Cry of Fear** (Steam release, version string `1.6a`) a
 > [!TIP]
 > The recommended way to install and play ReCoF is the [ReCoF Launcher](https://github.com/caixax/ReCoF-Launcher/releases/latest). It makes the copy of the game for you, checks every file it downloads, keeps ReCoF and itself up to date, and backs up your saves before each update. Installing a release zip by hand still works.
 
+> [!WARNING]
+> **Windows 11 and Smart App Control.** ReCoF's files are not digitally signed yet. On a PC where Smart App Control is on, Windows refuses to load them and the game stops with a "Bad Image" error that names `hw.dll` (error status `0xc0e90002`). To play ReCoF, turn it off: open **Windows Security**, go to **App & browser control**, click **Smart App Control settings** and choose **Off**. A shortcut: press Win+R, type `windowsdefender://smartapp/` and press Enter. On many versions of Windows 11 it cannot be turned back on afterwards without resetting Windows; Microsoft Defender keeps protecting the PC either way.
+>
+> Windows 10 is not affected, nor is Windows 11 when Smart App Control is off or still in evaluation mode. The ReCoF Launcher checks this and warns you before it starts the game.
+
 ## Principles
 
 - **DeCoF stays faithful.** DeCoF reproduces retail exactly, bugs included. Fixes and improvements are made here. Corrections to the decompilation itself, such as a wrong name or a real mismatch, go to DeCoF and are merged in.
