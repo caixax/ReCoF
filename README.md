@@ -7,13 +7,16 @@ ReCoF fixes the bugs of **Cry of Fear** (Steam release, version string `1.6a`) a
 > [!IMPORTANT]
 > ReCoF is work in progress. Test it only in a copy of the game, never in your Steam installation.
 
+> [!TIP]
+> The recommended way to install and play ReCoF is the [ReCoF Launcher](https://github.com/caixax/ReCoF-Launcher/releases/latest). It makes the copy of the game for you, checks every file it downloads, keeps ReCoF and itself up to date, and backs up your saves before each update. Installing a release zip by hand still works.
+
 ## Principles
 
 - **DeCoF stays faithful.** DeCoF reproduces retail exactly, bugs included. Fixes and improvements are made here. Corrections to the decompilation itself, such as a wrong name or a real mismatch, go to DeCoF and are merged in.
 - **Speedrun techniques stay.** Movement tech, skips and exploits that runners use are not removed unless they crash the game or corrupt saves. When a fix changes something runners rely on, the original behavior stays available behind a cvar.
 - **New cvars and commands use the prefix `rc_`.**
 - **Retail saves keep loading.** A fix that has to change a save table versions it and still reads the old format.
-- **Every change is measured against the baseline.** Before any fix, a ReCoF build is identical to DeCoF's except for build stamps and the name of the build folder, so each fix can be checked to change only the functions it means to change. hl.dll and client.dll are built with a current compiler since Sprint 5, so for them `python tools/build.py --retail-cc check <unit>` does that check with the retail compiler (docs/toolchains.md).
+- **Every change is measured against the baseline.** Before any fix, a ReCoF build is identical to DeCoF's except for build stamps and the name of the build folder, so each fix can be checked to change only the functions it means to change (docs/baseline.md). hl.dll and client.dll are built with a current compiler since Sprint 5, so their code no longer matches retail byte for byte; DeCoF's tools compare a unit with the retail compiler.
 
 ## Building
 
@@ -39,7 +42,7 @@ The binaries land in `build/bin`, and `dist/` becomes a copy of the game that ru
 
 ## Making a release
 
-Releases are installed and updated by the [ReCoF Launcher](https://github.com/caixax/ReCoF-Launcher), which only accepts the format described in its [docs/releases.md](https://github.com/caixax/ReCoF-Launcher/blob/main/docs/releases.md): `recof-<version>.zip`, `recof-manifest.json` and its Ed25519 signature `recof-manifest.json.sig`. After building every binary as above:
+Releases are installed and updated by the [ReCoF Launcher](https://github.com/caixax/ReCoF-Launcher), which only accepts the format described in its [docs/releases.md](https://github.com/caixax/ReCoF-Launcher/blob/master/docs/releases.md): `recof-<version>.zip`, `recof-manifest.json` and its Ed25519 signature `recof-manifest.json.sig`. After building every binary as above:
 
 ```
 python tools/make_release.py --version 0.2.0 --channel beta
