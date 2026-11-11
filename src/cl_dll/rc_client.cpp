@@ -38,6 +38,7 @@ static cvar_t		*rc_jump_priority;
 static int			s_bDucktapReleased;	// +rc_ducktap released duck on the frame before
 static cvar_t		*rc_rawinput;
 static cvar_t		*rc_vsync;	// B304
+static cvar_t		*rc_omgbruh_sound;	// B318
 static HWND			s_hRawWnd;			// raw input 1: the game window, once hooked
 static WNDPROC		s_pfnRawOldProc;	// raw input 1: the engine's window procedure
 static HANDLE		s_hRawThread;		// raw input 2: the input thread
@@ -145,6 +146,7 @@ void RcClient_Init( void )
 
 	rc_rawinput = gEngfuncs.pfnRegisterVariable( "rc_rawinput", "2", FCVAR_ARCHIVE );
 	rc_vsync = gEngfuncs.pfnRegisterVariable( "rc_vsync", "0", FCVAR_ARCHIVE );	// B304
+	rc_omgbruh_sound = gEngfuncs.pfnRegisterVariable( "rc_omgbruh_sound", "0", FCVAR_ARCHIVE );	// B318
 
 	rc_viewmodel_fov = gEngfuncs.pfnRegisterVariable( "rc_viewmodel_fov", "0", FCVAR_ARCHIVE );
 	rc_viewmodel_ofs_forward = gEngfuncs.pfnRegisterVariable( "rc_viewmodel_ofs_forward", "0", FCVAR_ARCHIVE );
@@ -753,6 +755,16 @@ void RcRawMouseShutdown( void )
 }
 
 //-----------------------------------------------------------------------------
+// B318 rc_omgbruh_sound: the weapon sounds that irrKlang plays (mp3.cpp CMP3::PlaySFX_guess) get a random playback
+// speed between 0.9 and 1.1, which also moves their pitch at every shot. 1 plays every shot as recorded, which
+// replacement sounds such as Cry of Fear 1.5's gun sounds need; 0 keeps retail's variation
+float RcWeaponSoundSpeed( void )
+{
+	if ( rc_omgbruh_sound && rc_omgbruh_sound->value )
+		return 1.0f;
+	return gEngfuncs.pfnRandomFloat( -0.1, 0.1 ) + 1.0;
+}
+
 // B304 rc_vsync: the engine never sets the swap interval, so the driver's default applied, which is vsync
 // on, and only the driver's control panel could turn it off. 0 turns it off, 1 on. It is set when the value
 // or the GL context changes; a setting forced in the driver's control panel still wins

@@ -56,6 +56,9 @@ void RcViewmodelOffset( float *origin, const float *forward, const float *right,
 int RcViewmodelFovBegin( void );
 void RcViewmodelFovEnd( int on );
 
+// B318 rc_omgbruh_sound: the playback speed of a weapon sound played by irrKlang (called from mp3.cpp)
+float RcWeaponSoundSpeed( void );
+
 // B184 rc_rawinput (called from inputw32.cpp)
 int RcRawInputOn( void );
 void RcRawMouseReset( void );

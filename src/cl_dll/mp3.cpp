@@ -3,6 +3,7 @@
 #include "hud.h"
 #include "cl_util.h"
 #include "mp3.h"
+#include "rc_client.h"
 
 #include <irrKlang.h>
 #include <windows.h>
@@ -430,7 +431,7 @@ void CMP3::PlaySFX_guess( const char *pszSample, int iType, bool bFlag, Vector v
 			if ( flVolume < 0 )
 				flVolume = 0;
 			g_pSFX_guess->setVolume( flVolume );
-			g_pSFX_guess->setPlaybackSpeed( gEngfuncs.pfnRandomFloat( -0.1, 0.1 ) + 1.0 );
+			g_pSFX_guess->setPlaybackSpeed( RcWeaponSoundSpeed() );	// B318: retail pfnRandomFloat( -0.1, 0.1 ) + 1.0
 			g_pSFX_guess->setIsPaused( false );
 		}
 	}
@@ -451,7 +452,7 @@ void CMP3::PlaySFX_guess( const char *pszSample, int iType, bool bFlag, Vector v
 			if ( flVolume < 0 )
 				flVolume = 0;
 			pSound->setVolume( flVolume );
-			pSound->setPlaybackSpeed( gEngfuncs.pfnRandomFloat( -0.1, 0.1 ) + 1.0 );
+			pSound->setPlaybackSpeed( RcWeaponSoundSpeed() );	// B318: retail pfnRandomFloat( -0.1, 0.1 ) + 1.0
 			pSound->setIsPaused( false );
 		}
 	}

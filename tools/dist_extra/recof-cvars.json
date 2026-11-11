@@ -392,6 +392,14 @@
       "group": "Other",
       "label_en": "Discord status",
       "desc_en": "While Discord is open, your profile shows that you are playing ReCoF: the map, the version, whether you are playing or in the menu, your FPS and the difficulty."
+    },
+    {
+      "name": "rc_omgbruh_sound",
+      "type": "bool",
+      "default": "0",
+      "group": "Other",
+      "label_en": "Same pitch on every shot",
+      "desc_en": "Plays your weapon sounds at their recorded pitch. The original game changes the pitch a little at every shot, which makes replacement gun sounds (for example the ones of Cry of Fear 1.5) sound wrong."
     }
   ]
 }

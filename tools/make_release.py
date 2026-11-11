@@ -149,6 +149,8 @@ NEW CONSOLE OPTIONS (default in brackets)
                            Options, Video uses it
   rc_crashtest 1 / 2       crash or hang the game on purpose, to see the reports
   rc_discord [1]           Discord status: the map, the version, FPS and difficulty
+  rc_omgbruh_sound [0]     1 = your weapon sounds keep the same pitch at every shot
+                           (for replacement sounds such as the 1.5 gun sounds)
   rc_ch_set_health, rc_ch_set_pos, rc_ch_set_pos_offset, rc_ch_get_pos, rc_ch_set_vel,
   rc_ch_set_vel_angles, rc_set_angles
                            BunnymodXT's practice commands (sv_cheats 1)
