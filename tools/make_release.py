@@ -93,6 +93,11 @@ NOTES
   values moved. The script addition is in docs/speedrun.md of the ReCoF
   repository ("ReCoF autosplitter block").
 - The Linux patcher does not apply to these files.
+- Windows 11 "Bad Image" error naming hw.dll (0xc0e90002): Smart App Control
+  refuses ReCoF's files because they are not signed yet. Turn it off in
+  Windows Security, App & browser control, Smart App Control settings, Off
+  (or Win+R, windowsdefender://smartapp/). On many Windows 11 versions it
+  cannot be turned back on without resetting Windows.
 - Sprays: Options, Spray makes your spray from a PNG, JPG, BMP, GIF or TIFF
   picture in cryoffear\\logos; Options, Keyboard has the Spray logo key
   (impulse 201). Single player has no wait between sprays.
