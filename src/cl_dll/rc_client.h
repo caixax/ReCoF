@@ -76,6 +76,7 @@ int RcSmooth_View( struct ref_params_s *pparams, int bMove, float *move );
 void RcSmooth_Redraw( void );
 int RcSmooth_RenderOnly( void );
 float RcSmooth_Ahead( void );
+float RcSmooth_Fps( void );
 
 // rc_discord.cpp (B316): Discord Rich Presence. Init registers rc_discord (from RcClient_Init), Frame follows the game
 // (from HUD_Frame), Shutdown takes the presence down (from HUD_Shutdown)

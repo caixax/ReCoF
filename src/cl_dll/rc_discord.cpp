@@ -1,16 +1,20 @@
-// ReCoF Discord Rich Presence (B316): Discord shows that the player is in ReCoF, its version, the map and, in
-// co-op, how many players there are, as BunnymodXT does for Half-Life. It talks to the Discord client through
-// discord-rpc (src/external/discord-rpc, the fork BunnymodXT uses, MIT), whose own thread keeps the connection and
-// connects again when Discord starts later. Nothing happens without a Discord client. rc_discord 0 turns it off.
-// The presence used to come from the ReCoF Launcher while the game ran; it is the game's now.
+// ReCoF Discord Rich Presence (B316), laid out as BunnymodXT's for Half-Life:
+//   ReCoF                                     (the Discord application's name)
+//   Map: c_start | Version 0.2.1              (in the menus: Version 0.2.1)
+//   Playing | FPS: 300.0 | Hard               (or In the menu; in co-op Playing co-op (2 of 4))
+// with the time since the game started. The menus are the engine's own (no map loaded) and the 3D menu maps. It talks
+// to the Discord client through discord-rpc (the src/external/discord-rpc submodule: the fork BunnymodXT uses, MIT),
+// whose own thread keeps the connection and connects again when Discord starts later; nothing happens without a
+// Discord client. rc_discord 0 turns it off. The presence used to come from the ReCoF Launcher; it is the game's now.
 
 #include "hud.h"
 #include "cl_util.h"
 #include "cvardef.h"
 #include "rc_client.h"
 #include "rc_version.h"
-#include "discord-rpc/discord_rpc.h"
+#include "discord_rpc.h"
 
+#include <windows.h>
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
@@ -21,7 +25,13 @@ static const char RC_DISCORD_APP_ID[] = "1564718095418003586";
 static cvar_t	*rc_discord;
 static bool		s_bConnected;		// Discord_Initialize was called
 static int64_t	s_iSessionStart;	// when the game started, for the elapsed time
-static char		s_szShown[384];		// what was last sent, so an unchanged presence is not sent again
+static char		s_szShown[384];		// the place and the state last sent, so an unchanged presence is not sent again
+static double	s_flSentAt;			// when it was last sent
+static double	s_flFpsStart;		// the game frames of the last second, for the FPS when nothing is drawn
+static int		s_iFpsFrames;
+static float	s_flFrameFps;
+
+#define RC_DISCORD_REFRESH	15.0	// seconds between updates that only change the FPS (Discord takes a few a minute)
 
 // the maps that are menus rather than places
 static bool RcDiscordMenuMap( const char *pszMap )
@@ -54,6 +64,27 @@ static void RcDiscordMap( char *pszOut, int iSize )
 	char *pszDot = strrchr( pszOut, '.' );
 	if ( pszDot && !_stricmp( pszDot, ".bsp" ) )
 		*pszDot = 0;
+}
+
+// the difficulty the server set (hl.dll skillset: 1 to 4); a client of another server does not have it
+static const char *RcDiscordDifficulty( void )
+{
+	switch ( (int)gEngfuncs.pfnGetCvarFloat( "difficulty" ) )
+	{
+	case 1:		return "Easy";
+	case 2:		return "Normal";
+	case 3:		return "Hard";
+	case 4:		return "Nightmare";
+	default:	return NULL;
+	}
+}
+
+static double RcDiscordNow( void )
+{
+	LARGE_INTEGER now, freq;
+	QueryPerformanceCounter( &now );
+	QueryPerformanceFrequency( &freq );
+	return (double)now.QuadPart / (double)freq.QuadPart;
 }
 
 // the players in the game, in co-op
@@ -96,30 +127,58 @@ void RcDiscord_Frame( void )
 		s_szShown[0] = 0;
 	}
 
+	double now = RcDiscordNow();
+
+	// the frames drawn each second while playing, else the game's frames each second (the menus)
+	s_iFpsFrames++;
+	if ( now - s_flFpsStart >= 1.0 || now < s_flFpsStart )
+	{
+		if ( now - s_flFpsStart < 2.0 && now >= s_flFpsStart )
+			s_flFrameFps = (float)( s_iFpsFrames / ( now - s_flFpsStart ) );
+		s_flFpsStart = now;
+		s_iFpsFrames = 0;
+	}
+	float flFps = RcSmooth_Fps();
+	if ( flFps <= 0 )
+		flFps = s_flFrameFps;
+
 	char szMap[64];
 	RcDiscordMap( szMap, sizeof( szMap ) );
+	bool bMenu = !szMap[0] || RcDiscordMenuMap( szMap );
 
-	char szDetails[128], szState[128];
-	_snprintf( szDetails, sizeof( szDetails ), "ReCoF %s", RECOF_VERSION );
+	char szDetails[128], szState[128], szWhere[64];
+	if ( bMenu )
+		_snprintf( szDetails, sizeof( szDetails ), "Version %s", RECOF_VERSION );
+	else
+		_snprintf( szDetails, sizeof( szDetails ), "Map: %s | Version %s", szMap, RECOF_VERSION );
+	szDetails[sizeof( szDetails ) - 1] = 0;
 
 	int iMaxPlayers = gEngfuncs.GetMaxClients();
-	if ( !szMap[0] || RcDiscordMenuMap( szMap ) )
-		_snprintf( szState, sizeof( szState ), "In the menus" );
+	if ( bMenu )
+		_snprintf( szWhere, sizeof( szWhere ), "In the menu" );
 	else if ( iMaxPlayers > 1 )
-		_snprintf( szState, sizeof( szState ), "Co-op on %s (%d of %d)", szMap, RcDiscordPlayers(), iMaxPlayers );
+		_snprintf( szWhere, sizeof( szWhere ), "Playing co-op (%d of %d)", RcDiscordPlayers(), iMaxPlayers );
 	else
-		_snprintf( szState, sizeof( szState ), "On %s", szMap );
-	szDetails[sizeof( szDetails ) - 1] = 0;
+		_snprintf( szWhere, sizeof( szWhere ), "Playing" );
+	szWhere[sizeof( szWhere ) - 1] = 0;
+
+	const char *pszDifficulty = RcDiscordDifficulty();
+	if ( pszDifficulty )
+		_snprintf( szState, sizeof( szState ), "%s | FPS: %.1f | %s", szWhere, flFps, pszDifficulty );
+	else
+		_snprintf( szState, sizeof( szState ), "%s | FPS: %.1f", szWhere, flFps );
 	szState[sizeof( szState ) - 1] = 0;
 
+	// a new place, state or difficulty goes at once; the FPS alone every RC_DISCORD_REFRESH seconds
 	char szShow[384];
-	_snprintf( szShow, sizeof( szShow ), "%s|%s", szDetails, szState );
+	_snprintf( szShow, sizeof( szShow ), "%s|%s|%s", szDetails, szWhere, pszDifficulty ? pszDifficulty : "" );
 	szShow[sizeof( szShow ) - 1] = 0;
 
-	// Discord takes a few updates a minute at most; discord-rpc sends the latest when it may
-	if ( strcmp( szShow, s_szShown ) )
+	bool bChanged = strcmp( szShow, s_szShown ) != 0;
+	if ( bChanged || now - s_flSentAt >= RC_DISCORD_REFRESH || now < s_flSentAt )
 	{
 		strcpy( s_szShown, szShow );
+		s_flSentAt = now;
 
 		DiscordRichPresence presence;
 		memset( &presence, 0, sizeof( presence ) );
@@ -146,4 +205,5 @@ void RcDiscord_Shutdown( void )
 	Discord_Shutdown();
 	s_bConnected = false;
 	s_szShown[0] = 0;
+	s_flSentAt = 0;
 }

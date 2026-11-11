@@ -1,0 +1,6 @@
+[submodule "src/external/discord-rpc"]
+	path = src/external/discord-rpc
+	url = https://github.com/YaLTeR/discord-rpc.git
+[submodule "src/external/rapidjson"]
+	path = src/external/rapidjson
+	url = https://github.com/Tencent/rapidjson.git

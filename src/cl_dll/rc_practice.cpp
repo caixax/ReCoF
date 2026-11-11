@@ -12,6 +12,8 @@
 #include "cvardef.h"
 #include "rc_client.h"
 
+static void RcPracticeCommands( void );
+
 static cvar_t	*rc_wallhack;
 static cvar_t	*rc_wallhack_additive;
 static cvar_t	*rc_wallhack_alpha;
@@ -28,6 +30,7 @@ void RcPractice_Init( void )
 	rc_disable_vgui = gEngfuncs.pfnRegisterVariable( "rc_disable_vgui", "0", 0 );
 	s_pCheats = gEngfuncs.pfnGetCvarPointer( "sv_cheats" );
 	s_pNovis = gEngfuncs.pfnGetCvarPointer( "r_novis" );
+	RcPracticeCommands();
 }
 
 static bool RcCheats( void )
@@ -71,6 +74,39 @@ int RcWallhack( float *pflAlpha, int *pbAdditive )
 	*pflAlpha = flAlpha;
 	*pbAdditive = rc_wallhack_additive->value != 0;
 	return 1;
+}
+
+// the practice commands run on the server (hl.dll rc_cheats.cpp); the client has them too, so the console offers
+// them as they are typed, and hands each one on with its arguments
+static void RcForwardToServer_f( void )
+{
+	char szLine[512];
+	int iLen = 0;
+	szLine[0] = 0;
+
+	for ( int i = 0; i < gEngfuncs.Cmd_Argc() && iLen < (int)sizeof( szLine ) - 2; i++ )
+	{
+		const char *pszArg = gEngfuncs.Cmd_Argv( i );
+		int n = _snprintf( szLine + iLen, sizeof( szLine ) - iLen, i ? " %s" : "%s", pszArg );
+		if ( n < 0 )
+		{
+			szLine[iLen] = 0;	// too long: the line stops at the last whole argument
+			break;
+		}
+		iLen += n;
+	}
+	szLine[sizeof( szLine ) - 1] = 0;
+
+	gEngfuncs.pfnServerCmd( szLine );
+}
+
+static void RcPracticeCommands( void )
+{
+	static const char *s_pszCommands[] = { "rc_ch_set_health", "rc_ch_set_pos", "rc_ch_set_pos_offset", "rc_ch_get_pos",
+		"rc_ch_set_vel", "rc_ch_set_vel_angles", "rc_set_angles", "rc_ch_set_angles" };
+
+	for ( int i = 0; i < ARRAYSIZE( s_pszCommands ); i++ )
+		gEngfuncs.pfnAddCommand( (char *)s_pszCommands[i], RcForwardToServer_f );
 }
 
 int RcDisableVgui( void )

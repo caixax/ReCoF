@@ -118,6 +118,8 @@ static int		s_iCountGame;			// game frames since then
 static int		s_iCountSmooth;			// pictures of RcSmooth_Frame since then
 static int		s_iShowDrawn;
 static int		s_iShowGame;
+static float	s_flShowDrawn;			// the same, unrounded, for the Discord status (RcSmooth_Fps)
+static double	s_flShowTime;			// when it was counted
 static int		s_bShowOurs;			// the last count had pictures of RcSmooth_Frame
 
 static double RcSmoothNow( void )
@@ -458,6 +460,15 @@ int RcSmooth_View( struct ref_params_s *pparams, int bMove, float *move )
 	return 1;
 }
 
+// the pictures drawn each second over the last half second of play, 0 when nothing was drawn lately (menus, loads)
+float RcSmooth_Fps( void )
+{
+	double now = RcSmoothNow();
+	if ( !s_flShowTime || now - s_flShowTime > 2.0 || now < s_flShowTime )
+		return 0;
+	return s_flShowDrawn;
+}
+
 // HUD_Redraw, each picture: cl_showfps with the pictures drawn and the game frames, "300 fps (100 logic)", while
 // rc_smoothframes is on; otherwise the engine's counter
 void RcSmooth_Redraw( void )
@@ -479,6 +490,8 @@ void RcSmooth_Redraw( void )
 		if ( span >= 0.5 && span < 2.0 )
 		{
 			s_iShowDrawn = (int)( s_iCountDrawn / span + 0.5 );
+			s_flShowDrawn = (float)( s_iCountDrawn / span );
+			s_flShowTime = now;
 			s_iShowGame = (int)( s_iCountGame / span + 0.5 );
 			s_bShowOurs = 1;
 		}

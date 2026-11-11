@@ -148,13 +148,14 @@ NEW CONSOLE OPTIONS (default in brackets)
                            (m: 0 full screen, 1 window, 2 borderless window);
                            Options, Video uses it
   rc_crashtest 1 / 2       crash or hang the game on purpose, to see the reports
-  rc_discord [1]           Discord status: ReCoF, its version and the map
+  rc_discord [1]           Discord status: the map, the version, FPS and difficulty
   rc_ch_set_health, rc_ch_set_pos, rc_ch_set_pos_offset, rc_ch_get_pos, rc_ch_set_vel,
   rc_ch_set_vel_angles, rc_set_angles
                            BunnymodXT's practice commands (sv_cheats 1)
   rc_wallhack [0], rc_wallhack_alpha [0.6], rc_wallhack_additive [0], rc_novis [0],
-  rc_render_far_entities [0]
-                           see through walls, the whole map, every entity (sv_cheats 1)
+  rc_render_far_entities [0], rc_show_triggers [0]
+                           see through walls, the whole map, every entity, the
+                           triggers (sv_cheats 1)
   rc_disable_changelevel [0]  level changes do not start, for routing
   rc_disable_vgui [0]      hides the VGUI panels
   Crashes and hangs: a message box with the details (Ctrl+C copies it), and a report

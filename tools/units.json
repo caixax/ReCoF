@@ -961,6 +961,7 @@
         "src/dlls",
         "src/game_shared",
         "src/external",
+        "src/external/discord-rpc/include",
         "refs/irrklang-1.6.0/include",
         "refs/id3lib-3.8.3/include"
       ],
@@ -1551,24 +1552,44 @@
           "source": "src/cl_dll/rc_practice.cpp"
         },
         {
-          "name": "external/discord-rpc/discord_rpc",
-          "source": "src/external/discord-rpc/discord_rpc.cpp"
+          "name": "external/discord-rpc/src/discord_rpc",
+          "source": "src/external/discord-rpc/src/discord_rpc.cpp",
+          "includes": [
+            "src/external/discord-rpc/include",
+            "src/external/rapidjson/include"
+          ]
         },
         {
-          "name": "external/discord-rpc/rpc_connection",
-          "source": "src/external/discord-rpc/rpc_connection.cpp"
+          "name": "external/discord-rpc/src/rpc_connection",
+          "source": "src/external/discord-rpc/src/rpc_connection.cpp",
+          "includes": [
+            "src/external/discord-rpc/include",
+            "src/external/rapidjson/include"
+          ]
         },
         {
-          "name": "external/discord-rpc/serialization",
-          "source": "src/external/discord-rpc/serialization.cpp"
+          "name": "external/discord-rpc/src/serialization",
+          "source": "src/external/discord-rpc/src/serialization.cpp",
+          "includes": [
+            "src/external/discord-rpc/include",
+            "src/external/rapidjson/include"
+          ]
         },
         {
-          "name": "external/discord-rpc/connection_win",
-          "source": "src/external/discord-rpc/connection_win.cpp"
+          "name": "external/discord-rpc/src/connection_win",
+          "source": "src/external/discord-rpc/src/connection_win.cpp",
+          "includes": [
+            "src/external/discord-rpc/include",
+            "src/external/rapidjson/include"
+          ]
         },
         {
-          "name": "external/discord-rpc/discord_register_win",
-          "source": "src/external/discord-rpc/discord_register_win.cpp"
+          "name": "external/discord-rpc/src/discord_register_win",
+          "source": "src/external/discord-rpc/src/discord_register_win.cpp",
+          "includes": [
+            "src/external/discord-rpc/include",
+            "src/external/rapidjson/include"
+          ]
         }
       ],
       "link": {
@@ -1774,11 +1795,11 @@
           "cl_dll/rc_smooth",
           "cl_dll/rc_discord",
           "cl_dll/rc_practice",
-          "external/discord-rpc/discord_rpc",
-          "external/discord-rpc/rpc_connection",
-          "external/discord-rpc/serialization",
-          "external/discord-rpc/connection_win",
-          "external/discord-rpc/discord_register_win"
+          "external/discord-rpc/src/discord_rpc",
+          "external/discord-rpc/src/rpc_connection",
+          "external/discord-rpc/src/serialization",
+          "external/discord-rpc/src/connection_win",
+          "external/discord-rpc/src/discord_register_win"
         ]
       }
     },

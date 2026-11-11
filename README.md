@@ -25,7 +25,8 @@ The tools and steps are the same as DeCoF's: see "Building it yourself" in the [
 1. Copy your Cry of Fear game folder, the one that holds `cof.exe`, to `versions/1.6a`. The scripts only read it.
 2. Install the compilers listed in the DeCoF README, and the Visual Studio 2022 Build Tools (C++ workload, MSVC 14.44, Windows 11 SDK 10.0.26100) for hl.dll and client.dll. The default locations are under `I:\Tools` and the Visual Studio default; the paths are set at the top of `tools/msvc.py`, `tools/msvc1444.py`, `tools/msvc6.py` and `tools/coflaunchapp/build.py`.
 3. Put the third-party headers into `refs/`: `halflife`, `a3d-sdk`, `bzip2-1.0.2-dl`, `dxheaders`, `irrklang-1.6.0` and `id3lib-3.8.3`, from the sources in the DeCoF README.
-4. Build:
+4. Fetch the submodules, discord-rpc and RapidJSON for the Discord status: `git submodule update --init`.
+5. Build:
 
 ```
 python tools/build.py link hl
@@ -72,6 +73,16 @@ git merge decof/master
 | [docs/feasibility/](docs/feasibility/README.md) | Feasibility studies for the larger projects: GPU and multicore, `rc_hlmovement`, a launcher repository, a server SDK |
 
 The decompilation's own notes (how each compiler was identified, the source workflow, struct layouts, reference repositories and their licenses) and its tools stay in [DeCoF](https://github.com/caixax/DeCoF).
+
+## Credits
+
+- **Team Psykskallar** made Cry of Fear. ReCoF fixes and extends their game and ships none of its assets.
+- **Valve** made the GoldSrc engine and the Half-Life SDK that Cry of Fear is built on.
+- **BUzer** wrote the Paranoia renderer that Cry of Fear's client and OpenGL wrapper come from.
+- **cd_n0** made RebuiltSimon. ReCoF's information panel, HUD numbers, ducktap and autojump aids and other speedrun options are rebuilt from what it shows and does; none of its code is used.
+- **YaLTeR** made BunnymodXT, whose practice commands, crosshair, timer and ideas ReCoF follows, and the fork of discord-rpc that ReCoF's Discord status uses.
+- **IlyaTsyganov** wrote the Cry of Fear LiveSplit script, whose timing rules ReCoF's run timer follows.
+- **Discord** made discord-rpc, and **Tencent and Milo Yip** made RapidJSON; both are MIT and come in as submodules.
 
 ## License
 

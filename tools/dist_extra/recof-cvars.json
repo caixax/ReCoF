@@ -391,7 +391,7 @@
       "default": "1",
       "group": "Other",
       "label_en": "Discord status",
-      "desc_en": "While Discord is open, your profile shows that you are playing ReCoF, its version and the map you are on."
+      "desc_en": "While Discord is open, your profile shows that you are playing ReCoF: the map, the version, whether you are playing or in the menu, your FPS and the difficulty."
     }
   ]
 }

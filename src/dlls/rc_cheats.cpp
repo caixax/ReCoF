@@ -127,7 +127,8 @@ bool RcCheatCommand( edict_t *pEntity, const char *pcmd )
 		return true;
 	}
 
-	if ( FStrEq( pcmd, "rc_set_angles" ) )
+	// rc_ch_set_angles: the name with ch_ as the other practice commands have (BunnymodXT's has none)
+	if ( FStrEq( pcmd, "rc_set_angles" ) || FStrEq( pcmd, "rc_ch_set_angles" ) )
 	{
 		if ( !RcCheatsOn( pPlayer ) )
 			return true;

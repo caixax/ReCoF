@@ -3107,15 +3107,57 @@ player is 1 if the ent/e is a player and 0 otherwise
 pSet is either the PAS or PVS that we previous set up.  We can use it to ask the engine to filter the entity against the PAS or PVS.
 we could also use the pas/ pvs that we set in SetupVisibility, if we wanted to.  Caching the value is valid in that case, but still only for the current frame
 */
+// ReCoF (B317): rc_show_triggers with sv_cheats 1 sends the triggers, brushes the game keeps from being drawn
+// (InitTrigger sets EF_NODRAW), and AddToFullPack gives them a see-through colour by what they do
+static bool RcShowTrigger( edict_t *ent )
+{
+	if ( !rc_show_triggers.value || ent->v.solid != SOLID_TRIGGER )
+		return false;
+
+	const char *pszModel = STRING( ent->v.model );	// a brush model: "*<n>"
+	if ( !pszModel || pszModel[0] != '*' )
+		return false;
+
+	static cvar_t *s_pCheats;
+	if ( !s_pCheats )
+		s_pCheats = CVAR_GET_POINTER( "sv_cheats" );
+	return s_pCheats && s_pCheats->value;
+}
+
+static void RcTriggerColour( edict_t *ent, struct entity_state_s *state )
+{
+	const char *pszClass = STRING( ent->v.classname );
+	int r = 255, g = 128, b = 0;	// the rest: orange
+
+	if ( FStrEq( pszClass, "trigger_changelevel" ) )
+		r = 0, g = 255, b = 0;
+	else if ( FStrEq( pszClass, "trigger_teleport" ) || FStrEq( pszClass, "info_teleport_destination" ) )
+		r = 0, g = 128, b = 255;
+	else if ( FStrEq( pszClass, "trigger_hurt" ) )
+		r = 255, g = 0, b = 0;
+	else if ( FStrEq( pszClass, "trigger_push" ) )
+		r = 255, g = 255, b = 0;
+	else if ( FStrEq( pszClass, "trigger_once" ) || FStrEq( pszClass, "trigger_multiple" ) )
+		r = 255, g = 0, b = 255;
+
+	state->effects &= ~EF_NODRAW;
+	state->rendermode = kRenderTransColor;
+	state->renderamt = 70;
+	state->rendercolor.r = r;
+	state->rendercolor.g = g;
+	state->rendercolor.b = b;
+}
+
 int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *host, int hostflags, int player, unsigned char *pSet )
 {
 	int					i;
+	bool				bShowTrigger = RcShowTrigger( ent );	// ReCoF (B317)
 
 	// don't send if flagged for NODRAW and it's not the host getting the message
 	// ReCoF (rc_hlmovement): except a ladder box (CRcHLLadder), which client prediction climbs; the client
 	// engine does not draw EF_NODRAW entities
 	if ( ( ent->v.effects == EF_NODRAW ) &&
-		 ( ent != host ) && ent->v.skin != CONTENTS_LADDER )
+		 ( ent != host ) && ent->v.skin != CONTENTS_LADDER && !bShowTrigger )
 		return 0;
 
 	// Ignore ents without valid / visible models
@@ -3286,6 +3328,9 @@ int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *h
 		state->usehull      = ( ent->v.flags & FL_DUCKING ) ? 1 : 0;
 		state->health		= ent->v.health;
 	}
+
+	if ( bShowTrigger )
+		RcTriggerColour( ent, state );	// ReCoF (B317)
 
 	return 1;
 }

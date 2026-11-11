@@ -78,6 +78,9 @@ cvar_t	rc_render_far_entities = {"rc_render_far_entities","0" };
 // ReCoF (B317), BunnymodXT's bxt_novis: with sv_cheats 1, the whole map is drawn (the engine's r_novis, set by the
 // client) and every entity is sent, as rc_render_far_entities
 cvar_t	rc_novis = {"rc_novis","0" };
+// ReCoF (B317), BunnymodXT's bxt_show_triggers: with sv_cheats 1, triggers are sent and drawn see-through, coloured by
+// what they do
+cvar_t	rc_show_triggers = {"rc_show_triggers","0" };
 cvar_t	cof_walksteptime = {"cof_walksteptime","410", FCVAR_SERVER };
 cvar_t	cof_runsteptime = {"cof_runsteptime","375", FCVAR_SERVER };
 cvar_t	cof_sprintsteptime = {"cof_sprintsteptime","300", FCVAR_SERVER };
@@ -560,6 +563,7 @@ void GameDLLInit( void )
 	CVAR_REGISTER (&rc_disable_changelevel);
 	CVAR_REGISTER (&rc_render_far_entities);
 	CVAR_REGISTER (&rc_novis);
+	CVAR_REGISTER (&rc_show_triggers);
 	CVAR_REGISTER (&cof_walksteptime);
 	CVAR_REGISTER (&cof_runsteptime);
 	CVAR_REGISTER (&cof_sprintsteptime);
