@@ -1,3 +1,0 @@
-??0CAutoGain@@QAE@XZ
-?Reset@CAutoGain@@QAEXHMMM@Z
-?ProcessSamples@CAutoGain@@QAEXPAFH@Z

@@ -61,16 +61,14 @@ git merge decof/master
 
 | File | What it covers |
 |---|---|
-| [docs/tooling.md](docs/tooling.md) | Tool versions and sources, the build and link commands per binary |
-| [docs/toolchains.md](docs/toolchains.md) | How each compiler was identified |
-| [docs/howto_cof_source.md](docs/howto_cof_source.md) | The workflow for a source file and the compiler patterns that decide a match |
-| [docs/structs.md](docs/structs.md) | Struct and class layouts that differ from the Half-Life SDK |
+| [docs/tooling.md](docs/tooling.md) | The tools a build needs and the commands |
 | [docs/original_bugs.md](docs/original_bugs.md) | Bugs of the retail game found during the decompilation, the starting point for ReCoF's fixes |
-| [docs/refs.md](docs/refs.md) | Reference repositories, what each provides and its license |
 | [docs/bugs.md](docs/bugs.md) | The bug inventory: every known problem, its evidence, severity, runner impact and fix plan |
 | [docs/speedrun.md](docs/speedrun.md) | Speedrun techniques ReCoF keeps, and the runner tools that depend on the binaries |
 | [docs/baseline.md](docs/baseline.md) | The baseline build every fix is compared with, and how to compare (`tools/compare_build.py`) |
 | [docs/feasibility/](docs/feasibility/README.md) | Feasibility studies for the larger projects: GPU and multicore, `rc_hlmovement`, a launcher repository, a server SDK |
+
+The decompilation's own notes (how each compiler was identified, the source workflow, struct layouts, reference repositories and their licenses) and its tools stay in [DeCoF](https://github.com/caixax/DeCoF).
 
 ## License
 

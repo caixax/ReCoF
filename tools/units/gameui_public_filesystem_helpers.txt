@@ -1,3 +1,0 @@
-?ParseFile@@YAPBDPBDPADPA_NPAUcharacterset_s@@@Z
-?InitializeCharacterSets@@YAXXZ
-?ParseFile@@YAPADPAD0PA_N@Z

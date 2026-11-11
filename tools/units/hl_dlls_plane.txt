@@ -1,3 +1,0 @@
-?InitializePlane@CPlane@@QAEXABVVector@@0@Z
-?PointInFront@CPlane@@QAEHABVVector@@@Z
-??0CPlane@@QAE@XZ

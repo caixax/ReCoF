@@ -2,9 +2,6 @@
   "_comment": "Translation units per DLL. Flags are the ones deduced from the 1.6a binaries (docs/toolchains.md). Target functions are listed by their MSVC decorated names, which tools/symbols/<dll>_1.6a.csv maps to retail addresses.",
   "dlls": {
     "hl": {
-      "ghidra_folder": "/1.6a",
-      "ghidra_program": "hl.dll",
-      "symbols": "tools/symbols/hl_1.6a.csv",
       "cflags": [
         "/nologo",
         "/c",
@@ -40,793 +37,635 @@
       "units": [
         {
           "name": "dlls/h_export",
-          "source": "src/dlls/h_export.cpp",
-          "functions_file": "tools/units/hl_dlls_h_export.txt"
+          "source": "src/dlls/h_export.cpp"
         },
         {
           "name": "pm_shared/pm_math",
-          "source": "src/pm_shared/pm_math.c",
-          "functions_file": "tools/units/hl_pm_shared_pm_math.txt"
+          "source": "src/pm_shared/pm_math.c"
         },
         {
           "name": "pm_shared/pm_shared",
-          "source": "src/pm_shared/pm_shared.c",
-          "functions_file": "tools/units/hl_pm_shared_pm_shared.txt"
+          "source": "src/pm_shared/pm_shared.c"
         },
         {
           "name": "pm_shared/pm_debug",
-          "source": "src/pm_shared/pm_debug.c",
-          "functions_file": "tools/units/hl_pm_shared_pm_debug.txt"
+          "source": "src/pm_shared/pm_debug.c"
         },
         {
           "name": "game_shared/voice_gamemgr",
-          "source": "src/game_shared/voice_gamemgr.cpp",
-          "functions_file": "tools/units/hl_game_shared_voice_gamemgr.txt"
+          "source": "src/game_shared/voice_gamemgr.cpp"
         },
         {
           "name": "dlls/ai_basenpc_schedule",
-          "source": "src/dlls/AI_BaseNPC_Schedule.cpp",
-          "functions_file": "tools/units/hl_dlls_ai_basenpc_schedule.txt"
+          "source": "src/dlls/AI_BaseNPC_Schedule.cpp"
         },
         {
           "name": "dlls/alias",
-          "source": "src/dlls/alias.cpp",
-          "functions_file": "tools/units/hl_dlls_alias.txt"
+          "source": "src/dlls/alias.cpp"
         },
         {
           "name": "dlls/animating",
-          "source": "src/dlls/animating.cpp",
-          "functions_file": "tools/units/hl_dlls_animating.txt"
+          "source": "src/dlls/animating.cpp"
         },
         {
           "name": "dlls/animation",
-          "source": "src/dlls/animation.cpp",
-          "functions_file": "tools/units/hl_dlls_animation.txt"
+          "source": "src/dlls/animation.cpp"
         },
         {
           "name": "dlls/bmodels",
-          "source": "src/dlls/bmodels.cpp",
-          "functions_file": "tools/units/hl_dlls_bmodels.txt"
+          "source": "src/dlls/bmodels.cpp"
         },
         {
           "name": "dlls/buttons",
-          "source": "src/dlls/buttons.cpp",
-          "functions_file": "tools/units/hl_dlls_buttons.txt"
+          "source": "src/dlls/buttons.cpp"
         },
         {
           "name": "dlls/cbase",
-          "source": "src/dlls/cbase.cpp",
-          "functions_file": "tools/units/hl_dlls_cbase.txt"
+          "source": "src/dlls/cbase.cpp"
         },
         {
           "name": "dlls/client",
-          "source": "src/dlls/client.cpp",
-          "functions_file": "tools/units/hl_dlls_client.txt"
+          "source": "src/dlls/client.cpp"
         },
         {
           "name": "dlls/spectator",
-          "source": "src/dlls/spectator.cpp",
-          "functions_file": "tools/units/hl_dlls_spectator.txt"
+          "source": "src/dlls/spectator.cpp"
         },
         {
           "name": "dlls/combat",
-          "source": "src/dlls/combat.cpp",
-          "functions_file": "tools/units/hl_dlls_combat.txt"
+          "source": "src/dlls/combat.cpp"
         },
         {
           "name": "dlls/defaultai",
-          "source": "src/dlls/defaultai.cpp",
-          "functions_file": "tools/units/hl_dlls_defaultai.txt"
+          "source": "src/dlls/defaultai.cpp"
         },
         {
           "name": "dlls/doors",
-          "source": "src/dlls/doors.cpp",
-          "functions_file": "tools/units/hl_dlls_doors.txt"
+          "source": "src/dlls/doors.cpp"
         },
         {
           "name": "dlls/effects",
-          "source": "src/dlls/effects.cpp",
-          "functions_file": "tools/units/hl_dlls_effects.txt"
+          "source": "src/dlls/effects.cpp"
         },
         {
           "name": "dlls/explode",
-          "source": "src/dlls/explode.cpp",
-          "functions_file": "tools/units/hl_dlls_explode.txt"
+          "source": "src/dlls/explode.cpp"
         },
         {
           "name": "dlls/flyingmonster",
-          "source": "src/dlls/flyingmonster.cpp",
-          "functions_file": "tools/units/hl_dlls_flyingmonster.txt"
+          "source": "src/dlls/flyingmonster.cpp"
         },
         {
           "name": "dlls/func_break",
-          "source": "src/dlls/func_break.cpp",
-          "functions_file": "tools/units/hl_dlls_func_break.txt"
+          "source": "src/dlls/func_break.cpp"
         },
         {
           "name": "dlls/gamerules",
-          "source": "src/dlls/gamerules.cpp",
-          "functions_file": "tools/units/hl_dlls_gamerules.txt"
+          "source": "src/dlls/gamerules.cpp"
         },
         {
           "name": "dlls/genericmonster",
-          "source": "src/dlls/genericmonster.cpp",
-          "functions_file": "tools/units/hl_dlls_genericmonster.txt"
+          "source": "src/dlls/genericmonster.cpp"
         },
         {
           "name": "dlls/ggrenade",
-          "source": "src/dlls/ggrenade.cpp",
-          "functions_file": "tools/units/hl_dlls_ggrenade.txt"
+          "source": "src/dlls/ggrenade.cpp"
         },
         {
           "name": "dlls/h_battery",
-          "source": "src/dlls/h_battery.cpp",
-          "functions_file": "tools/units/hl_dlls_h_battery.txt"
+          "source": "src/dlls/h_battery.cpp"
         },
         {
           "name": "dlls/h_cine",
-          "source": "src/dlls/h_cine.cpp",
-          "functions_file": "tools/units/hl_dlls_h_cine.txt"
+          "source": "src/dlls/h_cine.cpp"
         },
         {
           "name": "dlls/h_cycler",
-          "source": "src/dlls/h_cycler.cpp",
-          "functions_file": "tools/units/hl_dlls_h_cycler.txt"
+          "source": "src/dlls/h_cycler.cpp"
         },
         {
           "name": "dlls/items",
-          "source": "src/dlls/items.cpp",
-          "functions_file": "tools/units/hl_dlls_items.txt"
+          "source": "src/dlls/items.cpp"
         },
         {
           "name": "dlls/lights",
-          "source": "src/dlls/lights.cpp",
-          "functions_file": "tools/units/hl_dlls_lights.txt"
+          "source": "src/dlls/lights.cpp"
         },
         {
           "name": "dlls/locus",
-          "source": "src/dlls/locus.cpp",
-          "functions_file": "tools/units/hl_dlls_locus.txt"
+          "source": "src/dlls/locus.cpp"
         },
         {
           "name": "dlls/maprules",
-          "source": "src/dlls/maprules.cpp",
-          "functions_file": "tools/units/hl_dlls_maprules.txt"
+          "source": "src/dlls/maprules.cpp"
         },
         {
           "name": "dlls/monstermaker",
-          "source": "src/dlls/monstermaker.cpp",
-          "functions_file": "tools/units/hl_dlls_monstermaker.txt"
+          "source": "src/dlls/monstermaker.cpp"
         },
         {
           "name": "dlls/monsters",
-          "source": "src/dlls/monsters.cpp",
-          "functions_file": "tools/units/hl_dlls_monsters.txt"
+          "source": "src/dlls/monsters.cpp"
         },
         {
           "name": "dlls/monsterstate",
-          "source": "src/dlls/monsterstate.cpp",
-          "functions_file": "tools/units/hl_dlls_monsterstate.txt"
+          "source": "src/dlls/monsterstate.cpp"
         },
         {
           "name": "dlls/mortar",
-          "source": "src/dlls/mortar.cpp",
-          "functions_file": "tools/units/hl_dlls_mortar.txt"
+          "source": "src/dlls/mortar.cpp"
         },
         {
           "name": "dlls/movewith",
-          "source": "src/dlls/movewith.cpp",
-          "functions_file": "tools/units/hl_dlls_movewith.txt"
+          "source": "src/dlls/movewith.cpp"
         },
         {
           "name": "dlls/multiplay_gamerules",
-          "source": "src/dlls/multiplay_gamerules.cpp",
-          "functions_file": "tools/units/hl_dlls_multiplay_gamerules.txt"
+          "source": "src/dlls/multiplay_gamerules.cpp"
         },
         {
           "name": "dlls/nodes",
-          "source": "src/dlls/nodes.cpp",
-          "functions_file": "tools/units/hl_dlls_nodes.txt"
+          "source": "src/dlls/nodes.cpp"
         },
         {
           "name": "dlls/paranoia_wpn",
-          "source": "src/dlls/paranoia_wpn.cpp",
-          "functions_file": "tools/units/hl_dlls_paranoia_wpn.txt"
+          "source": "src/dlls/paranoia_wpn.cpp"
         },
         {
           "name": "dlls/pathcorner",
-          "source": "src/dlls/pathcorner.cpp",
-          "functions_file": "tools/units/hl_dlls_pathcorner.txt"
+          "source": "src/dlls/pathcorner.cpp"
         },
         {
           "name": "dlls/plane",
-          "source": "src/dlls/plane.cpp",
-          "functions_file": "tools/units/hl_dlls_plane.txt"
+          "source": "src/dlls/plane.cpp"
         },
         {
           "name": "dlls/plats",
-          "source": "src/dlls/plats.cpp",
-          "functions_file": "tools/units/hl_dlls_plats.txt"
+          "source": "src/dlls/plats.cpp"
         },
         {
           "name": "dlls/player",
-          "source": "src/dlls/player.cpp",
-          "functions_file": "tools/units/hl_dlls_player.txt"
+          "source": "src/dlls/player.cpp"
         },
         {
           "name": "dlls/scripted",
-          "source": "src/dlls/scripted.cpp",
-          "functions_file": "tools/units/hl_dlls_scripted.txt"
+          "source": "src/dlls/scripted.cpp"
         },
         {
           "name": "dlls/singleplay_gamerules",
-          "source": "src/dlls/singleplay_gamerules.cpp",
-          "functions_file": "tools/units/hl_dlls_singleplay_gamerules.txt"
+          "source": "src/dlls/singleplay_gamerules.cpp"
         },
         {
           "name": "dlls/skill",
-          "source": "src/dlls/skill.cpp",
-          "functions_file": "tools/units/hl_dlls_skill.txt"
+          "source": "src/dlls/skill.cpp"
         },
         {
           "name": "dlls/sound",
-          "source": "src/dlls/sound.cpp",
-          "functions_file": "tools/units/hl_dlls_sound.txt"
+          "source": "src/dlls/sound.cpp"
         },
         {
           "name": "dlls/soundent",
-          "source": "src/dlls/soundent.cpp",
-          "functions_file": "tools/units/hl_dlls_soundent.txt"
+          "source": "src/dlls/soundent.cpp"
         },
         {
           "name": "dlls/squadmonster",
-          "source": "src/dlls/squadmonster.cpp",
-          "functions_file": "tools/units/hl_dlls_squadmonster.txt"
+          "source": "src/dlls/squadmonster.cpp"
         },
         {
           "name": "dlls/subs",
-          "source": "src/dlls/subs.cpp",
-          "functions_file": "tools/units/hl_dlls_subs.txt"
+          "source": "src/dlls/subs.cpp"
         },
         {
           "name": "dlls/talkmonster",
-          "source": "src/dlls/talkmonster.cpp",
-          "functions_file": "tools/units/hl_dlls_talkmonster.txt"
+          "source": "src/dlls/talkmonster.cpp"
         },
         {
           "name": "dlls/teamplay_gamerules",
-          "source": "src/dlls/teamplay_gamerules.cpp",
-          "functions_file": "tools/units/hl_dlls_teamplay_gamerules.txt"
+          "source": "src/dlls/teamplay_gamerules.cpp"
         },
         {
           "name": "dlls/triggers",
-          "source": "src/dlls/triggers.cpp",
-          "functions_file": "tools/units/hl_dlls_triggers.txt"
+          "source": "src/dlls/triggers.cpp"
         },
         {
           "name": "dlls/util",
-          "source": "src/dlls/util.cpp",
-          "functions_file": "tools/units/hl_dlls_util.txt"
+          "source": "src/dlls/util.cpp"
         },
         {
           "name": "dlls/weapons",
-          "source": "src/dlls/weapons.cpp",
-          "functions_file": "tools/units/hl_dlls_weapons.txt"
+          "source": "src/dlls/weapons.cpp"
         },
         {
           "name": "dlls/world",
-          "source": "src/dlls/world.cpp",
-          "functions_file": "tools/units/hl_dlls_world.txt"
+          "source": "src/dlls/world.cpp"
         },
         {
           "name": "dlls/cof_3dkeypad",
-          "source": "src/dlls/CoF_3DKeypad.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_3dkeypad.txt"
+          "source": "src/dlls/CoF_3DKeypad.cpp"
         },
         {
           "name": "dlls/cof_action",
-          "source": "src/dlls/CoF_Action.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_action.txt"
+          "source": "src/dlls/CoF_Action.cpp"
         },
         {
           "name": "dlls/cof_animatedcamera",
-          "source": "src/dlls/CoF_AnimatedCamera.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_animatedcamera.txt"
+          "source": "src/dlls/CoF_AnimatedCamera.cpp"
         },
         {
           "name": "dlls/cof_axe",
-          "source": "src/dlls/CoF_Axe.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_axe.txt"
+          "source": "src/dlls/CoF_Axe.cpp"
         },
         {
           "name": "dlls/cof_barshoot",
-          "source": "src/dlls/CoF_BarShoot.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_barshoot.txt"
+          "source": "src/dlls/CoF_BarShoot.cpp"
         },
         {
           "name": "dlls/cof_boat",
-          "source": "src/dlls/CoF_Boat.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_boat.txt"
+          "source": "src/dlls/CoF_Boat.cpp"
         },
         {
           "name": "dlls/cof_booklaser",
-          "source": "src/dlls/CoF_BookLaser.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_booklaser.txt"
+          "source": "src/dlls/CoF_BookLaser.cpp"
         },
         {
           "name": "dlls/cof_booksimonsledgehammer",
-          "source": "src/dlls/CoF_BookSimonSledgehammer.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_booksimonsledgehammer.txt"
+          "source": "src/dlls/CoF_BookSimonSledgehammer.cpp"
         },
         {
           "name": "dlls/cof_branch",
-          "source": "src/dlls/CoF_Branch.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_branch.txt"
+          "source": "src/dlls/CoF_Branch.cpp"
         },
         {
           "name": "dlls/cof_browning_wheelchair",
-          "source": "src/dlls/CoF_Browning_Wheelchair.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_browning_wheelchair.txt"
+          "source": "src/dlls/CoF_Browning_Wheelchair.cpp"
         },
         {
           "name": "dlls/cof_camera",
-          "source": "src/dlls/CoF_Camera.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_camera.txt"
+          "source": "src/dlls/CoF_Camera.cpp"
         },
         {
           "name": "dlls/cof_chainsawboss",
-          "source": "src/dlls/CoF_ChainsawBoss.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_chainsawboss.txt"
+          "source": "src/dlls/CoF_ChainsawBoss.cpp"
         },
         {
           "name": "dlls/cof_checkbrush",
-          "source": "src/dlls/CoF_CheckBrush.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_checkbrush.txt"
+          "source": "src/dlls/CoF_CheckBrush.cpp"
         },
         {
           "name": "dlls/cof_coopbuttonpress",
-          "source": "src/dlls/CoF_CoopButtonPress.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_coopbuttonpress.txt"
+          "source": "src/dlls/CoF_CoopButtonPress.cpp"
         },
         {
           "name": "dlls/cof_cooplevelchangemanager",
-          "source": "src/dlls/CoF_CoopLevelChangeManager.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_cooplevelchangemanager.txt"
+          "source": "src/dlls/CoF_CoopLevelChangeManager.cpp"
         },
         {
           "name": "dlls/cof_crab",
-          "source": "src/dlls/CoF_Crab.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_crab.txt"
+          "source": "src/dlls/CoF_Crab.cpp"
         },
         {
           "name": "dlls/cof_cutscenemodel",
-          "source": "src/dlls/CoF_CutsceneModel.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_cutscenemodel.txt"
+          "source": "src/dlls/CoF_CutsceneModel.cpp"
         },
         {
           "name": "dlls/cof_developercommentary",
-          "source": "src/dlls/CoF_DeveloperCommentary.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_developercommentary.txt"
+          "source": "src/dlls/CoF_DeveloperCommentary.cpp"
         },
         {
           "name": "dlls/cof_doctorboss",
-          "source": "src/dlls/CoF_DoctorBoss.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_doctorboss.txt"
+          "source": "src/dlls/CoF_DoctorBoss.cpp"
         },
         {
           "name": "dlls/cof_doctorbossshoot",
-          "source": "src/dlls/CoF_DoctorBossShoot.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_doctorbossshoot.txt"
+          "source": "src/dlls/CoF_DoctorBossShoot.cpp"
         },
         {
           "name": "dlls/cof_door_prop_view",
-          "source": "src/dlls/CoF_Door_Prop_View.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_door_prop_view.txt"
+          "source": "src/dlls/CoF_Door_Prop_View.cpp"
         },
         {
           "name": "dlls/cof_dual_weapon",
-          "source": "src/dlls/CoF_Dual_Weapon.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_dual_weapon.txt"
+          "source": "src/dlls/CoF_Dual_Weapon.cpp"
         },
         {
           "name": "dlls/cof_dualpistol",
-          "source": "src/dlls/CoF_DualPistol.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_dualpistol.txt"
+          "source": "src/dlls/CoF_DualPistol.cpp"
         },
         {
           "name": "dlls/cof_faceless",
-          "source": "src/dlls/CoF_Faceless.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_faceless.txt"
+          "source": "src/dlls/CoF_Faceless.cpp"
         },
         {
           "name": "dlls/cof_facelessvalve",
-          "source": "src/dlls/CoF_FacelessValve.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_facelessvalve.txt"
+          "source": "src/dlls/CoF_FacelessValve.cpp"
         },
         {
           "name": "dlls/cof_famas",
-          "source": "src/dlls/CoF_FAMAS.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_famas.txt"
+          "source": "src/dlls/CoF_FAMAS.cpp"
         },
         {
           "name": "dlls/cof_faster",
-          "source": "src/dlls/CoF_Faster.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_faster.txt"
+          "source": "src/dlls/CoF_Faster.cpp"
         },
         {
           "name": "dlls/cof_flare",
-          "source": "src/dlls/CoF_Flare.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_flare.txt"
+          "source": "src/dlls/CoF_Flare.cpp"
         },
         {
           "name": "dlls/cof_flashlight",
-          "source": "src/dlls/CoF_Flashlight.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_flashlight.txt"
+          "source": "src/dlls/CoF_Flashlight.cpp"
         },
         {
           "name": "dlls/cof_flygare",
-          "source": "src/dlls/CoF_Flygare.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_flygare.txt"
+          "source": "src/dlls/CoF_Flygare.cpp"
         },
         {
           "name": "dlls/cof_funcvalve",
-          "source": "src/dlls/CoF_FuncValve.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_funcvalve.txt"
+          "source": "src/dlls/CoF_FuncValve.cpp"
         },
         {
           "name": "dlls/cof_g43",
-          "source": "src/dlls/CoF_G43.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_g43.txt"
+          "source": "src/dlls/CoF_G43.cpp"
         },
         {
           "name": "dlls/cof_glock",
-          "source": "src/dlls/CoF_Glock.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_glock.txt"
+          "source": "src/dlls/CoF_Glock.cpp"
         },
         {
           "name": "dlls/cof_interdoor",
-          "source": "src/dlls/CoF_InterDoor.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_interdoor.txt"
+          "source": "src/dlls/CoF_InterDoor.cpp"
         },
         {
           "name": "dlls/cof_interdoorcoop",
-          "source": "src/dlls/CoF_InterDoorCoop.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_interdoorcoop.txt"
+          "source": "src/dlls/CoF_InterDoorCoop.cpp"
         },
         {
           "name": "dlls/cof_keyitem",
-          "source": "src/dlls/CoF_KeyItem.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_keyitem.txt"
+          "source": "src/dlls/CoF_KeyItem.cpp"
         },
         {
           "name": "dlls/cof_ladder",
-          "source": "src/dlls/CoF_Ladder.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_ladder.txt"
+          "source": "src/dlls/CoF_Ladder.cpp"
         },
         {
           "name": "dlls/cof_lantern",
-          "source": "src/dlls/CoF_Lantern.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_lantern.txt"
+          "source": "src/dlls/CoF_Lantern.cpp"
         },
         {
           "name": "dlls/cof_m16",
-          "source": "src/dlls/CoF_M16.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_m16.txt"
+          "source": "src/dlls/CoF_M16.cpp"
         },
         {
           "name": "dlls/cof_mobilephone",
-          "source": "src/dlls/CoF_MobilePhone.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_mobilephone.txt"
+          "source": "src/dlls/CoF_MobilePhone.cpp"
         },
         {
           "name": "dlls/cof_monsterbaby",
-          "source": "src/dlls/CoF_MonsterBaby.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_monsterbaby.txt"
+          "source": "src/dlls/CoF_MonsterBaby.cpp"
         },
         {
           "name": "dlls/cof_monsterchild",
-          "source": "src/dlls/CoF_MonsterChild.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_monsterchild.txt"
+          "source": "src/dlls/CoF_MonsterChild.cpp"
         },
         {
           "name": "dlls/cof_monstercrazybitch",
-          "source": "src/dlls/CoF_MonsterCrazyBitch.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_monstercrazybitch.txt"
+          "source": "src/dlls/CoF_MonsterCrazyBitch.cpp"
         },
         {
           "name": "dlls/cof_monstercustom",
-          "source": "src/dlls/CoF_MonsterCustom.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_monstercustom.txt"
+          "source": "src/dlls/CoF_MonsterCustom.cpp"
         },
         {
           "name": "dlls/cof_monsterkrypande",
-          "source": "src/dlls/CoF_MonsterKrypande.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_monsterkrypande.txt"
+          "source": "src/dlls/CoF_MonsterKrypande.cpp"
         },
         {
           "name": "dlls/cof_monstersewmo",
-          "source": "src/dlls/CoF_MonsterSewmo.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_monstersewmo.txt"
+          "source": "src/dlls/CoF_MonsterSewmo.cpp"
         },
         {
           "name": "dlls/cof_monsterslower3",
-          "source": "src/dlls/CoF_MonsterSlower3.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_monsterslower3.txt"
+          "source": "src/dlls/CoF_MonsterSlower3.cpp"
         },
         {
           "name": "dlls/cof_nicecamera",
-          "source": "src/dlls/CoF_NiceCamera.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_nicecamera.txt"
+          "source": "src/dlls/CoF_NiceCamera.cpp"
         },
         {
           "name": "dlls/cof_nightstick",
-          "source": "src/dlls/CoF_NightStick.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_nightstick.txt"
+          "source": "src/dlls/CoF_NightStick.cpp"
         },
         {
           "name": "dlls/cof_numeralplate",
-          "source": "src/dlls/CoF_NumeralPlate.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_numeralplate.txt"
+          "source": "src/dlls/CoF_NumeralPlate.cpp"
         },
         {
           "name": "dlls/cof_p345",
-          "source": "src/dlls/CoF_P345.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_p345.txt"
+          "source": "src/dlls/CoF_P345.cpp"
         },
         {
           "name": "dlls/cof_phonecall",
-          "source": "src/dlls/CoF_PhoneCall.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_phonecall.txt"
+          "source": "src/dlls/CoF_PhoneCall.cpp"
         },
         {
           "name": "dlls/cof_pushablevan",
-          "source": "src/dlls/CoF_PushableVan.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_pushablevan.txt"
+          "source": "src/dlls/CoF_PushableVan.cpp"
         },
         {
           "name": "dlls/cof_puzzlebars",
-          "source": "src/dlls/CoF_PuzzleBars.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_puzzlebars.txt"
+          "source": "src/dlls/CoF_PuzzleBars.cpp"
         },
         {
           "name": "dlls/cof_puzzlebarsbutton",
-          "source": "src/dlls/CoF_PuzzleBarsButton.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_puzzlebarsbutton.txt"
+          "source": "src/dlls/CoF_PuzzleBarsButton.cpp"
         },
         {
           "name": "dlls/cof_radio",
-          "source": "src/dlls/CoF_Radio.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_radio.txt"
+          "source": "src/dlls/CoF_Radio.cpp"
         },
         {
           "name": "dlls/cof_revolver",
-          "source": "src/dlls/CoF_Revolver.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_revolver.txt"
+          "source": "src/dlls/CoF_Revolver.cpp"
         },
         {
           "name": "dlls/cof_rifle",
-          "source": "src/dlls/CoF_Rifle.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_rifle.txt"
+          "source": "src/dlls/CoF_Rifle.cpp"
         },
         {
           "name": "dlls/cof_roofboss",
-          "source": "src/dlls/CoF_RoofBoss.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_roofboss.txt"
+          "source": "src/dlls/CoF_RoofBoss.cpp"
         },
         {
           "name": "dlls/cof_runningcrazy",
-          "source": "src/dlls/CoF_RunningCrazy.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_runningcrazy.txt"
+          "source": "src/dlls/CoF_RunningCrazy.cpp"
         },
         {
           "name": "dlls/cof_sawcrazy",
-          "source": "src/dlls/CoF_SawCrazy.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_sawcrazy.txt"
+          "source": "src/dlls/CoF_SawCrazy.cpp"
         },
         {
           "name": "dlls/cof_sawrunner",
-          "source": "src/dlls/CoF_SawRunner.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_sawrunner.txt"
+          "source": "src/dlls/CoF_SawRunner.cpp"
         },
         {
           "name": "dlls/cof_sewerboss",
-          "source": "src/dlls/CoF_SewerBoss.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_sewerboss.txt"
+          "source": "src/dlls/CoF_SewerBoss.cpp"
         },
         {
           "name": "dlls/cof_shotgun",
-          "source": "src/dlls/CoF_Shotgun.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_shotgun.txt"
+          "source": "src/dlls/CoF_Shotgun.cpp"
         },
         {
           "name": "dlls/cof_sicksimon",
-          "source": "src/dlls/CoF_SickSimon.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_sicksimon.txt"
+          "source": "src/dlls/CoF_SickSimon.cpp"
         },
         {
           "name": "dlls/cof_sledgehammer",
-          "source": "src/dlls/CoF_Sledgehammer.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_sledgehammer.txt"
+          "source": "src/dlls/CoF_Sledgehammer.cpp"
         },
         {
           "name": "dlls/cof_slower",
-          "source": "src/dlls/CoF_Slower.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_slower.txt"
+          "source": "src/dlls/CoF_Slower.cpp"
         },
         {
           "name": "dlls/cof_slowertentacled",
-          "source": "src/dlls/CoF_SlowerTentacled.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_slowertentacled.txt"
+          "source": "src/dlls/CoF_SlowerTentacled.cpp"
         },
         {
           "name": "dlls/cof_spitter",
-          "source": "src/dlls/CoF_Spitter.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_spitter.txt"
+          "source": "src/dlls/CoF_Spitter.cpp"
         },
         {
           "name": "dlls/cof_statues",
-          "source": "src/dlls/CoF_Statues.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_statues.txt"
+          "source": "src/dlls/CoF_Statues.cpp"
         },
         {
           "name": "dlls/cof_statueuse",
-          "source": "src/dlls/CoF_StatueUse.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_statueuse.txt"
+          "source": "src/dlls/CoF_StatueUse.cpp"
         },
         {
           "name": "dlls/cof_stranger",
-          "source": "src/dlls/CoF_Stranger.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_stranger.txt"
+          "source": "src/dlls/CoF_Stranger.cpp"
         },
         {
           "name": "dlls/cof_strangle",
-          "source": "src/dlls/CoF_Strangle.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_strangle.txt"
+          "source": "src/dlls/CoF_Strangle.cpp"
         },
         {
           "name": "dlls/cof_subtitlechange",
-          "source": "src/dlls/CoF_SubtitleChange.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_subtitlechange.txt"
+          "source": "src/dlls/CoF_SubtitleChange.cpp"
         },
         {
           "name": "dlls/cof_subtitlemain",
-          "source": "src/dlls/CoF_SubtitleMain.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_subtitlemain.txt"
+          "source": "src/dlls/CoF_SubtitleMain.cpp"
         },
         {
           "name": "dlls/cof_subwaybrickwall",
-          "source": "src/dlls/CoF_SubwayBrickWall.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_subwaybrickwall.txt"
+          "source": "src/dlls/CoF_SubwayBrickWall.cpp"
         },
         {
           "name": "dlls/cof_suicider",
-          "source": "src/dlls/CoF_Suicider.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_suicider.txt"
+          "source": "src/dlls/CoF_Suicider.cpp"
         },
         {
           "name": "dlls/cof_switchblade",
-          "source": "src/dlls/CoF_Switchblade.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_switchblade.txt"
+          "source": "src/dlls/CoF_Switchblade.cpp"
         },
         {
           "name": "dlls/cof_syringe",
-          "source": "src/dlls/CoF_Syringe.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_syringe.txt"
+          "source": "src/dlls/CoF_Syringe.cpp"
         },
         {
           "name": "dlls/cof_taller",
-          "source": "src/dlls/CoF_Taller.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_taller.txt"
+          "source": "src/dlls/CoF_Taller.cpp"
         },
         {
           "name": "dlls/cof_taperecorder",
-          "source": "src/dlls/CoF_TapeRecorder.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_taperecorder.txt"
+          "source": "src/dlls/CoF_TapeRecorder.cpp"
         },
         {
           "name": "dlls/cof_telephone",
-          "source": "src/dlls/CoF_Telephone.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_telephone.txt"
+          "source": "src/dlls/CoF_Telephone.cpp"
         },
         {
           "name": "dlls/cof_telescope",
-          "source": "src/dlls/CoF_Telescope.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_telescope.txt"
+          "source": "src/dlls/CoF_Telescope.cpp"
         },
         {
           "name": "dlls/cof_thirdpersoninteraction",
-          "source": "src/dlls/CoF_ThirdPersonInteraction.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_thirdpersoninteraction.txt"
+          "source": "src/dlls/CoF_ThirdPersonInteraction.cpp"
         },
         {
           "name": "dlls/cof_tmp",
-          "source": "src/dlls/CoF_TMP.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_tmp.txt"
+          "source": "src/dlls/CoF_TMP.cpp"
         },
         {
           "name": "dlls/cof_twitcher",
-          "source": "src/dlls/CoF_Twitcher.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_twitcher.txt"
+          "source": "src/dlls/CoF_Twitcher.cpp"
         },
         {
           "name": "dlls/cof_twitcher2",
-          "source": "src/dlls/CoF_Twitcher2.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_twitcher2.txt"
+          "source": "src/dlls/CoF_Twitcher2.cpp"
         },
         {
           "name": "dlls/cof_twitcher3",
-          "source": "src/dlls/CoF_Twitcher3.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_twitcher3.txt"
+          "source": "src/dlls/CoF_Twitcher3.cpp"
         },
         {
           "name": "dlls/cof_twitcher4",
-          "source": "src/dlls/CoF_Twitcher4.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_twitcher4.txt"
+          "source": "src/dlls/CoF_Twitcher4.cpp"
         },
         {
           "name": "dlls/cof_userpasswordnote",
-          "source": "src/dlls/CoF_UserPasswordNote.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_userpasswordnote.txt"
+          "source": "src/dlls/CoF_UserPasswordNote.cpp"
         },
         {
           "name": "dlls/cof_vp70",
-          "source": "src/dlls/CoF_VP70.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_vp70.txt"
+          "source": "src/dlls/CoF_VP70.cpp"
         },
         {
           "name": "dlls/cof_watro",
-          "source": "src/dlls/CoF_Watro.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_watro.txt"
+          "source": "src/dlls/CoF_Watro.cpp"
         },
         {
           "name": "dlls/cof_wheelchairplayer",
-          "source": "src/dlls/CoF_WheelchairPlayer.cpp",
-          "functions_file": "tools/units/hl_dlls_cof_wheelchairplayer.txt"
+          "source": "src/dlls/CoF_WheelchairPlayer.cpp"
         },
         {
           "name": "dlls/item_padlock",
-          "source": "src/dlls/item_padlock.cpp",
-          "functions_file": "tools/units/hl_dlls_item_padlock.txt"
+          "source": "src/dlls/item_padlock.cpp"
         },
         {
           "name": "dlls/monster_ruben",
-          "source": "src/dlls/monster_ruben.cpp",
-          "functions_file": "tools/units/hl_dlls_monster_ruben.txt"
+          "source": "src/dlls/monster_ruben.cpp"
         },
         {
           "name": "dlls/subtitle_multiple",
-          "source": "src/dlls/Subtitle_Multiple.cpp",
-          "functions_file": "tools/units/hl_dlls_subtitle_multiple.txt"
+          "source": "src/dlls/Subtitle_Multiple.cpp"
         },
         {
           "name": "dlls/CoF_MP5_guess",
-          "source": "src/dlls/CoF_MP5_guess.cpp",
-          "functions_file": "tools/units/hl_dlls_guess_CoF_MP5.txt"
+          "source": "src/dlls/CoF_MP5_guess.cpp"
         },
         {
           "name": "dlls/CoF_BowlingBall_guess",
-          "source": "src/dlls/CoF_BowlingBall_guess.cpp",
-          "functions_file": "tools/units/hl_dlls_guess_CoF_BowlingBall.txt"
+          "source": "src/dlls/CoF_BowlingBall_guess.cpp"
         },
         {
           "name": "dlls/h_ai",
-          "source": "src/dlls/h_ai.cpp",
-          "functions_file": "tools/units/hl_dlls_h_ai.txt"
+          "source": "src/dlls/h_ai.cpp"
         },
         {
           "name": "dlls/game",
-          "source": "src/dlls/game.cpp",
-          "functions_file": "tools/units/hl_dlls_game.txt"
+          "source": "src/dlls/game.cpp"
         },
         {
           "name": "dlls/globals",
-          "source": "src/dlls/globals.cpp",
-          "functions_file": "tools/units/hl_dlls_globals.txt"
+          "source": "src/dlls/globals.cpp"
         },
         {
           "name": "dlls/CoF_MP5ModeSaveRestore_guess",
-          "source": "src/dlls/CoF_MP5ModeSaveRestore_guess.cpp",
-          "functions_file": "tools/units/hl_dlls_guess_CoF_MP5ModeSaveRestore.txt"
+          "source": "src/dlls/CoF_MP5ModeSaveRestore_guess.cpp"
         }
       ],
       "toolchain": "msvc1444",
@@ -1037,9 +876,6 @@
     },
     "opengl32": {
       "toolchain": "vc6",
-      "ghidra_folder": "/1.6a",
-      "ghidra_program": "opengl32.dll",
-      "symbols": "tools/symbols/opengl32_1.6a.csv",
       "cflags": [
         "/nologo",
         "/c",
@@ -1060,13 +896,11 @@
       "units": [
         {
           "name": "opengl32",
-          "source": "src/opengl32/opengl32.cpp",
-          "functions_file": "tools/units/opengl32_opengl32.txt"
+          "source": "src/opengl32/opengl32.cpp"
         },
         {
           "name": "OtherOGL",
-          "source": "src/opengl32/OtherOGL.cpp",
-          "functions_file": "tools/units/opengl32_OtherOGL.txt"
+          "source": "src/opengl32/OtherOGL.cpp"
         }
       ],
       "link": {
@@ -1090,9 +924,6 @@
       }
     },
     "client": {
-      "ghidra_folder": "/1.6a",
-      "ghidra_program": "client.dll",
-      "symbols": "tools/symbols/client_1.6a.csv",
       "cflags": [
         "/nologo",
         "/c",
@@ -1132,688 +963,551 @@
       "units": [
         {
           "name": "cl_dll/parsemsg",
-          "source": "src/cl_dll/parsemsg.cpp",
-          "functions_file": "tools/units/client_cl_dll_parsemsg.txt"
+          "source": "src/cl_dll/parsemsg.cpp"
         },
         {
           "name": "cl_dll/studio_util",
-          "source": "src/cl_dll/studio_util.cpp",
-          "functions_file": "tools/units/client_cl_dll_studio_util.txt"
+          "source": "src/cl_dll/studio_util.cpp"
         },
         {
           "name": "cl_dll/train",
-          "source": "src/cl_dll/train.cpp",
-          "functions_file": "tools/units/client_cl_dll_train.txt"
+          "source": "src/cl_dll/train.cpp"
         },
         {
           "name": "pm_shared/pm_shared",
-          "source": "src/pm_shared/pm_shared.c",
-          "functions_file": "tools/units/client_pm_shared_pm_shared.txt"
+          "source": "src/pm_shared/pm_shared.c"
         },
         {
           "name": "pm_shared/pm_math",
-          "source": "src/pm_shared/pm_math.c",
-          "functions_file": "tools/units/client_pm_shared_pm_math.txt"
+          "source": "src/pm_shared/pm_math.c"
         },
         {
           "name": "pm_shared/pm_debug",
-          "source": "src/pm_shared/pm_debug.c",
-          "functions_file": "tools/units/client_pm_shared_pm_debug.txt"
+          "source": "src/pm_shared/pm_debug.c"
         },
         {
           "name": "common/interface",
-          "source": "src/common/interface.cpp",
-          "functions_file": "tools/units/client_common_interface.txt"
+          "source": "src/common/interface.cpp"
         },
         {
           "name": "game_shared/voice_banmgr",
-          "source": "src/game_shared/voice_banmgr.cpp",
-          "functions_file": "tools/units/client_game_shared_voice_banmgr.txt"
+          "source": "src/game_shared/voice_banmgr.cpp"
         },
         {
           "name": "cl_dll/health",
-          "source": "src/cl_dll/health.cpp",
-          "functions_file": "tools/units/client_cl_dll_health.txt"
+          "source": "src/cl_dll/health.cpp"
         },
         {
           "name": "cl_dll/battery",
-          "source": "src/cl_dll/battery.cpp",
-          "functions_file": "tools/units/client_cl_dll_battery.txt"
+          "source": "src/cl_dll/battery.cpp"
         },
         {
           "name": "cl_dll/flashlight",
-          "source": "src/cl_dll/flashlight.cpp",
-          "functions_file": "tools/units/client_cl_dll_flashlight.txt"
+          "source": "src/cl_dll/flashlight.cpp"
         },
         {
           "name": "cl_dll/geiger",
-          "source": "src/cl_dll/geiger.cpp",
-          "functions_file": "tools/units/client_cl_dll_geiger.txt"
+          "source": "src/cl_dll/geiger.cpp"
         },
         {
           "name": "cl_dll/statusbar",
-          "source": "src/cl_dll/statusbar.cpp",
-          "functions_file": "tools/units/client_cl_dll_statusbar.txt"
+          "source": "src/cl_dll/statusbar.cpp"
         },
         {
           "name": "cl_dll/status_icons",
-          "source": "src/cl_dll/status_icons.cpp",
-          "functions_file": "tools/units/client_cl_dll_status_icons.txt"
+          "source": "src/cl_dll/status_icons.cpp"
         },
         {
           "name": "cl_dll/saytext",
-          "source": "src/cl_dll/saytext.cpp",
-          "functions_file": "tools/units/client_cl_dll_saytext.txt"
+          "source": "src/cl_dll/saytext.cpp"
         },
         {
           "name": "cl_dll/message",
-          "source": "src/cl_dll/message.cpp",
-          "functions_file": "tools/units/client_cl_dll_message.txt"
+          "source": "src/cl_dll/message.cpp"
         },
         {
           "name": "cl_dll/menu",
-          "source": "src/cl_dll/menu.cpp",
-          "functions_file": "tools/units/client_cl_dll_menu.txt"
+          "source": "src/cl_dll/menu.cpp"
         },
         {
           "name": "cl_dll/death",
-          "source": "src/cl_dll/death.cpp",
-          "functions_file": "tools/units/client_cl_dll_death.txt"
+          "source": "src/cl_dll/death.cpp"
         },
         {
           "name": "cl_dll/text_message",
-          "source": "src/cl_dll/text_message.cpp",
-          "functions_file": "tools/units/client_cl_dll_text_message.txt"
+          "source": "src/cl_dll/text_message.cpp"
         },
         {
           "name": "cl_dll/ammo_secondary",
-          "source": "src/cl_dll/ammo_secondary.cpp",
-          "functions_file": "tools/units/client_cl_dll_ammo_secondary.txt"
+          "source": "src/cl_dll/ammo_secondary.cpp"
         },
         {
           "name": "cl_dll/ammohistory",
-          "source": "src/cl_dll/ammohistory.cpp",
-          "functions_file": "tools/units/client_cl_dll_ammohistory.txt"
+          "source": "src/cl_dll/ammohistory.cpp"
         },
         {
           "name": "cl_dll/input",
-          "source": "src/cl_dll/input.cpp",
-          "functions_file": "tools/units/client_cl_dll_input.txt"
+          "source": "src/cl_dll/input.cpp"
         },
         {
           "name": "cl_dll/inputw32",
-          "source": "src/cl_dll/inputw32.cpp",
-          "functions_file": "tools/units/client_cl_dll_inputw32.txt"
+          "source": "src/cl_dll/inputw32.cpp"
         },
         {
           "name": "cl_dll/in_camera",
-          "source": "src/cl_dll/in_camera.cpp",
-          "functions_file": "tools/units/client_cl_dll_in_camera.txt"
+          "source": "src/cl_dll/in_camera.cpp"
         },
         {
           "name": "cl_dll/ev_common",
-          "source": "src/cl_dll/ev_common.cpp",
-          "functions_file": "tools/units/client_cl_dll_ev_common.txt"
+          "source": "src/cl_dll/ev_common.cpp"
         },
         {
           "name": "cl_dll/hud_msg",
-          "source": "src/cl_dll/hud_msg.cpp",
-          "functions_file": "tools/units/client_cl_dll_hud_msg.txt"
+          "source": "src/cl_dll/hud_msg.cpp"
         },
         {
           "name": "cl_dll/hud_redraw",
-          "source": "src/cl_dll/hud_redraw.cpp",
-          "functions_file": "tools/units/client_cl_dll_hud_redraw.txt"
+          "source": "src/cl_dll/hud_redraw.cpp"
         },
         {
           "name": "cl_dll/HUDControl_guess",
-          "source": "src/cl_dll/HUDControl_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_HUDControl.txt"
+          "source": "src/cl_dll/HUDControl_guess.cpp"
         },
         {
           "name": "cl_dll/gl_light_dynamic",
-          "source": "src/cl_dll/gl_light_dynamic.cpp",
-          "functions_file": "tools/units/client_cl_dll_gl_light_dynamic.txt"
+          "source": "src/cl_dll/gl_light_dynamic.cpp"
         },
         {
           "name": "cl_dll/gl_lightmap",
-          "source": "src/cl_dll/gl_lightmap.cpp",
-          "functions_file": "tools/units/client_cl_dll_gl_lightmap.txt"
+          "source": "src/cl_dll/gl_lightmap.cpp"
         },
         {
           "name": "cl_dll/gl_model",
-          "source": "src/cl_dll/gl_model.cpp",
-          "functions_file": "tools/units/client_cl_dll_gl_model.txt"
+          "source": "src/cl_dll/gl_model.cpp"
         },
         {
           "name": "cl_dll/gl_postprocess",
-          "source": "src/cl_dll/gl_postprocess.cpp",
-          "functions_file": "tools/units/client_cl_dll_gl_postprocess.txt"
+          "source": "src/cl_dll/gl_postprocess.cpp"
         },
         {
           "name": "cl_dll/gl_sky",
-          "source": "src/cl_dll/gl_sky.cpp",
-          "functions_file": "tools/units/client_cl_dll_gl_sky.txt"
+          "source": "src/cl_dll/gl_sky.cpp"
         },
         {
           "name": "cl_dll/gl_texloader",
-          "source": "src/cl_dll/gl_texloader.cpp",
-          "functions_file": "tools/units/client_cl_dll_gl_texloader.txt"
+          "source": "src/cl_dll/gl_texloader.cpp"
         },
         {
           "name": "cl_dll/glows",
-          "source": "src/cl_dll/glows.cpp",
-          "functions_file": "tools/units/client_cl_dll_glows.txt"
+          "source": "src/cl_dll/glows.cpp"
         },
         {
           "name": "cl_dll/grass",
-          "source": "src/cl_dll/grass.cpp",
-          "functions_file": "tools/units/client_cl_dll_grass.txt"
+          "source": "src/cl_dll/grass.cpp"
         },
         {
           "name": "cl_dll/particlemgr",
-          "source": "src/cl_dll/particlemgr.cpp",
-          "functions_file": "tools/units/client_cl_dll_particlemgr.txt"
+          "source": "src/cl_dll/particlemgr.cpp"
         },
         {
           "name": "cl_dll/particlemsg",
-          "source": "src/cl_dll/particlemsg.cpp",
-          "functions_file": "tools/units/client_cl_dll_particlemsg.txt"
+          "source": "src/cl_dll/particlemsg.cpp"
         },
         {
           "name": "cl_dll/particlesys",
-          "source": "src/cl_dll/particlesys.cpp",
-          "functions_file": "tools/units/client_cl_dll_particlesys.txt"
+          "source": "src/cl_dll/particlesys.cpp"
         },
         {
           "name": "cl_dll/rain",
-          "source": "src/cl_dll/rain.cpp",
-          "functions_file": "tools/units/client_cl_dll_rain.txt"
+          "source": "src/cl_dll/rain.cpp"
         },
         {
           "name": "cl_dll/triapiobjects",
-          "source": "src/cl_dll/triapiobjects.cpp",
-          "functions_file": "tools/units/client_cl_dll_triapiobjects.txt"
+          "source": "src/cl_dll/triapiobjects.cpp"
         },
         {
           "name": "cl_dll/StudioModelRenderer",
-          "source": "src/cl_dll/StudioModelRenderer.cpp",
-          "functions_file": "tools/units/client_cl_dll_StudioModelRenderer.txt"
+          "source": "src/cl_dll/StudioModelRenderer.cpp"
         },
         {
           "name": "cl_dll/GameStudioModelRenderer",
-          "source": "src/cl_dll/GameStudioModelRenderer.cpp",
-          "functions_file": "tools/units/client_cl_dll_GameStudioModelRenderer.txt"
+          "source": "src/cl_dll/GameStudioModelRenderer.cpp"
         },
         {
           "name": "cl_dll/gl_debug",
-          "source": "src/cl_dll/gl_debug.cpp",
-          "functions_file": "tools/units/client_cl_dll_gl_debug.txt"
+          "source": "src/cl_dll/gl_debug.cpp"
         },
         {
           "name": "cl_dll/gl_decals",
-          "source": "src/cl_dll/gl_decals.cpp",
-          "functions_file": "tools/units/client_cl_dll_gl_decals.txt"
+          "source": "src/cl_dll/gl_decals.cpp"
         },
         {
           "name": "cl_dll/gl_renderer",
-          "source": "src/cl_dll/gl_renderer.cpp",
-          "functions_file": "tools/units/client_cl_dll_gl_renderer.txt"
+          "source": "src/cl_dll/gl_renderer.cpp"
         },
         {
           "name": "cl_dll/gl_rsurf",
-          "source": "src/cl_dll/gl_rsurf.cpp",
-          "functions_file": "tools/units/client_cl_dll_gl_rsurf.txt"
+          "source": "src/cl_dll/gl_rsurf.cpp"
         },
         {
           "name": "cl_dll/gl_studiomodel",
-          "source": "src/cl_dll/gl_studiomodel.cpp",
-          "functions_file": "tools/units/client_cl_dll_gl_studiomodel.txt"
+          "source": "src/cl_dll/gl_studiomodel.cpp"
         },
         {
           "name": "cl_dll/quake_bsp",
-          "source": "src/cl_dll/quake_bsp.cpp",
-          "functions_file": "tools/units/client_cl_dll_quake_bsp.txt"
+          "source": "src/cl_dll/quake_bsp.cpp"
         },
         {
           "name": "cl_dll/tri",
-          "source": "src/cl_dll/tri.cpp",
-          "functions_file": "tools/units/client_cl_dll_tri.txt"
+          "source": "src/cl_dll/tri.cpp"
         },
         {
           "name": "cl_dll/hud_spectator",
-          "source": "src/cl_dll/hud_spectator.cpp",
-          "functions_file": "tools/units/client_cl_dll_hud_spectator.txt"
+          "source": "src/cl_dll/hud_spectator.cpp"
         },
         {
           "name": "cl_dll/hud_servers",
-          "source": "src/cl_dll/hud_servers.cpp",
-          "functions_file": "tools/units/client_cl_dll_hud_servers.txt"
+          "source": "src/cl_dll/hud_servers.cpp"
         },
         {
           "name": "cl_dll/cdll_int",
-          "source": "src/cl_dll/cdll_int.cpp",
-          "functions_file": "tools/units/client_cl_dll_cdll_int.txt"
+          "source": "src/cl_dll/cdll_int.cpp"
         },
         {
           "name": "cl_dll/entity",
-          "source": "src/cl_dll/entity.cpp",
-          "functions_file": "tools/units/client_cl_dll_entity.txt"
+          "source": "src/cl_dll/entity.cpp"
         },
         {
           "name": "cl_dll/events",
-          "source": "src/cl_dll/events.cpp",
-          "functions_file": "tools/units/client_cl_dll_events.txt"
+          "source": "src/cl_dll/events.cpp"
         },
         {
           "name": "cl_dll/demo",
-          "source": "src/cl_dll/demo.cpp",
-          "functions_file": "tools/units/client_cl_dll_demo.txt"
+          "source": "src/cl_dll/demo.cpp"
         },
         {
           "name": "cl_dll/exception",
-          "source": "src/cl_dll/exception.cpp",
-          "functions_file": "tools/units/client_cl_dll_exception.txt"
+          "source": "src/cl_dll/exception.cpp"
         },
         {
           "name": "cl_dll/log",
-          "source": "src/cl_dll/log.cpp",
-          "functions_file": "tools/units/client_cl_dll_log.txt"
+          "source": "src/cl_dll/log.cpp"
         },
         {
           "name": "cl_dll/ammo",
-          "source": "src/cl_dll/ammo.cpp",
-          "functions_file": "tools/units/client_cl_dll_ammo.txt"
+          "source": "src/cl_dll/ammo.cpp"
         },
         {
           "name": "cl_dll/hud",
-          "source": "src/cl_dll/hud.cpp",
-          "functions_file": "tools/units/client_cl_dll_hud.txt"
+          "source": "src/cl_dll/hud.cpp"
         },
         {
           "name": "cl_dll/view",
-          "source": "src/cl_dll/view.cpp",
-          "functions_file": "tools/units/client_cl_dll_view.txt"
+          "source": "src/cl_dll/view.cpp"
         },
         {
           "name": "cl_dll/ev_hldm",
-          "source": "src/cl_dll/ev_hldm.cpp",
-          "functions_file": "tools/units/client_cl_dll_ev_hldm.txt"
+          "source": "src/cl_dll/ev_hldm.cpp"
         },
         {
           "name": "cl_dll/vgui_ScorePanel",
-          "source": "src/cl_dll/vgui_ScorePanel.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_ScorePanel.txt"
+          "source": "src/cl_dll/vgui_ScorePanel.cpp"
         },
         {
           "name": "cl_dll/vgui_ServerBrowser",
-          "source": "src/cl_dll/vgui_ServerBrowser.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_ServerBrowser.txt"
+          "source": "src/cl_dll/vgui_ServerBrowser.cpp"
         },
         {
           "name": "cl_dll/vgui_SchemeManager",
-          "source": "src/cl_dll/vgui_SchemeManager.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_SchemeManager.txt"
+          "source": "src/cl_dll/vgui_SchemeManager.cpp"
         },
         {
           "name": "cl_dll/vgui_CustomObjects",
-          "source": "src/cl_dll/vgui_CustomObjects.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_CustomObjects.txt"
+          "source": "src/cl_dll/vgui_CustomObjects.cpp"
         },
         {
           "name": "cl_dll/vgui_ControlConfigPanel",
-          "source": "src/cl_dll/vgui_ControlConfigPanel.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_ControlConfigPanel.txt"
+          "source": "src/cl_dll/vgui_ControlConfigPanel.cpp"
         },
         {
           "name": "cl_dll/vgui_ConsolePanel",
-          "source": "src/cl_dll/vgui_ConsolePanel.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_ConsolePanel.txt"
+          "source": "src/cl_dll/vgui_ConsolePanel.cpp"
         },
         {
           "name": "cl_dll/vgui_gamma",
-          "source": "src/cl_dll/vgui_gamma.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_gamma.txt"
+          "source": "src/cl_dll/vgui_gamma.cpp"
         },
         {
           "name": "cl_dll/vgui_hud",
-          "source": "src/cl_dll/vgui_hud.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_hud.txt"
+          "source": "src/cl_dll/vgui_hud.cpp"
         },
         {
           "name": "cl_dll/vgui_int",
-          "source": "src/cl_dll/vgui_int.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_int.txt"
+          "source": "src/cl_dll/vgui_int.cpp"
         },
         {
           "name": "cl_dll/vgui_MOTDWindow",
-          "source": "src/cl_dll/vgui_MOTDWindow.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_MOTDWindow.txt"
+          "source": "src/cl_dll/vgui_MOTDWindow.cpp"
         },
         {
           "name": "cl_dll/vgui_paranoiatext",
-          "source": "src/cl_dll/vgui_paranoiatext.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_paranoiatext.txt"
+          "source": "src/cl_dll/vgui_paranoiatext.cpp"
         },
         {
           "name": "cl_dll/vgui_SpectatorPanel",
-          "source": "src/cl_dll/vgui_SpectatorPanel.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_SpectatorPanel.txt"
+          "source": "src/cl_dll/vgui_SpectatorPanel.cpp"
         },
         {
           "name": "cl_dll/vgui_subtitles",
-          "source": "src/cl_dll/vgui_subtitles.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_subtitles.txt"
+          "source": "src/cl_dll/vgui_subtitles.cpp"
         },
         {
           "name": "cl_dll/vgui_teammenu",
-          "source": "src/cl_dll/vgui_teammenu.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_teammenu.txt"
+          "source": "src/cl_dll/vgui_teammenu.cpp"
         },
         {
           "name": "cl_dll/vgui_tips",
-          "source": "src/cl_dll/vgui_tips.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_tips.txt"
+          "source": "src/cl_dll/vgui_tips.cpp"
         },
         {
           "name": "cl_dll/vgui_ClassMenu",
-          "source": "src/cl_dll/vgui_ClassMenu.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_ClassMenu.txt"
+          "source": "src/cl_dll/vgui_ClassMenu.cpp"
         },
         {
           "name": "cl_dll/vgui_TeamFortressViewport",
-          "source": "src/cl_dll/vgui_TeamFortressViewport.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_TeamFortressViewport.txt"
+          "source": "src/cl_dll/vgui_TeamFortressViewport.cpp"
         },
         {
           "name": "game_shared/vgui_helpers",
-          "source": "src/game_shared/vgui_helpers.cpp",
-          "functions_file": "tools/units/client_game_shared_vgui_helpers.txt"
+          "source": "src/game_shared/vgui_helpers.cpp"
         },
         {
           "name": "game_shared/vgui_loadtga",
-          "source": "src/game_shared/vgui_loadtga.cpp",
-          "functions_file": "tools/units/client_game_shared_vgui_loadtga.txt"
+          "source": "src/game_shared/vgui_loadtga.cpp"
         },
         {
           "name": "game_shared/vgui_scrollbar2",
-          "source": "src/game_shared/vgui_scrollbar2.cpp",
-          "functions_file": "tools/units/client_game_shared_vgui_scrollbar2.txt"
+          "source": "src/game_shared/vgui_scrollbar2.cpp"
         },
         {
           "name": "game_shared/voice_status",
-          "source": "src/game_shared/voice_status.cpp",
-          "functions_file": "tools/units/client_game_shared_voice_status.txt"
+          "source": "src/game_shared/voice_status.cpp"
         },
         {
           "name": "game_shared/voice_vgui_tweakdlg",
-          "source": "src/game_shared/voice_vgui_tweakdlg.cpp",
-          "functions_file": "tools/units/client_game_shared_voice_vgui_tweakdlg.txt"
+          "source": "src/game_shared/voice_vgui_tweakdlg.cpp"
         },
         {
           "name": "cl_dll/AmmoInventory_guess",
-          "source": "src/cl_dll/AmmoInventory_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_AmmoInventory.txt"
+          "source": "src/cl_dll/AmmoInventory_guess.cpp"
         },
         {
           "name": "cl_dll/BookMenu_guess",
-          "source": "src/cl_dll/BookMenu_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_BookMenu.txt"
+          "source": "src/cl_dll/BookMenu_guess.cpp"
         },
         {
           "name": "cl_dll/ClothesMenu_guess",
-          "source": "src/cl_dll/ClothesMenu_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_ClothesMenu.txt"
+          "source": "src/cl_dll/ClothesMenu_guess.cpp"
         },
         {
           "name": "cl_dll/CoopStats_guess",
-          "source": "src/cl_dll/CoopStats_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_CoopStats.txt"
+          "source": "src/cl_dll/CoopStats_guess.cpp"
         },
         {
           "name": "cl_dll/Credits_guess",
-          "source": "src/cl_dll/Credits_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_Credits.txt"
+          "source": "src/cl_dll/Credits_guess.cpp"
         },
         {
           "name": "cl_dll/CutsceneSkip_guess",
-          "source": "src/cl_dll/CutsceneSkip_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_CutsceneSkip.txt"
+          "source": "src/cl_dll/CutsceneSkip_guess.cpp"
         },
         {
           "name": "cl_dll/Documents_guess",
-          "source": "src/cl_dll/Documents_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_Documents.txt"
+          "source": "src/cl_dll/Documents_guess.cpp"
         },
         {
           "name": "cl_dll/VGUIExtraMenu_guess",
-          "source": "src/cl_dll/VGUIExtraMenu_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_VGUIExtraMenu.txt"
+          "source": "src/cl_dll/VGUIExtraMenu_guess.cpp"
         },
         {
           "name": "cl_dll/GameMenu_guess",
-          "source": "src/cl_dll/GameMenu_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_GameMenu.txt"
+          "source": "src/cl_dll/GameMenu_guess.cpp"
         },
         {
           "name": "cl_dll/Language_guess",
-          "source": "src/cl_dll/Language_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_Language.txt"
+          "source": "src/cl_dll/Language_guess.cpp"
         },
         {
           "name": "cl_dll/BlackBar_guess",
-          "source": "src/cl_dll/BlackBar_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_BlackBar.txt"
+          "source": "src/cl_dll/BlackBar_guess.cpp"
         },
         {
           "name": "cl_dll/Neffect_guess",
-          "source": "src/cl_dll/Neffect_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_Neffect.txt"
+          "source": "src/cl_dll/Neffect_guess.cpp"
         },
         {
           "name": "cl_dll/Padlock_guess",
-          "source": "src/cl_dll/Padlock_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_Padlock.txt"
+          "source": "src/cl_dll/Padlock_guess.cpp"
         },
         {
           "name": "cl_dll/SaveLoad_guess",
-          "source": "src/cl_dll/SaveLoad_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_SaveLoad.txt"
+          "source": "src/cl_dll/SaveLoad_guess.cpp"
         },
         {
           "name": "cl_dll/Scope_guess",
-          "source": "src/cl_dll/Scope_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_Scope.txt"
+          "source": "src/cl_dll/Scope_guess.cpp"
         },
         {
           "name": "cl_dll/Telephone_guess",
-          "source": "src/cl_dll/Telephone_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_Telephone.txt"
+          "source": "src/cl_dll/Telephone_guess.cpp"
         },
         {
           "name": "cl_dll/TVFrame_guess",
-          "source": "src/cl_dll/TVFrame_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_TVFrame.txt"
+          "source": "src/cl_dll/TVFrame_guess.cpp"
         },
         {
           "name": "cl_dll/Unlockables_guess",
-          "source": "src/cl_dll/Unlockables_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_Unlockables.txt"
+          "source": "src/cl_dll/Unlockables_guess.cpp"
         },
         {
           "name": "cl_dll/AnimalStatue_guess",
-          "source": "src/cl_dll/AnimalStatue_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_AnimalStatue.txt"
+          "source": "src/cl_dll/AnimalStatue_guess.cpp"
         },
         {
           "name": "cl_dll/VGUIBillboard_guess",
-          "source": "src/cl_dll/VGUIBillboard_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_VGUIBillboard.txt"
+          "source": "src/cl_dll/VGUIBillboard_guess.cpp"
         },
         {
           "name": "cl_dll/BossBar_guess",
-          "source": "src/cl_dll/BossBar_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_BossBar.txt"
+          "source": "src/cl_dll/BossBar_guess.cpp"
         },
         {
           "name": "cl_dll/Computer_guess",
-          "source": "src/cl_dll/Computer_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_Computer.txt"
+          "source": "src/cl_dll/Computer_guess.cpp"
         },
         {
           "name": "cl_dll/Difficulty_guess",
-          "source": "src/cl_dll/Difficulty_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_Difficulty.txt"
+          "source": "src/cl_dll/Difficulty_guess.cpp"
         },
         {
           "name": "cl_dll/GameOver_guess",
-          "source": "src/cl_dll/GameOver_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_GameOver.txt"
+          "source": "src/cl_dll/GameOver_guess.cpp"
         },
         {
           "name": "cl_dll/RECBInventory_guess",
-          "source": "src/cl_dll/RECBInventory_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_RECBInventory.txt"
+          "source": "src/cl_dll/RECBInventory_guess.cpp"
         },
         {
           "name": "cl_dll/Keypad_guess",
-          "source": "src/cl_dll/Keypad_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_Keypad.txt"
+          "source": "src/cl_dll/Keypad_guess.cpp"
         },
         {
           "name": "cl_dll/NoteDocument_guess",
-          "source": "src/cl_dll/NoteDocument_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_NoteDocument.txt"
+          "source": "src/cl_dll/NoteDocument_guess.cpp"
         },
         {
           "name": "cl_dll/Phone_guess",
-          "source": "src/cl_dll/Phone_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_Phone.txt"
+          "source": "src/cl_dll/Phone_guess.cpp"
         },
         {
           "name": "cl_dll/PuzzleBar_guess",
-          "source": "src/cl_dll/PuzzleBar_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_PuzzleBar.txt"
+          "source": "src/cl_dll/PuzzleBar_guess.cpp"
         },
         {
           "name": "cl_dll/Save_guess",
-          "source": "src/cl_dll/Save_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_Save.txt"
+          "source": "src/cl_dll/Save_guess.cpp"
         },
         {
           "name": "cl_dll/UserDocument_guess",
-          "source": "src/cl_dll/UserDocument_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_UserDocument.txt"
+          "source": "src/cl_dll/UserDocument_guess.cpp"
         },
         {
           "name": "cl_dll/Yesno_guess",
-          "source": "src/cl_dll/Yesno_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_Yesno.txt"
+          "source": "src/cl_dll/Yesno_guess.cpp"
         },
         {
           "name": "cl_dll/util",
-          "source": "src/cl_dll/util.cpp",
-          "functions_file": "tools/units/client_cl_dll_util.txt"
+          "source": "src/cl_dll/util.cpp"
         },
         {
           "name": "cl_dll/hl/hl_events",
-          "source": "src/cl_dll/hl/hl_events.cpp",
-          "functions_file": "tools/units/client_cl_dll_hl_hl_events.txt"
+          "source": "src/cl_dll/hl/hl_events.cpp"
         },
         {
           "name": "cl_dll/hl/hl_objects",
-          "source": "src/cl_dll/hl/hl_objects.cpp",
-          "functions_file": "tools/units/client_cl_dll_hl_hl_objects.txt"
+          "source": "src/cl_dll/hl/hl_objects.cpp"
         },
         {
           "name": "cl_dll/hl/hl_weapons",
-          "source": "src/cl_dll/hl/hl_weapons.cpp",
-          "functions_file": "tools/units/client_cl_dll_hl_hl_weapons.txt"
+          "source": "src/cl_dll/hl/hl_weapons.cpp"
         },
         {
           "name": "cl_dll/glmanager",
-          "source": "src/cl_dll/glmanager.cpp",
-          "functions_file": "tools/units/client_cl_dll_glmanager.txt"
+          "source": "src/cl_dll/glmanager.cpp"
         },
         {
           "name": "cl_dll/mp3",
-          "source": "src/cl_dll/mp3.cpp",
-          "functions_file": "tools/units/client_cl_dll_mp3.txt"
+          "source": "src/cl_dll/mp3.cpp"
         },
         {
           "name": "cl_dll/vgui_tabpanel",
-          "source": "src/cl_dll/vgui_tabpanel.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_tabpanel.txt"
+          "source": "src/cl_dll/vgui_tabpanel.cpp"
         },
         {
           "name": "game_shared/vgui_checkbutton2",
-          "source": "src/game_shared/vgui_checkbutton2.cpp",
-          "functions_file": "tools/units/client_game_shared_vgui_checkbutton2.txt"
+          "source": "src/game_shared/vgui_checkbutton2.cpp"
         },
         {
           "name": "game_shared/vgui_grid",
-          "source": "src/game_shared/vgui_grid.cpp",
-          "functions_file": "tools/units/client_game_shared_vgui_grid.txt"
+          "source": "src/game_shared/vgui_grid.cpp"
         },
         {
           "name": "game_shared/vgui_listbox",
-          "source": "src/game_shared/vgui_listbox.cpp",
-          "functions_file": "tools/units/client_game_shared_vgui_listbox.txt"
+          "source": "src/game_shared/vgui_listbox.cpp"
         },
         {
           "name": "game_shared/vgui_slider2",
-          "source": "src/game_shared/vgui_slider2.cpp",
-          "functions_file": "tools/units/client_game_shared_vgui_slider2.txt"
+          "source": "src/game_shared/vgui_slider2.cpp"
         },
         {
           "name": "cl_dll/vgui_radio",
-          "source": "src/cl_dll/vgui_radio.cpp",
-          "functions_file": "tools/units/client_cl_dll_vgui_radio.txt"
+          "source": "src/cl_dll/vgui_radio.cpp"
         },
         {
           "name": "cl_dll/TGALoader_guess",
-          "source": "src/cl_dll/TGALoader_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_TGALoader.txt"
+          "source": "src/cl_dll/TGALoader_guess.cpp"
         },
         {
           "name": "cl_dll/hud_update",
-          "source": "src/cl_dll/hud_update.cpp",
-          "functions_file": "tools/units/client_cl_dll_hud_update.txt"
+          "source": "src/cl_dll/hud_update.cpp"
         },
         {
           "name": "cl_dll/CgContext_guess",
-          "source": "src/cl_dll/CgContext_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_CgContext.txt"
+          "source": "src/cl_dll/CgContext_guess.cpp"
         },
         {
           "name": "cl_dll/CgWater_guess",
-          "source": "src/cl_dll/CgWater_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_CgWater.txt"
+          "source": "src/cl_dll/CgWater_guess.cpp"
         },
         {
           "name": "cl_dll/PBuffer_guess",
-          "source": "src/cl_dll/PBuffer_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_PBuffer.txt"
+          "source": "src/cl_dll/PBuffer_guess.cpp"
         },
         {
           "name": "cl_dll/TextureManager_guess",
-          "source": "src/cl_dll/TextureManager_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_TextureManager.txt"
+          "source": "src/cl_dll/TextureManager_guess.cpp"
         },
         {
           "name": "cl_dll/lensflare",
-          "source": "src/cl_dll/lensflare.cpp",
-          "functions_file": "tools/units/client_cl_dll_lensflare.txt"
+          "source": "src/cl_dll/lensflare.cpp"
         },
         {
           "name": "cl_dll/Blur_guess",
-          "source": "src/cl_dll/Blur_guess.cpp",
-          "functions_file": "tools/units/client_cl_dll_guess_Blur.txt"
+          "source": "src/cl_dll/Blur_guess.cpp"
         },
         {
           "name": "cl_dll/MP3FileInfo",
-          "source": "src/cl_dll/MP3FileInfo.cpp",
-          "functions_file": "tools/units/client_cl_dll_MP3FileInfo.txt"
+          "source": "src/cl_dll/MP3FileInfo.cpp"
         },
         {
           "name": "cl_dll/rc_client",
@@ -2050,8 +1744,6 @@
     },
     "hw": {
       "toolchain": "vc6",
-      "ghidra_folder": "/1.6a",
-      "ghidra_program": "hw.dll",
       "symbols": "tools/symbols/hw_1.6a.csv",
       "cflags": [
         "/nologo",
@@ -2072,237 +1764,191 @@
       "units": [
         {
           "name": "engine/crc",
-          "source": "src/engine_hw/crc.c",
-          "functions_file": "tools/units/hw_engine_crc.txt"
+          "source": "src/engine_hw/crc.c"
         },
         {
           "name": "engine/cvar",
-          "source": "src/engine_hw/cvar.c",
-          "functions_file": "tools/units/hw_engine_cvar.txt"
+          "source": "src/engine_hw/cvar.c"
         },
         {
           "name": "engine/cmd",
-          "source": "src/engine_hw/cmd.c",
-          "functions_file": "tools/units/hw_engine_cmd.txt"
+          "source": "src/engine_hw/cmd.c"
         },
         {
           "name": "engine/zone",
-          "source": "src/engine_hw/zone.c",
-          "functions_file": "tools/units/hw_engine_zone.txt"
+          "source": "src/engine_hw/zone.c"
         },
         {
           "name": "engine/math",
           "source": "src/engine_hw/math.asm",
-          "toolchain": "vc6pp",
-          "functions": ["_Invert24To16", "_TransformVector", "_BoxOnPlaneSide"]
+          "toolchain": "vc6pp"
         },
         {
           "name": "engine/snd_mixa",
           "source": "src/engine_hw/snd_mixa.asm",
-          "toolchain": "vc6pp",
-          "functions": ["_SND_PaintChannelFrom8Asm_guess", "_Snd_WriteLinearBlastStereo16", "_SND_PaintChannelFrom8A3D_guess"]
+          "toolchain": "vc6pp"
         },
         {
           "name": "engine/sys_wina",
           "source": "src/engine_hw/sys_wina.asm",
-          "toolchain": "vc6pp",
-          "functions": ["_MaskExceptions", "_Sys_LowFPPrecision", "_Sys_HighFPPrecision", "_Sys_PushFPCW_SetHigh", "_Sys_PopFPCW", "_Sys_SetFPCW", "_Sys_InitFPU_guess"]
+          "toolchain": "vc6pp"
         },
         {
           "name": "engine/worlda",
           "source": "src/engine_hw/worlda.asm",
-          "toolchain": "vc6pp",
-          "functions": ["_SV_HullPointContents"]
+          "toolchain": "vc6pp"
         },
         {
           "name": "engine/info",
-          "source": "src/engine_hw/info.c",
-          "functions_file": "tools/units/hw_engine_info.txt"
+          "source": "src/engine_hw/info.c"
         },
         {
           "name": "engine/CONSOLE",
-          "source": "src/engine_hw/CONSOLE.C",
-          "functions_file": "tools/units/hw_engine_CONSOLE.txt"
+          "source": "src/engine_hw/CONSOLE.C"
         },
         {
           "name": "engine/KEYS",
-          "source": "src/engine_hw/KEYS.C",
-          "functions_file": "tools/units/hw_engine_KEYS.txt"
+          "source": "src/engine_hw/KEYS.C"
         },
         {
           "name": "engine/common",
-          "source": "src/engine_hw/common.c",
-          "functions_file": "tools/units/hw_engine_common.txt"
+          "source": "src/engine_hw/common.c"
         },
         {
           "name": "engine/delta",
-          "source": "src/engine_hw/delta.c",
-          "functions_file": "tools/units/hw_engine_delta.txt"
+          "source": "src/engine_hw/delta.c"
         },
         {
           "name": "engine/net_chan",
-          "source": "src/engine_hw/net_chan.c",
-          "functions_file": "tools/units/hw_engine_net_chan.txt"
+          "source": "src/engine_hw/net_chan.c"
         },
         {
           "name": "engine/pmovetst",
-          "source": "src/engine_hw/pmovetst.c",
-          "functions_file": "tools/units/hw_engine_pmovetst.txt"
+          "source": "src/engine_hw/pmovetst.c"
         },
         {
           "name": "engine/world",
-          "source": "src/engine_hw/world.c",
-          "functions_file": "tools/units/hw_engine_world.txt"
+          "source": "src/engine_hw/world.c"
         },
         {
           "name": "engine/hashpak",
-          "source": "src/engine_hw/hashpak.c",
-          "functions_file": "tools/units/hw_engine_hashpak.txt"
+          "source": "src/engine_hw/hashpak.c"
         },
         {
           "name": "engine/sv_log",
-          "source": "src/engine_hw/sv_log.c",
-          "functions_file": "tools/units/hw_engine_sv_log.txt"
+          "source": "src/engine_hw/sv_log.c"
         },
         {
           "name": "engine/sv_upld",
-          "source": "src/engine_hw/sv_upld.c",
-          "functions_file": "tools/units/hw_engine_sv_upld.txt"
+          "source": "src/engine_hw/sv_upld.c"
         },
         {
           "name": "engine/CL_MAIN",
-          "source": "src/engine_hw/CL_MAIN.C",
-          "functions_file": "tools/units/hw_engine_CL_MAIN.txt"
+          "source": "src/engine_hw/CL_MAIN.C"
         },
         {
           "name": "engine/qgl",
-          "source": "src/engine_hw/qgl.c",
-          "functions_file": "tools/units/hw_engine_qgl.txt"
+          "source": "src/engine_hw/qgl.c"
         },
         {
           "name": "engine/GL_DRAW",
-          "source": "src/engine_hw/GL_DRAW.C",
-          "functions_file": "tools/units/hw_engine_GL_DRAW.txt"
+          "source": "src/engine_hw/GL_DRAW.C"
         },
         {
           "name": "engine/GL_RMAIN",
-          "source": "src/engine_hw/GL_RMAIN.C",
-          "functions_file": "tools/units/hw_engine_GL_RMAIN.txt"
+          "source": "src/engine_hw/GL_RMAIN.C"
         },
         {
           "name": "engine/GL_RMISC",
-          "source": "src/engine_hw/GL_RMISC.C",
-          "functions_file": "tools/units/hw_engine_GL_RMISC.txt"
+          "source": "src/engine_hw/GL_RMISC.C"
         },
         {
           "name": "engine/GL_WARP",
-          "source": "src/engine_hw/GL_WARP.C",
-          "functions_file": "tools/units/hw_engine_GL_WARP.txt"
+          "source": "src/engine_hw/GL_WARP.C"
         },
         {
           "name": "engine/sv_main",
-          "source": "src/engine_hw/sv_main.c",
-          "functions_file": "tools/units/hw_engine_sv_main.txt"
+          "source": "src/engine_hw/sv_main.c"
         },
         {
           "name": "engine/CL_PARSE",
-          "source": "src/engine_hw/CL_PARSE.C",
-          "functions_file": "tools/units/hw_engine_CL_PARSE.txt"
+          "source": "src/engine_hw/CL_PARSE.C"
         },
         {
           "name": "engine/cl_ents",
-          "source": "src/engine_hw/cl_ents.c",
-          "functions_file": "tools/units/hw_engine_cl_ents.txt"
+          "source": "src/engine_hw/cl_ents.c"
         },
         {
           "name": "engine/cl_pred",
-          "source": "src/engine_hw/cl_pred.c",
-          "functions_file": "tools/units/hw_engine_cl_pred.txt"
+          "source": "src/engine_hw/cl_pred.c"
         },
         {
           "name": "engine/cl_parsefn",
-          "source": "src/engine_hw/cl_parsefn.c",
-          "functions_file": "tools/units/hw_engine_cl_parsefn.txt"
+          "source": "src/engine_hw/cl_parsefn.c"
         },
         {
           "name": "engine/host",
-          "source": "src/engine_hw/host.c",
-          "functions_file": "tools/units/hw_engine_host.txt"
+          "source": "src/engine_hw/host.c"
         },
         {
           "name": "engine/host_cmd",
-          "source": "src/engine_hw/host_cmd.c",
-          "functions_file": "tools/units/hw_engine_host_cmd.txt"
+          "source": "src/engine_hw/host_cmd.c"
         },
         {
           "name": "engine/sv_phys",
-          "source": "src/engine_hw/sv_phys.c",
-          "functions_file": "tools/units/hw_engine_sv_phys.txt"
+          "source": "src/engine_hw/sv_phys.c"
         },
         {
           "name": "engine/sv_user",
-          "source": "src/engine_hw/sv_user.c",
-          "functions_file": "tools/units/hw_engine_sv_user.txt"
+          "source": "src/engine_hw/sv_user.c"
         },
         {
           "name": "engine/pr_cmds",
-          "source": "src/engine_hw/pr_cmds.c",
-          "functions_file": "tools/units/hw_engine_pr_cmds.txt"
+          "source": "src/engine_hw/pr_cmds.c"
         },
         {
           "name": "engine/r_studio",
-          "source": "src/engine_hw/r_studio.c",
-          "functions_file": "tools/units/hw_engine_r_studio.txt"
+          "source": "src/engine_hw/r_studio.c"
         },
         {
           "name": "engine/CL_TENT",
-          "source": "src/engine_hw/CL_TENT.C",
-          "functions_file": "tools/units/hw_engine_CL_TENT.txt"
+          "source": "src/engine_hw/CL_TENT.C"
         },
         {
           "name": "engine/r_efx",
-          "source": "src/engine_hw/r_efx.c",
-          "functions_file": "tools/units/hw_engine_r_efx.txt"
+          "source": "src/engine_hw/r_efx.c"
         },
         {
           "name": "engine/R_PART",
-          "source": "src/engine_hw/R_PART.C",
-          "functions_file": "tools/units/hw_engine_R_PART.txt"
+          "source": "src/engine_hw/R_PART.C"
         },
         {
           "name": "engine/SND_DMA",
-          "source": "src/engine_hw/SND_DMA.C",
-          "functions_file": "tools/units/hw_engine_SND_DMA.txt"
+          "source": "src/engine_hw/SND_DMA.C"
         },
         {
           "name": "engine/SND_MIX",
-          "source": "src/engine_hw/SND_MIX.C",
-          "functions_file": "tools/units/hw_engine_SND_MIX.txt"
+          "source": "src/engine_hw/SND_MIX.C"
         },
         {
           "name": "engine/SND_MEM",
-          "source": "src/engine_hw/SND_MEM.C",
-          "functions_file": "tools/units/hw_engine_SND_MEM.txt"
+          "source": "src/engine_hw/SND_MEM.C"
         },
         {
           "name": "engine/net_ws",
-          "source": "src/engine_hw/net_ws.c",
-          "functions_file": "tools/units/hw_engine_net_ws.txt"
+          "source": "src/engine_hw/net_ws.c"
         },
         {
           "name": "engine/Sequence",
-          "source": "src/engine_hw/Sequence.c",
-          "functions_file": "tools/units/hw_engine_Sequence.txt"
+          "source": "src/engine_hw/Sequence.c"
         },
         {
           "name": "engine/CL_DEMO",
-          "source": "src/engine_hw/CL_DEMO.C",
-          "functions_file": "tools/units/hw_engine_CL_DEMO.txt"
+          "source": "src/engine_hw/CL_DEMO.C"
         },
         {
           "name": "bzip2/blocksort",
           "source": "refs/bzip2-1.0.2-dl/bzip2-1.0.2/blocksort.c",
-          "functions_file": "tools/units/hw_bzip2_blocksort.txt",
           "toolchain": "vc6pp",
           "cflags": [
             "/nologo",
@@ -2321,7 +1967,6 @@
         {
           "name": "bzip2/huffman",
           "source": "refs/bzip2-1.0.2-dl/bzip2-1.0.2/huffman.c",
-          "functions_file": "tools/units/hw_bzip2_huffman.txt",
           "toolchain": "vc6pp",
           "cflags": [
             "/nologo",
@@ -2340,7 +1985,6 @@
         {
           "name": "bzip2/crctable",
           "source": "refs/bzip2-1.0.2-dl/bzip2-1.0.2/crctable.c",
-          "functions_file": "tools/units/hw_bzip2_crctable.txt",
           "toolchain": "vc6pp",
           "cflags": [
             "/nologo",
@@ -2359,7 +2003,6 @@
         {
           "name": "bzip2/randtable",
           "source": "refs/bzip2-1.0.2-dl/bzip2-1.0.2/randtable.c",
-          "functions_file": "tools/units/hw_bzip2_randtable.txt",
           "toolchain": "vc6pp",
           "cflags": [
             "/nologo",
@@ -2378,7 +2021,6 @@
         {
           "name": "bzip2/compress",
           "source": "refs/bzip2-1.0.2-dl/bzip2-1.0.2/compress.c",
-          "functions_file": "tools/units/hw_bzip2_compress.txt",
           "toolchain": "vc6pp",
           "cflags": [
             "/nologo",
@@ -2397,7 +2039,6 @@
         {
           "name": "bzip2/decompress",
           "source": "refs/bzip2-1.0.2-dl/bzip2-1.0.2/decompress.c",
-          "functions_file": "tools/units/hw_bzip2_decompress.txt",
           "toolchain": "vc6pp",
           "cflags": [
             "/nologo",
@@ -2416,7 +2057,6 @@
         {
           "name": "bzip2/bzlib",
           "source": "refs/bzip2-1.0.2-dl/bzip2-1.0.2/bzlib.c",
-          "functions_file": "tools/units/hw_bzip2_bzlib.txt",
           "toolchain": "vc6pp",
           "cflags": [
             "/nologo",
@@ -2435,7 +2075,6 @@
         {
           "name": "public/KeyValues",
           "source": "src/public/KeyValues.cpp",
-          "functions_file": "tools/units/hw_public_KeyValues.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2455,7 +2094,6 @@
         {
           "name": "public/interface",
           "source": "src/public/interface.cpp",
-          "functions_file": "tools/units/hw_public_interface.txt",
           "includes": [
             "src/gameui",
             "src/public",
@@ -2467,7 +2105,6 @@
         {
           "name": "vgui2/controls/Panel",
           "source": "src/vgui2/controls/Panel.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_Panel.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2487,7 +2124,6 @@
         {
           "name": "vgui2/controls/Label",
           "source": "src/vgui2/controls/Label.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_Label.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2507,7 +2143,6 @@
         {
           "name": "vgui2/controls/Button",
           "source": "src/vgui2/controls/Button.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_Button.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2527,7 +2162,6 @@
         {
           "name": "vgui2/controls/EditablePanel",
           "source": "src/vgui2/controls/EditablePanel.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_EditablePanel.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2547,7 +2181,6 @@
         {
           "name": "vgui2/controls/controls",
           "source": "src/vgui2/controls/controls.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_controls.txt",
           "includes": [
             "src/gameui",
             "src/public",
@@ -2558,63 +2191,51 @@
         },
         {
           "name": "engine/mathlib",
-          "source": "src/engine_hw/mathlib.c",
-          "functions_file": "tools/units/hw_engine_mathlib.txt"
+          "source": "src/engine_hw/mathlib.c"
         },
         {
           "name": "engine/mem",
-          "source": "src/engine_hw/mem.c",
-          "functions_file": "tools/units/hw_engine_mem.txt"
+          "source": "src/engine_hw/mem.c"
         },
         {
           "name": "engine/GL_RSURF",
-          "source": "src/engine_hw/GL_RSURF.C",
-          "functions_file": "tools/units/hw_engine_GL_RSURF.txt"
+          "source": "src/engine_hw/GL_RSURF.C"
         },
         {
           "name": "engine/GL_MODEL",
-          "source": "src/engine_hw/GL_MODEL.C",
-          "functions_file": "tools/units/hw_engine_GL_MODEL.txt"
+          "source": "src/engine_hw/GL_MODEL.C"
         },
         {
           "name": "engine/decals",
-          "source": "src/engine_hw/decals.c",
-          "functions_file": "tools/units/hw_engine_decals.txt"
+          "source": "src/engine_hw/decals.c"
         },
         {
           "name": "engine/gl_screen",
-          "source": "src/engine_hw/gl_screen.c",
-          "functions_file": "tools/units/hw_engine_gl_screen.txt"
+          "source": "src/engine_hw/gl_screen.c"
         },
         {
           "name": "engine/VIEW",
-          "source": "src/engine_hw/VIEW.C",
-          "functions_file": "tools/units/hw_engine_VIEW.txt"
+          "source": "src/engine_hw/VIEW.C"
         },
         {
           "name": "engine/pr_edict",
-          "source": "src/engine_hw/pr_edict.c",
-          "functions_file": "tools/units/hw_engine_pr_edict.txt"
+          "source": "src/engine_hw/pr_edict.c"
         },
         {
           "name": "engine/prefs_guess",
-          "source": "src/engine_hw/prefs_guess.c",
-          "functions_file": "tools/units/hw_engine_prefs_guess.txt"
+          "source": "src/engine_hw/prefs_guess.c"
         },
         {
           "name": "engine/cdll_int",
-          "source": "src/engine_hw/cdll_int.c",
-          "functions_file": "tools/units/hw_engine_cdll_int.txt"
+          "source": "src/engine_hw/cdll_int.c"
         },
         {
           "name": "engine/sys_dll",
-          "source": "src/engine_hw/sys_dll.c",
-          "functions_file": "tools/units/hw_engine_sys_dll.txt"
+          "source": "src/engine_hw/sys_dll.c"
         },
         {
           "name": "engine/sys_dll2",
           "source": "src/engine_hw/sys_dll2.cpp",
-          "functions_file": "tools/units/hw_engine_sys_dll2.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2627,7 +2248,6 @@
         {
           "name": "engine/sys_getmodes",
           "source": "src/engine_hw/sys_getmodes.cpp",
-          "functions_file": "tools/units/hw_engine_sys_getmodes.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2639,13 +2259,11 @@
         },
         {
           "name": "engine/GL_VIDNT",
-          "source": "src/engine_hw/GL_VIDNT.C",
-          "functions_file": "tools/units/hw_engine_GL_VIDNT.txt"
+          "source": "src/engine_hw/GL_VIDNT.C"
         },
         {
           "name": "vgui2/controls/Frame",
           "source": "src/vgui2/controls/Frame.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_Frame.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2665,7 +2283,6 @@
         {
           "name": "vgui2/controls/TextEntry",
           "source": "src/vgui2/controls/TextEntry.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_TextEntry.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2685,7 +2302,6 @@
         {
           "name": "vgui2/controls/RichText",
           "source": "src/vgui2/controls/RichText.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_RichText.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2705,7 +2321,6 @@
         {
           "name": "vgui2/controls/Menu",
           "source": "src/vgui2/controls/Menu.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_Menu.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2725,7 +2340,6 @@
         {
           "name": "vgui2/controls/ProgressBar",
           "source": "src/vgui2/controls/ProgressBar.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_ProgressBar.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2745,7 +2359,6 @@
         {
           "name": "vgui2/controls/RadioButton",
           "source": "src/vgui2/controls/RadioButton.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_RadioButton.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2765,7 +2378,6 @@
         {
           "name": "vgui2/controls/TextImage",
           "source": "src/vgui2/controls/TextImage.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_TextImage.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2785,7 +2397,6 @@
         {
           "name": "vgui2/controls/FocusNavGroup",
           "source": "src/vgui2/controls/FocusNavGroup.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_FocusNavGroup.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2805,7 +2416,6 @@
         {
           "name": "vgui2/controls/MenuButton",
           "source": "src/vgui2/controls/MenuButton.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_MenuButton.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2825,7 +2435,6 @@
         {
           "name": "vgui2/controls/ScrollBar",
           "source": "src/vgui2/controls/ScrollBar.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_ScrollBar.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2845,7 +2454,6 @@
         {
           "name": "vgui2/controls/ScrollBarSlider",
           "source": "src/vgui2/controls/ScrollBarSlider.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_ScrollBarSlider.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2865,7 +2473,6 @@
         {
           "name": "vgui2/controls/MenuItem",
           "source": "src/vgui2/controls/MenuItem.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_MenuItem.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2885,7 +2492,6 @@
         {
           "name": "vgui2/controls/BuildGroup",
           "source": "src/vgui2/controls/BuildGroup.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_BuildGroup.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2905,7 +2511,6 @@
         {
           "name": "vgui2/controls/PanelListPanel",
           "source": "src/vgui2/controls/PanelListPanel.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_PanelListPanel.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2925,7 +2530,6 @@
         {
           "name": "vgui2/controls/BuildModeDialog",
           "source": "src/vgui2/controls/BuildModeDialog.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_BuildModeDialog.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2945,7 +2549,6 @@
         {
           "name": "vgui2/controls/ComboBox",
           "source": "src/vgui2/controls/ComboBox.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_ComboBox.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2965,7 +2568,6 @@
         {
           "name": "vgui2/controls/AnimatingImagePanel",
           "source": "src/vgui2/controls/AnimatingImagePanel.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_AnimatingImagePanel.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -2985,7 +2587,6 @@
         {
           "name": "vgui2/controls/BitmapImagePanel",
           "source": "src/vgui2/controls/BitmapImagePanel.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_BitmapImagePanel.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3005,7 +2606,6 @@
         {
           "name": "vgui2/controls/MessageBox",
           "source": "src/vgui2/controls/MessageBox.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_MessageBox.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3025,7 +2625,6 @@
         {
           "name": "vgui2/controls/ToggleButton",
           "source": "src/vgui2/controls/ToggleButton.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_ToggleButton.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3045,7 +2644,6 @@
         {
           "name": "vgui2/controls/CheckButton",
           "source": "src/vgui2/controls/CheckButton.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_CheckButton.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3065,7 +2663,6 @@
         {
           "name": "vgui2/controls/Divider",
           "source": "src/vgui2/controls/Divider.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_Divider.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3085,7 +2682,6 @@
         {
           "name": "vgui2/controls/URLLabel",
           "source": "src/vgui2/controls/URLLabel.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_URLLabel.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3105,7 +2701,6 @@
         {
           "name": "vgui2/controls/ImagePanel",
           "source": "src/vgui2/controls/ImagePanel.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_ImagePanel.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3125,7 +2720,6 @@
         {
           "name": "vgui2/controls/Tooltip",
           "source": "src/vgui2/controls/Tooltip.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_Tooltip.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3145,7 +2739,6 @@
         {
           "name": "vgui2/controls/Image",
           "source": "src/vgui2/controls/Image.cpp",
-          "functions_file": "tools/units/hw_vgui2_controls_Image.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3164,13 +2757,11 @@
         },
         {
           "name": "engine/net_api",
-          "source": "src/engine_hw/net_api.c",
-          "functions_file": "tools/units/hw_engine_net_api.txt"
+          "source": "src/engine_hw/net_api.c"
         },
         {
           "name": "engine/voice",
           "source": "src/engine_hw/voice.cpp",
-          "functions_file": "tools/units/hw_engine_voice.txt",
           "includes": [
             "src/engine_hw",
             "src/public",
@@ -3179,13 +2770,11 @@
         },
         {
           "name": "engine/r_trans",
-          "source": "src/engine_hw/r_trans.c",
-          "functions_file": "tools/units/hw_engine_r_trans.txt"
+          "source": "src/engine_hw/r_trans.c"
         },
         {
           "name": "engine/VGUI_EngineSurfaceWrap",
           "source": "src/engine_hw/VGUI_EngineSurfaceWrap.cpp",
-          "functions_file": "tools/units/hw_engine_VGUI_EngineSurfaceWrap.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3204,7 +2793,6 @@
         {
           "name": "engine/vgui_EngineSurfaceHW",
           "source": "src/engine_hw/vgui_EngineSurfaceHW.cpp",
-          "functions_file": "tools/units/hw_engine_vgui_EngineSurfaceHW.txt",
           "includes": [
             "src/engine_hw",
             "src/common",
@@ -3213,18 +2801,15 @@
         },
         {
           "name": "engine/tmessage",
-          "source": "src/engine_hw/tmessage.c",
-          "functions_file": "tools/units/hw_engine_tmessage.txt"
+          "source": "src/engine_hw/tmessage.c"
         },
         {
           "name": "engine/gl_rlight",
-          "source": "src/engine_hw/gl_rlight.c",
-          "functions_file": "tools/units/hw_engine_gl_rlight.txt"
+          "source": "src/engine_hw/gl_rlight.c"
         },
         {
           "name": "engine/cd",
           "source": "src/engine_hw/cd.cpp",
-          "functions_file": "tools/units/hw_engine_cd.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3236,38 +2821,31 @@
         },
         {
           "name": "engine/cdll_exp",
-          "source": "src/engine_hw/cdll_exp.c",
-          "functions_file": "tools/units/hw_engine_cdll_exp.txt"
+          "source": "src/engine_hw/cdll_exp.c"
         },
         {
           "name": "engine/cl_draw",
-          "source": "src/engine_hw/cl_draw.c",
-          "functions_file": "tools/units/hw_engine_cl_draw.txt"
+          "source": "src/engine_hw/cl_draw.c"
         },
         {
           "name": "engine/cl_extrap",
-          "source": "src/engine_hw/cl_extrap.c",
-          "functions_file": "tools/units/hw_engine_cl_extrap.txt"
+          "source": "src/engine_hw/cl_extrap.c"
         },
         {
           "name": "engine/cl_pmove",
-          "source": "src/engine_hw/cl_pmove.c",
-          "functions_file": "tools/units/hw_engine_cl_pmove.txt"
+          "source": "src/engine_hw/cl_pmove.c"
         },
         {
           "name": "engine/cmodel",
-          "source": "src/engine_hw/cmodel.c",
-          "functions_file": "tools/units/hw_engine_cmodel.txt"
+          "source": "src/engine_hw/cmodel.c"
         },
         {
           "name": "engine/com_custom",
-          "source": "src/engine_hw/com_custom.c",
-          "functions_file": "tools/units/hw_engine_com_custom.txt"
+          "source": "src/engine_hw/com_custom.c"
         },
         {
           "name": "engine/vgui2/text_draw",
           "source": "src/engine_hw/vgui2/text_draw.cpp",
-          "functions_file": "tools/units/hw_engine_vgui2_text_draw.txt",
           "includes": [
             "src/engine_hw",
             "src/public",
@@ -3277,7 +2855,6 @@
         {
           "name": "engine/vgui_intwrap2",
           "source": "src/engine_hw/vgui_intwrap2.cpp",
-          "functions_file": "tools/units/hw_engine_vgui_intwrap2.txt",
           "includes": [
             "src/engine_hw",
             "src/public",
@@ -3287,28 +2864,23 @@
         },
         {
           "name": "engine/chase",
-          "source": "src/engine_hw/chase.c",
-          "functions_file": "tools/units/hw_engine_chase.txt"
+          "source": "src/engine_hw/chase.c"
         },
         {
           "name": "engine/buildnum",
-          "source": "src/engine_hw/buildnum.c",
-          "functions_file": "tools/units/hw_engine_buildnum.txt"
+          "source": "src/engine_hw/buildnum.c"
         },
         {
           "name": "engine/GL_MESH",
-          "source": "src/engine_hw/GL_MESH.C",
-          "functions_file": "tools/units/hw_engine_GL_MESH.txt"
+          "source": "src/engine_hw/GL_MESH.C"
         },
         {
           "name": "engine/textures",
-          "source": "src/engine_hw/textures.c",
-          "functions_file": "tools/units/hw_engine_textures.txt"
+          "source": "src/engine_hw/textures.c"
         },
         {
           "name": "engine/sv_steam3",
           "source": "src/engine_hw/sv_steam3.cpp",
-          "functions_file": "tools/units/hw_engine_sv_steam3.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3321,7 +2893,6 @@
         {
           "name": "engine/vgui2/BaseUI_Interface",
           "source": "src/engine_hw/vgui2/BaseUI_Interface.cpp",
-          "functions_file": "tools/units/hw_engine_vgui2_BaseUI_Interface.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3342,7 +2913,6 @@
         {
           "name": "engine/vgui2/BaseUISurface",
           "source": "src/engine_hw/vgui2/BaseUISurface.cpp",
-          "functions_file": "tools/units/hw_engine_vgui2_BaseUISurface.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3361,13 +2931,11 @@
         },
         {
           "name": "engine/cl_spectator",
-          "source": "src/engine_hw/cl_spectator.c",
-          "functions_file": "tools/units/hw_engine_cl_spectator.txt"
+          "source": "src/engine_hw/cl_spectator.c"
         },
         {
           "name": "engine/DemoPlayerWrapper",
           "source": "src/engine_hw/DemoPlayerWrapper.cpp",
-          "functions_file": "tools/units/hw_engine_DemoPlayerWrapper.txt",
           "includes": [
             "src/engine_hw",
             "src/public",
@@ -3377,7 +2945,6 @@
         {
           "name": "engine/download",
           "source": "src/engine_hw/download.cpp",
-          "functions_file": "tools/units/hw_engine_download.txt",
           "includes": [
             "src/engine_hw",
             "src/public",
@@ -3386,13 +2953,11 @@
         },
         {
           "name": "engine/eventapi",
-          "source": "src/engine_hw/eventapi.c",
-          "functions_file": "tools/units/hw_engine_eventapi.txt"
+          "source": "src/engine_hw/eventapi.c"
         },
         {
           "name": "engine/filesystem_internal",
           "source": "src/engine_hw/filesystem_internal.cpp",
-          "functions_file": "tools/units/hw_engine_filesystem_internal.txt",
           "includes": [
             "src/engine_hw",
             "src/public",
@@ -3402,7 +2967,6 @@
         {
           "name": "engine/filesystem",
           "source": "src/engine_hw/filesystem.cpp",
-          "functions_file": "tools/units/hw_engine_filesystem.txt",
           "includes": [
             "src/engine_hw",
             "src/public",
@@ -3411,28 +2975,23 @@
         },
         {
           "name": "engine/glHud",
-          "source": "src/engine_hw/glHud.c",
-          "functions_file": "tools/units/hw_engine_glHud.txt"
+          "source": "src/engine_hw/glHud.c"
         },
         {
           "name": "engine/gl_refrag",
-          "source": "src/engine_hw/gl_refrag.c",
-          "functions_file": "tools/units/hw_engine_gl_refrag.txt"
+          "source": "src/engine_hw/gl_refrag.c"
         },
         {
           "name": "engine/HUD",
-          "source": "src/engine_hw/HUD.c",
-          "functions_file": "tools/units/hw_engine_HUD.txt"
+          "source": "src/engine_hw/HUD.c"
         },
         {
           "name": "engine/module",
-          "source": "src/engine_hw/module.cpp",
-          "functions_file": "tools/units/hw_engine_module.txt"
+          "source": "src/engine_hw/module.cpp"
         },
         {
           "name": "engine/ipratelimit",
           "source": "src/engine_hw/ipratelimit.cpp",
-          "functions_file": "tools/units/hw_engine_ipratelimit.txt",
           "includes": [
             "src/engine_hw",
             "src/common",
@@ -3442,7 +3001,6 @@
         {
           "name": "engine/ipratelimitWrapper",
           "source": "src/engine_hw/ipratelimitWrapper.cpp",
-          "functions_file": "tools/units/hw_engine_ipratelimitWrapper.txt",
           "includes": [
             "src/engine_hw",
             "src/common",
@@ -3452,7 +3010,6 @@
         {
           "name": "engine/dinput_guess",
           "source": "src/engine_hw/dinput_guess.cpp",
-          "functions_file": "tools/units/hw_engine_dinput_guess.txt",
           "includes": [
             "src/engine_hw",
             "src/common",
@@ -3461,48 +3018,39 @@
         },
         {
           "name": "engine/pmove",
-          "source": "src/engine_hw/pmove.c",
-          "functions_file": "tools/units/hw_engine_pmove.txt"
+          "source": "src/engine_hw/pmove.c"
         },
         {
           "name": "engine/pmovedbg",
-          "source": "src/engine_hw/pmovedbg.c",
-          "functions_file": "tools/units/hw_engine_pmovedbg.txt"
+          "source": "src/engine_hw/pmovedbg.c"
         },
         {
           "name": "engine/r_triangle",
-          "source": "src/engine_hw/r_triangle.c",
-          "functions_file": "tools/units/hw_engine_r_triangle.txt"
+          "source": "src/engine_hw/r_triangle.c"
         },
         {
           "name": "game_shared/shared_util",
-          "source": "src/game_shared/shared_util.cpp",
-          "functions_file": "tools/units/hw_game_shared_shared_util.txt"
+          "source": "src/game_shared/shared_util.cpp"
         },
         {
           "name": "engine/snd_win",
-          "source": "src/engine_hw/snd_win.c",
-          "functions_file": "tools/units/hw_engine_snd_win.txt"
+          "source": "src/engine_hw/snd_win.c"
         },
         {
           "name": "common/steamid",
-          "source": "src/common/steamid.cpp",
-          "functions_file": "tools/units/hw_common_steamid.txt"
+          "source": "src/common/steamid.cpp"
         },
         {
           "name": "engine/sv_move",
-          "source": "src/engine_hw/sv_move.c",
-          "functions_file": "tools/units/hw_engine_sv_move.txt"
+          "source": "src/engine_hw/sv_move.c"
         },
         {
           "name": "engine/sv_pmove",
-          "source": "src/engine_hw/sv_pmove.c",
-          "functions_file": "tools/units/hw_engine_sv_pmove.txt"
+          "source": "src/engine_hw/sv_pmove.c"
         },
         {
           "name": "engine/sv_remoteaccess",
           "source": "src/engine_hw/sv_remoteaccess.cpp",
-          "functions_file": "tools/units/hw_engine_sv_remoteaccess.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3519,13 +3067,11 @@
         },
         {
           "name": "engine/sv_secure",
-          "source": "src/engine_hw/sv_secure.c",
-          "functions_file": "tools/units/hw_engine_sv_secure.txt"
+          "source": "src/engine_hw/sv_secure.c"
         },
         {
           "name": "engine/SystemWrapper",
           "source": "src/engine_hw/SystemWrapper.cpp",
-          "functions_file": "tools/units/hw_engine_SystemWrapper.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3543,7 +3089,6 @@
         {
           "name": "engine/Tokenize_guess",
           "source": "src/engine_hw/Tokenize_guess.cpp",
-          "functions_file": "tools/units/hw_engine_Tokenize_guess.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3561,7 +3106,6 @@
         {
           "name": "common/BaseSystemModule",
           "source": "src/common/BaseSystemModule.cpp",
-          "functions_file": "tools/units/hw_common_BaseSystemModule.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3579,7 +3123,6 @@
         {
           "name": "common/ObjectList",
           "source": "src/common/ObjectList.cpp",
-          "functions_file": "tools/units/hw_common_ObjectList.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3592,7 +3135,6 @@
         {
           "name": "common/TokenLine",
           "source": "src/common/TokenLine.cpp",
-          "functions_file": "tools/units/hw_common_TokenLine.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3604,13 +3146,11 @@
         },
         {
           "name": "engine/downloadthread",
-          "source": "src/engine_hw/downloadthread.cpp",
-          "functions_file": "tools/units/hw_engine_downloadthread.txt"
+          "source": "src/engine_hw/downloadthread.cpp"
         },
         {
           "name": "engine/LoadBlob",
           "source": "src/engine_hw/LoadBlob.cpp",
-          "functions_file": "tools/units/hw_engine_LoadBlob.txt",
           "includes": [
             "src/engine_hw",
             "src/public",
@@ -3620,7 +3160,6 @@
         {
           "name": "engine/sys_engine",
           "source": "src/engine_hw/sys_engine.cpp",
-          "functions_file": "tools/units/hw_engine_sys_engine.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3633,7 +3172,6 @@
         {
           "name": "engine/thread",
           "source": "src/engine_hw/thread.cpp",
-          "functions_file": "tools/units/hw_engine_thread.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3646,7 +3184,6 @@
         {
           "name": "engine/traceinit",
           "source": "src/engine_hw/traceinit.cpp",
-          "functions_file": "tools/units/hw_engine_traceinit.txt",
           "includes": [
             "src/engine_hw",
             "src/public",
@@ -3656,7 +3193,6 @@
         {
           "name": "public/registry",
           "source": "src/public/registry.cpp",
-          "functions_file": "tools/units/hw_public_registry.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3668,18 +3204,15 @@
         },
         {
           "name": "public/UtlBuffer",
-          "source": "src/public/UtlBuffer.cpp",
-          "functions_file": "tools/units/hw_public_UtlBuffer.txt"
+          "source": "src/public/UtlBuffer.cpp"
         },
         {
           "name": "engine/verify_guess",
-          "source": "src/engine_hw/verify_guess.c",
-          "functions_file": "tools/units/hw_engine_verify_guess.txt"
+          "source": "src/engine_hw/verify_guess.c"
         },
         {
           "name": "engine/vgui_int",
           "source": "src/engine_hw/vgui_int.cpp",
-          "functions_file": "tools/units/hw_engine_vgui_int.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3698,7 +3231,6 @@
         {
           "name": "engine/vgui_intwrap",
           "source": "src/engine_hw/vgui_intwrap.cpp",
-          "functions_file": "tools/units/hw_engine_vgui_intwrap.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3716,38 +3248,31 @@
         },
         {
           "name": "engine/voice_sound_engine_interface",
-          "source": "src/engine_hw/voice_sound_engine_interface.cpp",
-          "functions_file": "tools/units/hw_engine_voice_sound_engine_interface.txt"
+          "source": "src/engine_hw/voice_sound_engine_interface.cpp"
         },
         {
           "name": "engine/wad",
-          "source": "src/engine_hw/wad.c",
-          "functions_file": "tools/units/hw_engine_wad.txt"
+          "source": "src/engine_hw/wad.c"
         },
         {
           "name": "public/utlsymbol",
-          "source": "src/public/utlsymbol.cpp",
-          "functions_file": "tools/units/hw_public_utlsymbol.txt"
+          "source": "src/public/utlsymbol.cpp"
         },
         {
           "name": "public/MemPool",
-          "source": "src/public/MemPool.cpp",
-          "functions_file": "tools/units/hw_public_MemPool.txt"
+          "source": "src/public/MemPool.cpp"
         },
         {
           "name": "a3d/A3DRenderer_guess",
-          "source": "src/a3d/A3DRenderer_guess.cpp",
-          "functions_file": "tools/units/hw_a3d_A3DRenderer_guess.txt"
+          "source": "src/a3d/A3DRenderer_guess.cpp"
         },
         {
           "name": "public/IceKey",
-          "source": "src/public/IceKey.cpp",
-          "functions_file": "tools/units/hw_public_IceKey.txt"
+          "source": "src/public/IceKey.cpp"
         },
         {
           "name": "iga/IGA_Engine_guess",
           "source": "src/iga/IGA_Engine_guess.cpp",
-          "functions_file": "tools/units/hw_iga_IGA_Engine_guess.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3765,7 +3290,6 @@
         {
           "name": "iga/IGA_Metadata_guess",
           "source": "src/iga/IGA_Metadata_guess.cpp",
-          "functions_file": "tools/units/hw_iga_IGA_Metadata_guess.txt",
           "includes": [
             "src/engine_hw",
             "src/public",
@@ -3774,18 +3298,15 @@
         },
         {
           "name": "mathlib/imagequant",
-          "source": "src/mathlib/imagequant.cpp",
-          "functions_file": "tools/units/hw_mathlib_imagequant.txt"
+          "source": "src/mathlib/imagequant.cpp"
         },
         {
           "name": "mathlib/quantize",
-          "source": "src/mathlib/quantize.cpp",
-          "functions_file": "tools/units/hw_mathlib_quantize.txt"
+          "source": "src/mathlib/quantize.cpp"
         },
         {
           "name": "iga/IGA_Quantizer_guess",
           "source": "src/iga/IGA_Quantizer_guess.cpp",
-          "functions_file": "tools/units/hw_iga_IGA_Quantizer_guess.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3798,7 +3319,6 @@
         {
           "name": "engine/hla3d_guess",
           "source": "src/engine_hw/hla3d_guess.cpp",
-          "functions_file": "tools/units/hw_engine_hla3d_guess.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3820,18 +3340,15 @@
             "src/engine_hw",
             "src/common",
             "refs/dxheaders"
-          ],
-          "functions_file": "tools/units/hw_engine_opengl2d3d_guess.txt"
+          ]
         },
         {
           "name": "engine/pe_win32_guess",
-          "source": "src/engine_hw/pe_win32_guess.c",
-          "functions_file": "tools/units/hw_engine_pe_win32_guess.txt"
+          "source": "src/engine_hw/pe_win32_guess.c"
         },
         {
           "name": "engine/vgui2/BaseUISurface_Font",
           "source": "src/engine_hw/vgui2/BaseUISurface_Font.cpp",
-          "functions_file": "tools/units/hw_engine_vgui2_BaseUISurface_Font.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3851,7 +3368,6 @@
         {
           "name": "engine/vgui2/FontTextureCache",
           "source": "src/engine_hw/vgui2/FontTextureCache.cpp",
-          "functions_file": "tools/units/hw_engine_vgui2_FontTextureCache.txt",
           "includes": [
             "src/public",
             "src/engine",
@@ -3863,7 +3379,6 @@
         {
           "name": "engine/vgui2/HtmlWindow",
           "source": "src/engine_hw/vgui2/HtmlWindow.cpp",
-          "functions_file": "tools/units/hw_engine_vgui2_HtmlWindow.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3883,7 +3398,6 @@
         {
           "name": "engine/DetailTexture",
           "source": "src/engine_hw/DetailTexture.cpp",
-          "functions_file": "tools/units/hw_engine_DetailTexture.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3895,18 +3409,15 @@
         },
         {
           "name": "engine/CircularBuffer",
-          "source": "src/engine_hw/CircularBuffer.cpp",
-          "functions_file": "tools/units/hw_engine_CircularBuffer.txt"
+          "source": "src/engine_hw/CircularBuffer.cpp"
         },
         {
           "name": "engine/voice_gain",
-          "source": "src/engine_hw/voice_gain.cpp",
-          "functions_file": "tools/units/hw_engine_voice_gain.txt"
+          "source": "src/engine_hw/voice_gain.cpp"
         },
         {
           "name": "engine/sys_sdlwind",
           "source": "src/engine_hw/sys_sdlwind.cpp",
-          "functions_file": "tools/units/hw_engine_sys_sdlwind.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3924,13 +3435,11 @@
         },
         {
           "name": "engine/bitmap_win",
-          "source": "src/engine_hw/bitmap_win.c",
-          "functions_file": "tools/units/hw_engine_bitmap_win.txt"
+          "source": "src/engine_hw/bitmap_win.c"
         },
         {
           "name": "engine/voice_mixer_controls_openal",
           "source": "src/engine_hw/voice_mixer_controls_openal.cpp",
-          "functions_file": "tools/units/hw_engine_voice_mixer_controls_openal.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3942,33 +3451,27 @@
         },
         {
           "name": "engine/l_studio",
-          "source": "src/engine_hw/l_studio.c",
-          "functions_file": "tools/units/hw_engine_l_studio.txt"
+          "source": "src/engine_hw/l_studio.c"
         },
         {
           "name": "engine/voice_wavefile",
-          "source": "src/engine_hw/voice_wavefile.cpp",
-          "functions_file": "tools/units/hw_engine_voice_wavefile.txt"
+          "source": "src/engine_hw/voice_wavefile.cpp"
         },
         {
           "name": "engine/czmodelcheck",
-          "source": "src/engine_hw/czmodelcheck.cpp",
-          "functions_file": "tools/units/hw_engine_czmodelcheck.txt"
+          "source": "src/engine_hw/czmodelcheck.cpp"
         },
         {
           "name": "utils/procinfo/procinfo",
-          "source": "src/utils/procinfo/procinfo.cpp",
-          "functions_file": "tools/units/hw_utils_procinfo_procinfo.txt"
+          "source": "src/utils/procinfo/procinfo.cpp"
         },
         {
           "name": "engine/glide_guess",
-          "source": "src/engine_hw/glide_guess.c",
-          "functions_file": "tools/units/hw_engine_glide_guess.txt"
+          "source": "src/engine_hw/glide_guess.c"
         },
         {
           "name": "engine/voice_record_dsound",
           "source": "src/engine_hw/voice_record_dsound.cpp",
-          "functions_file": "tools/units/hw_engine_voice_record_dsound.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3981,7 +3484,6 @@
         {
           "name": "engine/voice_record_wavein",
           "source": "src/engine_hw/voice_record_wavein.cpp",
-          "functions_file": "tools/units/hw_engine_voice_record_wavein.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -3994,7 +3496,6 @@
         {
           "name": "engine/LauncherDirectDraw_guess",
           "source": "src/engine_hw/LauncherDirectDraw_guess.cpp",
-          "functions_file": "tools/units/hw_engine_LauncherDirectDraw_guess.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -4007,7 +3508,6 @@
         {
           "name": "engine/vgui_EngineSurface",
           "source": "src/engine_hw/vgui_EngineSurface.cpp",
-          "functions_file": "tools/units/hw_engine_vgui_EngineSurface.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -4025,7 +3525,6 @@
         {
           "name": "engine/vgui_EngineSurfaceWin32",
           "source": "src/engine_hw/vgui_EngineSurfaceWin32.cpp",
-          "functions_file": "tools/units/hw_engine_vgui_EngineSurfaceWin32.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -4043,7 +3542,6 @@
         {
           "name": "engine/vgui2/MemoryBitmap",
           "source": "src/engine_hw/vgui2/MemoryBitmap.cpp",
-          "functions_file": "tools/units/hw_engine_vgui2_MemoryBitmap.txt",
           "cflags": [
             "/nologo",
             "/c",
@@ -4061,7 +3559,6 @@
         {
           "name": "vgui2/vgui_surfacelib/FontManager",
           "source": "src/vgui2/vgui_surfacelib/FontManager.cpp",
-          "functions_file": "tools/units/hw_vgui2_vgui_surfacelib_FontManager.txt",
           "toolchain": "vc6pp",
           "cflags": [
             "/nologo",
@@ -4078,7 +3575,6 @@
         {
           "name": "vgui2/vgui_surfacelib/Win32Font",
           "source": "src/vgui2/vgui_surfacelib/Win32Font.cpp",
-          "functions_file": "tools/units/hw_vgui2_vgui_surfacelib_Win32Font.txt",
           "toolchain": "vc6pp",
           "cflags": [
             "/nologo",
@@ -4095,7 +3591,6 @@
         {
           "name": "vgui2/vgui_surfacelib/FontAmalgam",
           "source": "src/vgui2/vgui_surfacelib/FontAmalgam.cpp",
-          "functions_file": "tools/units/hw_vgui2_vgui_surfacelib_FontAmalgam.txt",
           "toolchain": "vc6pp",
           "cflags": [
             "/nologo",
@@ -4480,9 +3975,6 @@
     },
     "launcher": {
       "toolchain": "vc6",
-      "ghidra_folder": "/1.6a",
-      "ghidra_program": "cof.exe",
-      "symbols": "tools/symbols/launcher_1.6a.csv",
       "cflags": [
         "/nologo",
         "/c",
@@ -4502,33 +3994,27 @@
       "units": [
         {
           "name": "commandline",
-          "source": "src/launcher/commandline.cpp",
-          "functions_file": "tools/units/launcher_commandline.txt"
+          "source": "src/launcher/commandline.cpp"
         },
         {
           "name": "interface",
-          "source": "src/launcher/interface.cpp",
-          "functions_file": "tools/units/launcher_interface.txt"
+          "source": "src/launcher/interface.cpp"
         },
         {
           "name": "launcher",
-          "source": "src/launcher/launcher.cpp",
-          "functions_file": "tools/units/launcher_launcher.txt"
+          "source": "src/launcher/launcher.cpp"
         },
         {
           "name": "LoadBlob",
-          "source": "src/launcher/LoadBlob.cpp",
-          "functions_file": "tools/units/launcher_LoadBlob.txt"
+          "source": "src/launcher/LoadBlob.cpp"
         },
         {
           "name": "registry",
-          "source": "src/launcher/registry.cpp",
-          "functions_file": "tools/units/launcher_registry.txt"
+          "source": "src/launcher/registry.cpp"
         },
         {
           "name": "SteamAppStartup_guess",
-          "source": "src/launcher/SteamAppStartup_guess.cpp",
-          "functions_file": "tools/units/launcher_SteamAppStartup_guess.txt"
+          "source": "src/launcher/SteamAppStartup_guess.cpp"
         }
       ],
       "link": {
@@ -4563,9 +4049,6 @@
     },
     "gameui": {
       "toolchain": "vc6",
-      "ghidra_folder": "/1.6a",
-      "ghidra_program": "GameUI.dll",
-      "symbols": "tools/symbols/gameui_1.6a.csv",
       "cflags": [
         "/nologo",
         "/c",
@@ -4745,388 +4228,311 @@
       "units": [
         {
           "name": "public/interface",
-          "source": "src/public/interface.cpp",
-          "functions_file": "tools/units/gameui_public_interface.txt"
+          "source": "src/public/interface.cpp"
         },
         {
           "name": "GameUI/Sys_Utils",
-          "source": "src/gameui/Sys_Utils.cpp",
-          "functions_file": "tools/units/gameui_GameUI_Sys_Utils.txt"
+          "source": "src/gameui/Sys_Utils.cpp"
         },
         {
           "name": "GameUI/GameUI_Interface",
-          "source": "src/gameui/GameUI_Interface.cpp",
-          "functions_file": "tools/units/gameui_GameUI_GameUI_Interface.txt"
+          "source": "src/gameui/GameUI_Interface.cpp"
         },
         {
           "name": "vgui2/controls/controls",
-          "source": "src/vgui2/controls/controls.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_controls.txt"
+          "source": "src/vgui2/controls/controls.cpp"
         },
         {
           "name": "public/KeyValues",
-          "source": "src/public/KeyValues.cpp",
-          "functions_file": "tools/units/gameui_public_KeyValues.txt"
+          "source": "src/public/KeyValues.cpp"
         },
         {
           "name": "vgui2/controls/Panel",
-          "source": "src/vgui2/controls/Panel.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_Panel.txt"
+          "source": "src/vgui2/controls/Panel.cpp"
         },
         {
           "name": "vgui2/controls/Label",
-          "source": "src/vgui2/controls/Label.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_Label.txt"
+          "source": "src/vgui2/controls/Label.cpp"
         },
         {
           "name": "vgui2/controls/Button",
-          "source": "src/vgui2/controls/Button.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_Button.txt"
+          "source": "src/vgui2/controls/Button.cpp"
         },
         {
           "name": "vgui2/controls/EditablePanel",
-          "source": "src/vgui2/controls/EditablePanel.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_EditablePanel.txt"
+          "source": "src/vgui2/controls/EditablePanel.cpp"
         },
         {
           "name": "vgui2/controls/Frame",
-          "source": "src/vgui2/controls/Frame.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_Frame.txt"
+          "source": "src/vgui2/controls/Frame.cpp"
         },
         {
           "name": "vgui2/controls/TextEntry",
-          "source": "src/vgui2/controls/TextEntry.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_TextEntry.txt"
+          "source": "src/vgui2/controls/TextEntry.cpp"
         },
         {
           "name": "vgui2/controls/RichText",
-          "source": "src/vgui2/controls/RichText.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_RichText.txt"
+          "source": "src/vgui2/controls/RichText.cpp"
         },
         {
           "name": "vgui2/controls/Menu",
-          "source": "src/vgui2/controls/Menu.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_Menu.txt"
+          "source": "src/vgui2/controls/Menu.cpp"
         },
         {
           "name": "vgui2/controls/BuildGroup",
-          "source": "src/vgui2/controls/BuildGroup.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_BuildGroup.txt"
+          "source": "src/vgui2/controls/BuildGroup.cpp"
         },
         {
           "name": "vgui2/controls/PanelListPanel",
-          "source": "src/vgui2/controls/PanelListPanel.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_PanelListPanel.txt"
+          "source": "src/vgui2/controls/PanelListPanel.cpp"
         },
         {
           "name": "vgui2/controls/BuildModeDialog",
-          "source": "src/vgui2/controls/BuildModeDialog.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_BuildModeDialog.txt"
+          "source": "src/vgui2/controls/BuildModeDialog.cpp"
         },
         {
           "name": "vgui2/controls/ComboBox",
-          "source": "src/vgui2/controls/ComboBox.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_ComboBox.txt"
+          "source": "src/vgui2/controls/ComboBox.cpp"
         },
         {
           "name": "vgui2/controls/AnimatingImagePanel",
-          "source": "src/vgui2/controls/AnimatingImagePanel.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_AnimatingImagePanel.txt"
+          "source": "src/vgui2/controls/AnimatingImagePanel.cpp"
         },
         {
           "name": "vgui2/controls/BitmapImagePanel",
-          "source": "src/vgui2/controls/BitmapImagePanel.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_BitmapImagePanel.txt"
+          "source": "src/vgui2/controls/BitmapImagePanel.cpp"
         },
         {
           "name": "vgui2/controls/MessageBox",
-          "source": "src/vgui2/controls/MessageBox.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_MessageBox.txt"
+          "source": "src/vgui2/controls/MessageBox.cpp"
         },
         {
           "name": "vgui2/controls/ListPanel",
-          "source": "src/vgui2/controls/ListPanel.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_ListPanel.txt"
+          "source": "src/vgui2/controls/ListPanel.cpp"
         },
         {
           "name": "vgui2/controls/TestScriptController",
-          "source": "src/vgui2/controls/TestScriptController.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_TestScriptController.txt"
+          "source": "src/vgui2/controls/TestScriptController.cpp"
         },
         {
           "name": "vgui2/controls/PropertySheet",
-          "source": "src/vgui2/controls/PropertySheet.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_PropertySheet.txt"
+          "source": "src/vgui2/controls/PropertySheet.cpp"
         },
         {
           "name": "vgui2/controls/SectionedListPanel",
-          "source": "src/vgui2/controls/SectionedListPanel.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_SectionedListPanel.txt"
+          "source": "src/vgui2/controls/SectionedListPanel.cpp"
         },
         {
           "name": "vgui2/controls/HTML",
-          "source": "src/vgui2/controls/HTML.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_HTML.txt"
+          "source": "src/vgui2/controls/HTML.cpp"
         },
         {
           "name": "vgui2/controls/Slider",
-          "source": "src/vgui2/controls/Slider.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_Slider.txt"
+          "source": "src/vgui2/controls/Slider.cpp"
         },
         {
           "name": "vgui2/controls/PanelHorizListPanel",
-          "source": "src/vgui2/controls/PanelHorizListPanel.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_PanelHorizListPanel.txt"
+          "source": "src/vgui2/controls/PanelHorizListPanel.cpp"
         },
         {
           "name": "vgui2/controls/ProgressBar",
-          "source": "src/vgui2/controls/ProgressBar.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_ProgressBar.txt"
+          "source": "src/vgui2/controls/ProgressBar.cpp"
         },
         {
           "name": "vgui2/controls/RadioButton",
-          "source": "src/vgui2/controls/RadioButton.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_RadioButton.txt"
+          "source": "src/vgui2/controls/RadioButton.cpp"
         },
         {
           "name": "vgui2/controls/TextImage",
-          "source": "src/vgui2/controls/TextImage.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_TextImage.txt"
+          "source": "src/vgui2/controls/TextImage.cpp"
         },
         {
           "name": "vgui2/controls/FocusNavGroup",
-          "source": "src/vgui2/controls/FocusNavGroup.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_FocusNavGroup.txt"
+          "source": "src/vgui2/controls/FocusNavGroup.cpp"
         },
         {
           "name": "vgui2/controls/MenuButton",
-          "source": "src/vgui2/controls/MenuButton.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_MenuButton.txt"
+          "source": "src/vgui2/controls/MenuButton.cpp"
         },
         {
           "name": "vgui2/controls/ScrollBar",
-          "source": "src/vgui2/controls/ScrollBar.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_ScrollBar.txt"
+          "source": "src/vgui2/controls/ScrollBar.cpp"
         },
         {
           "name": "vgui2/controls/ScrollBarSlider",
-          "source": "src/vgui2/controls/ScrollBarSlider.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_ScrollBarSlider.txt"
+          "source": "src/vgui2/controls/ScrollBarSlider.cpp"
         },
         {
           "name": "vgui2/controls/MenuItem",
-          "source": "src/vgui2/controls/MenuItem.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_MenuItem.txt"
+          "source": "src/vgui2/controls/MenuItem.cpp"
         },
         {
           "name": "vgui2/controls/ToggleButton",
-          "source": "src/vgui2/controls/ToggleButton.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_ToggleButton.txt"
+          "source": "src/vgui2/controls/ToggleButton.cpp"
         },
         {
           "name": "vgui2/controls/CheckButton",
-          "source": "src/vgui2/controls/CheckButton.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_CheckButton.txt"
+          "source": "src/vgui2/controls/CheckButton.cpp"
         },
         {
           "name": "vgui2/controls/Divider",
-          "source": "src/vgui2/controls/Divider.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_Divider.txt"
+          "source": "src/vgui2/controls/Divider.cpp"
         },
         {
           "name": "vgui2/controls/URLLabel",
-          "source": "src/vgui2/controls/URLLabel.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_URLLabel.txt"
+          "source": "src/vgui2/controls/URLLabel.cpp"
         },
         {
           "name": "vgui2/controls/ImagePanel",
-          "source": "src/vgui2/controls/ImagePanel.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_ImagePanel.txt"
+          "source": "src/vgui2/controls/ImagePanel.cpp"
         },
         {
           "name": "vgui2/controls/Tooltip",
-          "source": "src/vgui2/controls/Tooltip.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_Tooltip.txt"
+          "source": "src/vgui2/controls/Tooltip.cpp"
         },
         {
           "name": "vgui2/controls/Image",
-          "source": "src/vgui2/controls/Image.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_Image.txt"
+          "source": "src/vgui2/controls/Image.cpp"
         },
         {
           "name": "public/UtlBuffer",
-          "source": "src/public/UtlBuffer.cpp",
-          "functions_file": "tools/units/gameui_public_UtlBuffer.txt"
+          "source": "src/public/UtlBuffer.cpp"
         },
         {
           "name": "public/utlsymbol",
-          "source": "src/public/utlsymbol.cpp",
-          "functions_file": "tools/units/gameui_public_utlsymbol.txt"
+          "source": "src/public/utlsymbol.cpp"
         },
         {
           "name": "common/parsemsg",
-          "source": "src/common/parsemsg.cpp",
-          "functions_file": "tools/units/gameui_common_parsemsg.txt"
+          "source": "src/common/parsemsg.cpp"
         },
         {
           "name": "game_shared/shared_util",
-          "source": "src/game_shared/shared_util.cpp",
-          "functions_file": "tools/units/gameui_game_shared_shared_util.txt"
+          "source": "src/game_shared/shared_util.cpp"
         },
         {
           "name": "public/filesystem_helpers",
-          "source": "src/public/filesystem_helpers.cpp",
-          "functions_file": "tools/units/gameui_public_filesystem_helpers.txt"
+          "source": "src/public/filesystem_helpers.cpp"
         },
         {
           "name": "public/characterset",
-          "source": "src/public/characterset.cpp",
-          "functions_file": "tools/units/gameui_public_characterset.txt"
+          "source": "src/public/characterset.cpp"
         },
         {
           "name": "GameUI/CvarLatch",
-          "source": "src/gameui/CvarLatch.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CvarLatch.txt"
+          "source": "src/gameui/CvarLatch.cpp"
         },
         {
           "name": "common/Random",
-          "source": "src/common/Random.cpp",
-          "functions_file": "tools/units/gameui_common_Random.txt"
+          "source": "src/common/Random.cpp"
         },
         {
           "name": "GameUI/CareerBox",
-          "source": "src/gameui/CareerBox.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CareerBox.txt"
+          "source": "src/gameui/CareerBox.cpp"
         },
         {
           "name": "GameUI/CareerBaseFrame",
-          "source": "src/gameui/CareerBaseFrame.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CareerBaseFrame.txt"
+          "source": "src/gameui/CareerBaseFrame.cpp"
         },
         {
           "name": "GameUI/CareerBotFrame",
-          "source": "src/gameui/CareerBotFrame.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CareerBotFrame.txt"
+          "source": "src/gameui/CareerBotFrame.cpp"
         },
         {
           "name": "GameUI/CareerProfileFrame",
-          "source": "src/gameui/CareerProfileFrame.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CareerProfileFrame.txt"
+          "source": "src/gameui/CareerProfileFrame.cpp"
         },
         {
           "name": "GameUI/CareerMapFrame",
-          "source": "src/gameui/CareerMapFrame.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CareerMapFrame.txt"
+          "source": "src/gameui/CareerMapFrame.cpp"
         },
         {
           "name": "GameUI/CareerProfile",
-          "source": "src/gameui/CareerProfile.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CareerProfile.txt"
+          "source": "src/gameui/CareerProfile.cpp"
         },
         {
           "name": "GameUI/CareerDefinitions",
-          "source": "src/gameui/CareerDefinitions.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CareerDefinitions.txt"
+          "source": "src/gameui/CareerDefinitions.cpp"
         },
         {
           "name": "GameUI/CareerGameTasks",
-          "source": "src/gameui/CareerGameTasks.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CareerGameTasks.txt"
+          "source": "src/gameui/CareerGameTasks.cpp"
         },
         {
           "name": "GameUI/CareerGame",
-          "source": "src/gameui/CareerGame.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CareerGame.txt"
+          "source": "src/gameui/CareerGame.cpp"
         },
         {
           "name": "GameUI/SaveGameDialog",
-          "source": "src/gameui/SaveGameDialog.cpp",
-          "functions_file": "tools/units/gameui_GameUI_SaveGameDialog.txt"
+          "source": "src/gameui/SaveGameDialog.cpp"
         },
         {
           "name": "GameUI/CDKeyEntryDialog",
-          "source": "src/gameui/CDKeyEntryDialog.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CDKeyEntryDialog.txt"
+          "source": "src/gameui/CDKeyEntryDialog.cpp"
         },
         {
           "name": "GameUI/CreateMultiplayerGameBotPage",
-          "source": "src/gameui/CreateMultiplayerGameBotPage.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CreateMultiplayerGameBotPage.txt"
+          "source": "src/gameui/CreateMultiplayerGameBotPage.cpp"
         },
         {
           "name": "GameUI/CreateMultiplayerGameServerPage",
-          "source": "src/gameui/CreateMultiplayerGameServerPage.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CreateMultiplayerGameServerPage.txt"
+          "source": "src/gameui/CreateMultiplayerGameServerPage.cpp"
         },
         {
           "name": "GameUI/GameConsoleDialog",
-          "source": "src/gameui/GameConsoleDialog.cpp",
-          "functions_file": "tools/units/gameui_GameUI_GameConsoleDialog.txt"
+          "source": "src/gameui/GameConsoleDialog.cpp"
         },
         {
           "name": "GameUI/MultiplayerAdvancedDialog",
-          "source": "src/gameui/MultiplayerAdvancedDialog.cpp",
-          "functions_file": "tools/units/gameui_GameUI_MultiplayerAdvancedDialog.txt"
+          "source": "src/gameui/MultiplayerAdvancedDialog.cpp"
         },
         {
           "name": "GameUI/CreateMultiplayerGameGameplayPage",
-          "source": "src/gameui/CreateMultiplayerGameGameplayPage.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CreateMultiplayerGameGameplayPage.txt"
+          "source": "src/gameui/CreateMultiplayerGameGameplayPage.cpp"
         },
         {
           "name": "GameUI/CreateMultiplayerGameDialog",
-          "source": "src/gameui/CreateMultiplayerGameDialog.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CreateMultiplayerGameDialog.txt"
+          "source": "src/gameui/CreateMultiplayerGameDialog.cpp"
         },
         {
           "name": "public/checksum_md5",
-          "source": "src/public/checksum_md5.cpp",
-          "functions_file": "tools/units/gameui_public_checksum_md5.txt"
+          "source": "src/public/checksum_md5.cpp"
         },
         {
           "name": "GameUI/LogoFile",
-          "source": "src/gameui/LogoFile.cpp",
-          "functions_file": "tools/units/gameui_GameUI_LogoFile.txt"
+          "source": "src/gameui/LogoFile.cpp"
         },
         {
           "name": "HLTV/common/BitBuffer",
-          "source": "src/HLTV/common/BitBuffer.cpp",
-          "functions_file": "tools/units/gameui_HLTV_common_BitBuffer.txt"
+          "source": "src/HLTV/common/BitBuffer.cpp"
         },
         {
           "name": "GameUI/CvarSlider",
-          "source": "src/gameui/CvarSlider.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CvarSlider.txt"
+          "source": "src/gameui/CvarSlider.cpp"
         },
         {
           "name": "HLTV/common/DirectorCmd",
-          "source": "src/HLTV/common/DirectorCmd.cpp",
-          "functions_file": "tools/units/gameui_HLTV_common_DirectorCmd.txt"
+          "source": "src/HLTV/common/DirectorCmd.cpp"
         },
         {
           "name": "vgui2/controls/PropertyPage",
-          "source": "src/vgui2/controls/PropertyPage.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_PropertyPage.txt"
+          "source": "src/vgui2/controls/PropertyPage.cpp"
         },
         {
           "name": "GameUI/OptionsSubVideo",
-          "source": "src/gameui/OptionsSubVideo.cpp",
-          "functions_file": "tools/units/gameui_GameUI_OptionsSubVideo.txt"
+          "source": "src/gameui/OptionsSubVideo.cpp"
         },
         {
           "name": "vgui2/controls/PropertyDialog",
-          "source": "src/vgui2/controls/PropertyDialog.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_PropertyDialog.txt"
+          "source": "src/vgui2/controls/PropertyDialog.cpp"
         },
         {
           "name": "vgui2/controls/QueryBox",
-          "source": "src/vgui2/controls/QueryBox.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_QueryBox.txt"
+          "source": "src/vgui2/controls/QueryBox.cpp"
         },
         {
           "name": "GameUI/OptionsSubVoice",
-          "source": "src/gameui/OptionsSubVoice.cpp",
-          "functions_file": "tools/units/gameui_GameUI_OptionsSubVoice.txt"
+          "source": "src/gameui/OptionsSubVoice.cpp"
         },
         {
           "name": "GameUI/OptionsSubSpray",
@@ -5134,268 +4540,215 @@
         },
         {
           "name": "GameUI/ScriptObject",
-          "source": "src/gameui/ScriptObject.cpp",
-          "functions_file": "tools/units/gameui_GameUI_ScriptObject.txt"
+          "source": "src/gameui/ScriptObject.cpp"
         },
         {
           "name": "GameUI/NewGameDialog",
-          "source": "src/gameui/NewGameDialog.cpp",
-          "functions_file": "tools/units/gameui_GameUI_NewGameDialog.txt"
+          "source": "src/gameui/NewGameDialog.cpp"
         },
         {
           "name": "GameUI/CvarToggleCheckButton",
-          "source": "src/gameui/CvarToggleCheckButton.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CvarToggleCheckButton.txt"
+          "source": "src/gameui/CvarToggleCheckButton.cpp"
         },
         {
           "name": "GameUI/CvarTextEntry",
-          "source": "src/gameui/CvarTextEntry.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CvarTextEntry.txt"
+          "source": "src/gameui/CvarTextEntry.cpp"
         },
         {
           "name": "GameUI/ChangeGameDialog",
-          "source": "src/gameui/ChangeGameDialog.cpp",
-          "functions_file": "tools/units/gameui_GameUI_ChangeGameDialog.txt"
+          "source": "src/gameui/ChangeGameDialog.cpp"
         },
         {
           "name": "GameUI/LoadGameDialog",
-          "source": "src/gameui/LoadGameDialog.cpp",
-          "functions_file": "tools/units/gameui_GameUI_LoadGameDialog.txt"
+          "source": "src/gameui/LoadGameDialog.cpp"
         },
         {
           "name": "GameUI/LabeledCommandComboBox",
-          "source": "src/gameui/LabeledCommandComboBox.cpp",
-          "functions_file": "tools/units/gameui_GameUI_LabeledCommandComboBox.txt"
+          "source": "src/gameui/LabeledCommandComboBox.cpp"
         },
         {
           "name": "GameUI/BitmapImagePanel",
-          "source": "src/gameui/BitmapImagePanel.cpp",
-          "functions_file": "tools/units/gameui_GameUI_BitmapImagePanel.txt"
+          "source": "src/gameui/BitmapImagePanel.cpp"
         },
         {
           "name": "GameUI/VGuiSystemModuleLoader",
-          "source": "src/gameui/VGuiSystemModuleLoader.cpp",
-          "functions_file": "tools/units/gameui_GameUI_VGuiSystemModuleLoader.txt"
+          "source": "src/gameui/VGuiSystemModuleLoader.cpp"
         },
         {
           "name": "GameUI/CareerProfileButton",
-          "source": "src/gameui/CareerProfileButton.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CareerProfileButton.txt"
+          "source": "src/gameui/CareerProfileButton.cpp"
         },
         {
           "name": "GameUI/RefreshSteamLogin",
-          "source": "src/gameui/RefreshSteamLogin.cpp",
-          "functions_file": "tools/units/gameui_GameUI_RefreshSteamLogin.txt"
+          "source": "src/gameui/RefreshSteamLogin.cpp"
         },
         {
           "name": "GameUI/CommandCheckButton",
-          "source": "src/gameui/CommandCheckButton.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CommandCheckButton.txt"
+          "source": "src/gameui/CommandCheckButton.cpp"
         },
         {
           "name": "GameUI/PlayerListDialog",
-          "source": "src/gameui/PlayerListDialog.cpp",
-          "functions_file": "tools/units/gameui_GameUI_PlayerListDialog.txt"
+          "source": "src/gameui/PlayerListDialog.cpp"
         },
         {
           "name": "GameUI/HelpDialog",
-          "source": "src/gameui/HelpDialog.cpp",
-          "functions_file": "tools/units/gameui_GameUI_HelpDialog.txt"
+          "source": "src/gameui/HelpDialog.cpp"
         },
         {
           "name": "GameUI/BackgroundMenuButton",
-          "source": "src/gameui/BackgroundMenuButton.cpp",
-          "functions_file": "tools/units/gameui_GameUI_BackgroundMenuButton.txt"
+          "source": "src/gameui/BackgroundMenuButton.cpp"
         },
         {
           "name": "GameUI/ContentControlDialog",
-          "source": "src/gameui/ContentControlDialog.cpp",
-          "functions_file": "tools/units/gameui_GameUI_ContentControlDialog.txt"
+          "source": "src/gameui/ContentControlDialog.cpp"
         },
         {
           "name": "GameUI/DemoPlayerFileDialog",
-          "source": "src/gameui/DemoPlayerFileDialog.cpp",
-          "functions_file": "tools/units/gameui_GameUI_DemoPlayerFileDialog.txt"
+          "source": "src/gameui/DemoPlayerFileDialog.cpp"
         },
         {
           "name": "GameUI/CvarNegateCheckButton",
-          "source": "src/gameui/CvarNegateCheckButton.cpp",
-          "functions_file": "tools/units/gameui_GameUI_CvarNegateCheckButton.txt"
+          "source": "src/gameui/CvarNegateCheckButton.cpp"
         },
         {
           "name": "GameUI/TextEntryBox",
-          "source": "src/gameui/TextEntryBox.cpp",
-          "functions_file": "tools/units/gameui_GameUI_TextEntryBox.txt"
+          "source": "src/gameui/TextEntryBox.cpp"
         },
         {
           "name": "GameUI/OptionsSubMultiplayer",
-          "source": "src/gameui/OptionsSubMultiplayer.cpp",
-          "functions_file": "tools/units/gameui_GameUI_OptionsSubMultiplayer.txt"
+          "source": "src/gameui/OptionsSubMultiplayer.cpp"
         },
         {
           "name": "GameUI/TaskButton",
-          "source": "src/gameui/TaskButton.cpp",
-          "functions_file": "tools/units/gameui_GameUI_TaskButton.txt"
+          "source": "src/gameui/TaskButton.cpp"
         },
         {
           "name": "GameUI/KeyToggleCheckButton",
-          "source": "src/gameui/KeyToggleCheckButton.cpp",
-          "functions_file": "tools/units/gameui_GameUI_KeyToggleCheckButton.txt"
+          "source": "src/gameui/KeyToggleCheckButton.cpp"
         },
         {
           "name": "GameUI/BitmapButton",
-          "source": "src/gameui/BitmapButton.cpp",
-          "functions_file": "tools/units/gameui_GameUI_BitmapButton.txt"
+          "source": "src/gameui/BitmapButton.cpp"
         },
         {
           "name": "GameUI/OptionsSubAudio",
-          "source": "src/gameui/OptionsSubAudio.cpp",
-          "functions_file": "tools/units/gameui_GameUI_OptionsSubAudio.txt"
+          "source": "src/gameui/OptionsSubAudio.cpp"
         },
         {
           "name": "GameUI/ImageButton",
-          "source": "src/gameui/ImageButton.cpp",
-          "functions_file": "tools/units/gameui_GameUI_ImageButton.txt"
+          "source": "src/gameui/ImageButton.cpp"
         },
         {
           "name": "GameUI/OptionsSubMouse",
-          "source": "src/gameui/OptionsSubMouse.cpp",
-          "functions_file": "tools/units/gameui_GameUI_OptionsSubMouse.txt"
+          "source": "src/gameui/OptionsSubMouse.cpp"
         },
         {
           "name": "GameUI/DottedLabel",
-          "source": "src/gameui/DottedLabel.cpp",
-          "functions_file": "tools/units/gameui_GameUI_DottedLabel.txt"
+          "source": "src/gameui/DottedLabel.cpp"
         },
         {
           "name": "GameUI/MusicManager",
-          "source": "src/gameui/MusicManager.cpp",
-          "functions_file": "tools/units/gameui_GameUI_MusicManager.txt"
+          "source": "src/gameui/MusicManager.cpp"
         },
         {
           "name": "GameUI/OptionsSubAdvanced",
-          "source": "src/gameui/OptionsSubAdvanced.cpp",
-          "functions_file": "tools/units/gameui_GameUI_OptionsSubAdvanced.txt"
+          "source": "src/gameui/OptionsSubAdvanced.cpp"
         },
         {
           "name": "GameUI/labelslidercombo",
-          "source": "src/gameui/labelslidercombo.cpp",
-          "functions_file": "tools/units/gameui_GameUI_labelslidercombo.txt"
+          "source": "src/gameui/labelslidercombo.cpp"
         },
         {
           "name": "GameUI/MsgBuffer_guess",
-          "source": "src/gameui/MsgBuffer_guess.cpp",
-          "functions_file": "tools/units/gameui_GameUI_MsgBuffer_guess.txt"
+          "source": "src/gameui/MsgBuffer_guess.cpp"
         },
         {
           "name": "GameUI/NetAPI_guess",
-          "source": "src/gameui/NetAPI_guess.cpp",
-          "functions_file": "tools/units/gameui_GameUI_NetAPI_guess.txt"
+          "source": "src/gameui/NetAPI_guess.cpp"
         },
         {
           "name": "HLTV/common/byteorder",
-          "source": "src/HLTV/common/byteorder.cpp",
-          "functions_file": "tools/units/gameui_HLTV_common_byteorder.txt"
+          "source": "src/HLTV/common/byteorder.cpp"
         },
         {
           "name": "GameUI/ModInfo",
-          "source": "src/gameui/ModInfo.cpp",
-          "functions_file": "tools/units/gameui_GameUI_ModInfo.txt"
+          "source": "src/gameui/ModInfo.cpp"
         },
         {
           "name": "GameUI/BasePanel",
-          "source": "src/gameui/BasePanel.cpp",
-          "functions_file": "tools/units/gameui_GameUI_BasePanel.txt"
+          "source": "src/gameui/BasePanel.cpp"
         },
         {
           "name": "GameUI/vcontrolslistpanel",
-          "source": "src/gameui/vcontrolslistpanel.cpp",
-          "functions_file": "tools/units/gameui_GameUI_vcontrolslistpanel.txt"
+          "source": "src/gameui/vcontrolslistpanel.cpp"
         },
         {
           "name": "GameUI/PanelListPanel",
-          "source": "src/gameui/PanelListPanel.cpp",
-          "functions_file": "tools/units/gameui_GameUI_PanelListPanel.txt"
+          "source": "src/gameui/PanelListPanel.cpp"
         },
         {
           "name": "GameUI/GameConsole",
-          "source": "src/gameui/GameConsole.cpp",
-          "functions_file": "tools/units/gameui_GameUI_GameConsole.txt"
+          "source": "src/gameui/GameConsole.cpp"
         },
         {
           "name": "GameUI/RunGameEngine",
-          "source": "src/gameui/RunGameEngine.cpp",
-          "functions_file": "tools/units/gameui_GameUI_RunGameEngine.txt"
+          "source": "src/gameui/RunGameEngine.cpp"
         },
         {
           "name": "public/MemPool",
-          "source": "src/public/MemPool.cpp",
-          "functions_file": "tools/units/gameui_public_MemPool.txt"
+          "source": "src/public/MemPool.cpp"
         },
         {
           "name": "GameUI/OptionsSubKeyboard",
-          "source": "src/gameui/OptionsSubKeyboard.cpp",
-          "functions_file": "tools/units/gameui_GameUI_OptionsSubKeyboard.txt"
+          "source": "src/gameui/OptionsSubKeyboard.cpp"
         },
         {
           "name": "GameUI/OptionsDialog",
-          "source": "src/gameui/OptionsDialog.cpp",
-          "functions_file": "tools/units/gameui_GameUI_OptionsDialog.txt"
+          "source": "src/gameui/OptionsDialog.cpp"
         },
         {
           "name": "vgui2/controls/ImageList",
-          "source": "src/vgui2/controls/ImageList.cpp",
-          "functions_file": "tools/units/gameui_vgui2_controls_ImageList.txt"
+          "source": "src/vgui2/controls/ImageList.cpp"
         },
         {
           "name": "HLTV/common/common",
-          "source": "src/HLTV/common/common.cpp",
-          "functions_file": "tools/units/gameui_HLTV_common_common.txt"
+          "source": "src/HLTV/common/common.cpp"
         },
         {
           "name": "GameUI/DemoPlayerDialog",
-          "source": "src/gameui/DemoPlayerDialog.cpp",
-          "functions_file": "tools/units/gameui_GameUI_DemoPlayerDialog.txt"
+          "source": "src/gameui/DemoPlayerDialog.cpp"
         },
         {
           "name": "GameUI/DemoEventsDialog",
-          "source": "src/gameui/DemoEventsDialog.cpp",
-          "functions_file": "tools/units/gameui_GameUI_DemoEventsDialog.txt"
+          "source": "src/gameui/DemoEventsDialog.cpp"
         },
         {
           "name": "common/BaseSystemModule",
-          "source": "src/common/BaseSystemModule.cpp",
-          "functions_file": "tools/units/gameui_common_BaseSystemModule.txt"
+          "source": "src/common/BaseSystemModule.cpp"
         },
         {
           "name": "common/ObjectList",
-          "source": "src/common/ObjectList.cpp",
-          "functions_file": "tools/units/gameui_common_ObjectList.txt"
+          "source": "src/common/ObjectList.cpp"
         },
         {
           "name": "GameUI/DemoEditDialog",
-          "source": "src/gameui/DemoEditDialog.cpp",
-          "functions_file": "tools/units/gameui_GameUI_DemoEditDialog.txt"
+          "source": "src/gameui/DemoEditDialog.cpp"
         },
         {
           "name": "GameUI/Socket_guess",
-          "source": "src/gameui/Socket_guess.cpp",
-          "functions_file": "tools/units/gameui_GameUI_Socket_guess.txt"
+          "source": "src/gameui/Socket_guess.cpp"
         },
         {
           "name": "GameUI/LoadingDialog",
-          "source": "src/gameui/LoadingDialog.cpp",
-          "functions_file": "tools/units/gameui_GameUI_LoadingDialog.txt"
+          "source": "src/gameui/LoadingDialog.cpp"
         },
         {
           "name": "GameUI/MasterVersionChk_guess",
-          "source": "src/gameui/MasterVersionChk_guess.cpp",
-          "functions_file": "tools/units/gameui_GameUI_MasterVersionChk_guess.txt"
+          "source": "src/gameui/MasterVersionChk_guess.cpp"
         },
         {
           "name": "game_shared/bot/bot_profile",
           "source": "src/game_shared/bot/bot_profile.cpp",
-          "functions_file": "tools/units/gameui_game_shared_bot_bot_profile.txt",
           "defines": [
             "WIN32",
             "_WINDOWS",
@@ -5412,8 +4765,7 @@
         },
         {
           "name": "GameUI/Taskbar",
-          "source": "src/gameui/Taskbar.cpp",
-          "functions_file": "tools/units/gameui_GameUI_Taskbar.txt"
+          "source": "src/gameui/Taskbar.cpp"
         }
       ]
     }

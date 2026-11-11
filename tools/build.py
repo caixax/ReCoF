@@ -1,19 +1,13 @@
-"""Build and diff driver.
+"""Build driver.
 
-  python tools/build.py base   [unit ...]   compile src/ units (toolchain of the unit or its DLL)
-  python tools/build.py target [unit ...]   delink retail units through Ghidra
-  python tools/build.py objdiff             write objdiff.json
-  python tools/build.py report              objdiff report, per unit and function
-  python tools/build.py all    [unit ...]   base + target + objdiff + report
-  python tools/build.py check  <unit ...>   compile and report only these units
-  python tools/build.py decomp <unit ...>   Ghidra pseudo C into build/decomp/ (reference)
-  python tools/build.py link   <dll>        link all units of a DLL into build/bin/<dll>
-                                            (only when the DLL has a "link" section and
-                                            every unit compiles), then compare with retail
+  python tools/build.py base [unit ...]   compile src/ units (toolchain of the unit or its DLL)
+  python tools/build.py link <dll>        link all units of a DLL into build/bin/<dll>
+                                          (only when the DLL has a "link" section and
+                                          every unit compiles), then compare with retail
 
 Units are named <dll>/<path>, for example hl/dlls/h_export. Config lives in
-tools/units.json. Outputs: build/base/<dll>/<path>.obj (ours) and
-build/target/<dll>/<path>.obj (retail, delinked).
+tools/units.json. Outputs: build/base/<dll>/<path>.obj and, for the link,
+build/link_obj/ and build/bin/<dll>.
 
 Toolchains: "toolchain" of a DLL (msvc1427 by default, vc6) compiles its
 units and links it; a unit may name its own compiler ("toolchain": "vc6pp"
@@ -22,11 +16,10 @@ build/link_obj alike, while the DLL keeps linking with its own toolchain.
 A unit whose source ends in .asm (MASM syntax) is assembled with the ml.exe
 of its toolchain and "asflags" (default /nologo /c /Cp /coff /Zm).
 
-ReCoF builds hl.dll and client.dll with msvc1444 (VS 2022), so their code no
-longer matches retail. --retail-cc compiles (and links) them with the retail
-msvc1427 instead, which makes check and report match retail again, for
-example to merge a DeCoF correction: python tools/build.py --retail-cc check
-hl/dlls/player
+ReCoF builds hl.dll and client.dll with msvc1444 (VS 2022). The
+decompilation's tools (delinking retail units through Ghidra, objdiff
+reports, the matching workflow) are in DeCoF, which this repository was
+forked from.
 """
 import csv
 import json
@@ -34,8 +27,6 @@ import os
 import shutil
 import subprocess
 import sys
-import urllib.parse
-import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import msvc  # noqa: E402
@@ -43,9 +34,11 @@ import msvc1444  # noqa: E402
 import msvc6  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-GHIDRA = r"I:\Tools\ghidra_12.1.4_PUBLIC"
-OBJDIFF = r"I:\Tools\bin\objdiff-cli.exe"
 CONFIG = os.path.join(ROOT, "tools", "units.json")
+# hw.dll's retail functions with the evidence for each name (the rows of the
+# decompilation's progress list that the hw.dll link still needs:
+# delink_retail.py and merged_symbols)
+FUNCTIONS = os.path.join(ROOT, "tools", "symbols", "hw_functions.csv")
 
 
 def load_units(selected):
@@ -76,8 +69,6 @@ def toolchain_name(d, u=None):
     launcher) or vc6pp (VC6 SP6 with the processor pack). A unit's own
     "toolchain" replaces the DLL's for its compile only."""
     name = (u or {}).get("toolchain", d.get("toolchain", "msvc1427"))
-    if RETAIL_CC and name == "msvc1444":
-        name = "msvc1427"
     if name not in TOOLCHAINS:
         sys.exit("unknown toolchain %r (known: %s)" % (name, ", ".join(sorted(TOOLCHAINS))))
     return name
@@ -110,17 +101,10 @@ def ml_path(d, u=None):
     return path
 
 
-def unit_functions(u):
-    if "functions_file" in u:
-        return [l.strip() for l in open(os.path.join(ROOT, u["functions_file"])) if l.strip()]
-    return u.get("functions", [])
-
-
 def build_base(units, kind="base", extra=()):
     """Compile the units into build/<kind>/. The link may add flags that
     change only how functions are packaged (link section "cflags_extra",
-    objects in build/link_obj/), so the objects objdiff compares stay as
-    they are."""
+    objects in build/link_obj/), so build/base stays as the units compile."""
     ok = True
     for dll, d, u, full in units:
         tc = toolchain(d, u)
@@ -156,27 +140,6 @@ def build_base(units, kind="base", extra=()):
                 print("       ... %d more errors" % (len(errors) - 40))
         ok &= rc == 0
     return ok
-
-
-MCP_URL = "http://127.0.0.1:8089"
-
-
-def mcp_up():
-    try:
-        with urllib.request.urlopen(MCP_URL + "/check_connection", timeout=2) as r:
-            return r.status == 200
-    except Exception:
-        return False
-
-
-def mcp_call(path, body=None, query=None, timeout=120):
-    url = MCP_URL + path
-    if query:
-        url += "?" + urllib.parse.urlencode(query)
-    data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.loads(r.read().decode())
 
 
 def local_names(d):
@@ -223,14 +186,14 @@ def merged_symbols(d, dll, tag=""):
             rows[va] = (name, "func")
             curated.add(va)
     # a name may live at one address only (the COFF exporter refuses
-    # duplicates): curated entries win, then the strongest evidence in
-    # docs/progress.csv; the losers are forgotten in Ghidra. Names local to
+    # duplicates): curated entries win, then the strongest evidence in the
+    # retail function list (tools/symbols/hw_functions.csv). Names local to
     # their object ($LN jump tables, the VC6 dynamic initializers _$E1,
     # _$E2, ... that every C++ object with constructed globals numbers from
     # 1) may label one address per unit, and so may the copies that
     # _local.csv lists: besides them the name keeps one other address
     rank = {}
-    for r in csv.DictReader(open(os.path.join(ROOT, "docs", "progress.csv"))):
+    for r in csv.DictReader(open(FUNCTIONS)):
         if r["dll"] == dll:
             ev = r["evidence"]
             rank[r["va"].upper()] = (0 if ev.startswith("refbytes") else 1 if "exports" in ev
@@ -284,138 +247,6 @@ def merged_symbols(d, dll, tag=""):
         shutil.copyfile(out, shared + tag)
         os.replace(shared + tag, shared)
     return out
-
-
-def write_job(d, items, job, dll, tag=""):
-    os.makedirs(os.path.dirname(job), exist_ok=True)
-    symbols = merged_symbols(d, dll, tag)
-    # a name of _local.csv labels several addresses: each unit includes the
-    # copy listed for it, any other unit the one copy the list leaves out
-    local = local_names(d)
-    vas = {}
-    for r in csv.DictReader(open(symbols)):
-        if r["name"] in local:
-            vas.setdefault(r["name"], []).append(r["va"].upper())
-    with open(job, "w") as f:
-        f.write("symbols %s\n" % symbols)
-        f.write("forget %s\n" % os.path.join(ROOT, "build", "jobs", "forget_%s%s.csv" % (dll, tag)))
-        for u, full in items:
-            f.write("unit %s\n" % obj_path("target", full))
-            for name in unit_functions(u) + u.get("data", []):
-                if name in local:
-                    va = local[name].get(u["name"])
-                    rest = [v for v in vas.get(name, []) if v not in local[name].values()]
-                    if va is None and len(rest) == 1:
-                        va = rest[0]
-                    if va is not None:
-                        f.write("include %s %s\n" % (name, va))
-                        continue
-                f.write("include %s\n" % name)
-
-
-def build_target(units):
-    """Delink retail units with tools/ghidra_scripts/DelinkUnits.java.
-
-    Uses the running GhidraMCP server when it is up (it holds the project
-    lock and needs GHIDRA_MCP_ALLOW_SCRIPTS=1), otherwise headless Ghidra.
-    """
-    by_dll = {}
-    for dll, d, u, full in units:
-        by_dll.setdefault(dll, (d, []))[1].append((u, full))
-    script = os.path.join(ROOT, "tools", "ghidra_scripts", "DelinkUnits.java")
-    use_mcp = mcp_up()
-    ok = True
-    for dll, (d, items) in by_dll.items():
-        # one set of job files per process: agents delink concurrently
-        tag = "_%d" % os.getpid()
-        job = os.path.join(ROOT, "build", "jobs", "delink_%s%s.txt" % (dll, tag))
-        write_job(d, items, job, dll, tag)
-        for u, full in items:
-            if os.path.exists(obj_path("target", full)):
-                os.remove(obj_path("target", full))
-        program = d["ghidra_folder"] + "/" + d["ghidra_program"]
-        if use_mcp:
-            res = mcp_call("/run_ghidra_script", body={
-                "script_name": script, "args": job, "program": program,
-                "timeout_seconds": 1800}, timeout=1900)
-            mcp_call("/save_program", query={"program": program})
-            rc = 0 if res.get("success") or res.get("status") == "success" else 1
-            log = json.dumps(res)[:2000]
-        else:
-            log = os.path.join(ROOT, "build", "ghidra_logs", "delink_%s.log" % dll)
-            cmd = [os.path.join(GHIDRA, "support", "analyzeHeadless.bat"),
-                   os.path.join(ROOT, "re"), "CoF" + d["ghidra_folder"],
-                   "-process", d["ghidra_program"], "-noanalysis",
-                   "-scriptPath", os.path.dirname(script),
-                   "-postScript", "DelinkUnits.java", job, "-log", log]
-            rc = subprocess.call(cmd, cwd=ROOT, stdout=subprocess.DEVNULL,
-                                 stderr=subprocess.STDOUT)
-        for u, full in items:
-            exists = os.path.exists(obj_path("target", full))
-            if exists and toolchain_name(d, u).startswith("vc6") and not is_asm(u):
-                # the same object-local spellings as our compiled objects
-                import vc6_anon
-                vc6_anon.fix(obj_path("target", full))
-            print("target %-30s %s" % (full, "ok" if rc == 0 and exists else
-                                       "FAILED (%s)" % log))
-            ok &= rc == 0 and exists
-        for path in (job, os.path.join(ROOT, "build", "jobs", "symbols_%s%s.csv" % (dll, tag)),
-                     os.path.join(ROOT, "build", "jobs", "forget_%s%s.csv" % (dll, tag))):
-            if os.path.exists(path):
-                os.remove(path)
-    return ok
-
-
-def write_objdiff(units):
-    cfg = {
-        "$schema": "https://raw.githubusercontent.com/encounter/objdiff/main/config.schema.json",
-        "build_base": False,
-        "build_target": False,
-        "units": [],
-    }
-    for dll, d, u, full in units:
-        cfg["units"].append({
-            "name": full,
-            "target_path": os.path.relpath(obj_path("target", full), ROOT).replace("\\", "/"),
-            "base_path": os.path.relpath(obj_path("base", full), ROOT).replace("\\", "/"),
-            "metadata": {"source_path": u["source"]},
-        })
-    with open(os.path.join(ROOT, "objdiff.json"), "w") as f:
-        json.dump(cfg, f, indent=2)
-        f.write("\n")
-    print("wrote objdiff.json (%d units)" % len(cfg["units"]))
-
-
-def report():
-    # objdiff refuses the whole report when one object is missing (a unit
-    # that does not compile): report from a copy of the config that leaves
-    # out missing objects
-    cfg = json.load(open(os.path.join(ROOT, "objdiff.json")))
-    proj = os.path.join(ROOT, "build", "report_project")
-    os.makedirs(proj, exist_ok=True)
-    for u in cfg["units"]:
-        for key in ("target_path", "base_path"):
-            full = os.path.join(ROOT, u[key])
-            if os.path.exists(full):
-                u[key] = os.path.relpath(full, proj).replace("\\", "/")
-            else:
-                del u[key]
-    with open(os.path.join(proj, "objdiff.json"), "w") as f:
-        json.dump(cfg, f, indent=2)
-    out = os.path.join(ROOT, "build", "report.json")
-    rc = subprocess.call([OBJDIFF, "report", "generate", "-p", proj, "-o", out,
-                          "-f", "json-pretty"], cwd=ROOT)
-    if rc != 0:
-        return False
-    rep = json.load(open(out))
-    for unit in rep.get("units", []):
-        m = unit.get("measures", {})
-        print("%-30s code %6.2f%%  (%s/%s bytes)" % (
-            unit["name"], m.get("matched_code_percent", 0.0),
-            m.get("matched_code", "0"), m.get("total_code", "0")))
-        for fn in unit.get("functions", []):
-            print("    %7.2f%%  %s" % (fn.get("fuzzy_match_percent", 0.0), fn["name"]))
-    return True
 
 
 def link(dll):
@@ -564,116 +395,17 @@ def link(dll):
     return True
 
 
-def check(units):
-    """Compile the units and print the per-function match of only those
-    units (a one-unit objdiff report): the edit-diff loop."""
-    build_base(units)
-    names = {full for _d, _c, _u, full in units}
-    cfg = json.load(open(os.path.join(ROOT, "objdiff.json")))
-    # a unit created after the last objdiff.json (tools/make_unit.py)
-    if names - {u["name"] for u in cfg["units"]}:
-        write_objdiff(load_units([]))
-        cfg = json.load(open(os.path.join(ROOT, "objdiff.json")))
-    # one project directory per unit set, so parallel checks do not collide
-    tag = "_".join(sorted(n.replace("/", "_") for n in names))[:120]
-    proj = os.path.join(ROOT, "build", "check_project", tag)
-    os.makedirs(proj, exist_ok=True)
-    keep = []
-    for u in cfg["units"]:
-        if u["name"] not in names:
-            continue
-        for key in ("target_path", "base_path"):
-            full = os.path.join(ROOT, u[key])
-            if os.path.exists(full):
-                u[key] = os.path.relpath(full, proj).replace("\\", "/")
-            else:
-                del u[key]
-        keep.append(u)
-    cfg["units"] = keep
-    with open(os.path.join(proj, "objdiff.json"), "w") as f:
-        json.dump(cfg, f, indent=2)
-    out = os.path.join(proj, "report.json")
-    subprocess.call([OBJDIFF, "report", "generate", "-p", proj, "-o", out, "-f", "json"], cwd=ROOT,
-                    stderr=subprocess.DEVNULL)
-    rep = json.load(open(out))
-    for unit in rep.get("units", []):
-        m = unit.get("measures", {})
-        print("%-30s code %6.2f%%  (%s/%s bytes)" % (unit["name"], m.get("matched_code_percent", 0.0),
-                                                   m.get("matched_code", "0"), m.get("total_code", "0")))
-        funcs = unit.get("functions", [])
-        exact = [fn for fn in funcs if fn.get("fuzzy_match_percent", 0.0) >= 100.0]
-        print("    %d of %d functions at 100%%" % (len(exact), len(funcs)))
-        # only the functions below 100% (the full list costs a lot of output
-        # on large units); --all prints every function
-        for fn in sorted(funcs, key=lambda f: f.get("fuzzy_match_percent", 0.0)):
-            pct = fn.get("fuzzy_match_percent", 0.0)
-            if pct < 100.0 or SHOW_ALL:
-                # floor, so 99.996 does not print as 100.00
-                print("    %7.2f%%  %s" % (int(pct * 100) / 100.0, fn["name"]))
-
-
-def decomp(units):
-    """Ghidra pseudo C of every function of the units, into build/decomp/<unit>/
-    (reference only, through the running GhidraMCP server)."""
-    if not mcp_up():
-        sys.exit("decomp needs the GhidraMCP server")
-    script = os.path.join(ROOT, "tools", "ghidra_scripts", "DecompileList.java")
-    for dll, d, u, full in units:
-        job = os.path.join(ROOT, "build", "jobs", "decomp_%s.txt" % full.replace("/", "_"))
-        with open(job, "w") as f:
-            f.write("out %s\n" % os.path.join(ROOT, "build", "decomp", *full.split("/")))
-            for name in unit_functions(u):
-                f.write("func %s\n" % name)
-        res = mcp_call("/run_ghidra_script", body={
-            "script_name": script, "args": job,
-            "program": d["ghidra_folder"] + "/" + d["ghidra_program"],
-            "timeout_seconds": 1800}, timeout=1900)
-        out = res.get("console_output", "")
-        print("decomp %-30s %s" % (full, "ok" if "DecompileList:" in out else json.dumps(res)[:300]))
-
-
-SHOW_ALL = False
-RETAIL_CC = False
-
-
 def main():
-    global SHOW_ALL, RETAIL_CC
-    if "--all" in sys.argv:
-        SHOW_ALL = True
-        sys.argv.remove("--all")
-    if "--retail-cc" in sys.argv:
-        RETAIL_CC = True
-        sys.argv.remove("--retail-cc")
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3 and not (len(sys.argv) == 2 and sys.argv[1] == "base"):
         sys.exit(__doc__)
     cmd, sel = sys.argv[1], sys.argv[2:]
     if cmd == "link":
         link(sel[0])
         return
-    if cmd == "decomp":
-        decomp(load_units(sel))
-        return
-    if cmd == "check":
-        check(load_units(sel))
-        return
-    all_units = load_units([])
-    units = load_units(sel) if sel else all_units
-    if cmd == "base":
-        ok = build_base(units)
-    elif cmd == "target":
-        ok = build_target(units)
-    elif cmd == "objdiff":
-        write_objdiff(all_units)
-        ok = True
-    elif cmd == "report":
-        ok = report()
-    elif cmd == "all":
-        ok = build_base(units) and build_target(units)
-        write_objdiff(all_units)
-        ok = ok and report()
-    else:
+    if cmd != "base":
         sys.exit(__doc__)
-    sys.exit(0 if ok else 1)
+    units = load_units(sel) if sel else load_units([])
+    sys.exit(0 if build_base(units) else 1)
 
 
 if __name__ == "__main__":

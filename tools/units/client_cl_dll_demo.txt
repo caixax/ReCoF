@@ -1,2 +1,0 @@
-?Demo_WriteBuffer@@YAXHHPAE@Z
-_Demo_ReadBuffer

@@ -1,7 +1,0 @@
-_CL_IsSpectateOnly
-_CL_IsDevOverviewMode
-_CL_CalculateDevOverviewParameters
-_CL_InitSpectator
-_CL_AddEntityToPhysList
-_CL_MoveSpectatorCamera
-_CL_SetDevOverView

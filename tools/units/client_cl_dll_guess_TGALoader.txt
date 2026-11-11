@@ -1,3 +1,0 @@
-?LoadCompressedTGA_guess@CTGALoader_guess@@QAE_NPAUTexture_guess@@PADPAU_iobuf@@@Z
-?LoadTGA_guess@CTGALoader_guess@@QAE_NPAUTexture_guess@@PAD@Z
-?LoadUncompressedTGA_guess@CTGALoader_guess@@QAE_NPAUTexture_guess@@PADPAU_iobuf@@@Z

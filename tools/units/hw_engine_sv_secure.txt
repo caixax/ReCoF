@@ -1,2 +1,0 @@
-_SV_GetFileNameModuleS
-_SV_GetFileNameModuleC

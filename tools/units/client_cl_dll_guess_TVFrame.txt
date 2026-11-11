@@ -1,5 +1,0 @@
-??0CTVFrame@@QAE@XZ
-?Initialize@CTVFrame@@QAEXXZ
-?MsgTVFrame_guess@@YAHPBDHPAX@Z
-?TVFrameInit_guess@@YAXXZ
-??1CTVFrame@@QAE@XZ

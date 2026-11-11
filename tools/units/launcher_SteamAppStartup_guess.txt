@@ -1,3 +1,0 @@
-?FileExists_guess@@YA_NPBD@Z
-?ShouldLaunchAppViaSteam_guess@@YA_NPBD00@Z
-?LaunchSelfViaSteam_guess@@YAXPBD@Z

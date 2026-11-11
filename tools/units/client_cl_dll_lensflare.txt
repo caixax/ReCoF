@@ -1,5 +1,0 @@
-?Draw@CHudLensflare@@UAEHM@Z
-?Init@CHudLensflare@@UAEHXZ
-?MsgFunc_Lensflare@CHudLensflare@@QAEHPBDHPAX@Z
-?VidInit@CHudLensflare@@UAEHXZ
-?__MsgFunc_Lensflare@@YAHPBDHPAX@Z

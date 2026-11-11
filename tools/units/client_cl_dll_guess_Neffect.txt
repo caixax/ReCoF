@@ -1,3 +1,0 @@
-?Draw@CNeffect@@UAEHM@Z
-?Init@CNeffect@@UAEHXZ
-?VidInit@CNeffect@@UAEHXZ

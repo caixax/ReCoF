@@ -1,3 +1,0 @@
-?ColorQuantize@@YAXPBEHHHHPAE1H@Z
-?NthSample@@YAPAUSample@@PAU1@HH@Z
-?AllocSamples@@YAPAUSample@@HH@Z

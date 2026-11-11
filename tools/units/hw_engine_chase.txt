@@ -1,4 +1,0 @@
-_Chase_Init
-_Chase_Reset
-_TraceLine
-_Chase_Update

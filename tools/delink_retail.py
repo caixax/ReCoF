@@ -17,7 +17,7 @@ relocations are rebuilt from the retail image:
 
 - DIR32: every base relocation inside a range.
 - REL32: every call, jmp and jcc with a 32-bit displacement (capstone, linear
-  sweep restarted at each function start of docs/progress.csv) whose target
+  sweep restarted at each function start of tools/symbols/hw_functions.csv) whose target
   lies outside the section.
 
 A target inside one of the piece's own ranges is section relative. A target
@@ -83,10 +83,10 @@ class Retail:
         for r in csv.DictReader(open(path)):
             self.name_at.setdefault(int(r["va"], 16), r["name"])
         self.named = sorted(self.name_at)
-        rows = [r for r in csv.DictReader(open(os.path.join(ROOT, "docs", "progress.csv"))) if r["dll"] == dll]
+        rows = [r for r in csv.DictReader(open(build.FUNCTIONS)) if r["dll"] == dll]
         self.funcs = sorted(int(r["va"], 16) for r in rows)
         # the names Ghidra's function ID gave the static CRT (LIB rows of
-        # progress.csv) where the symbol map has none
+        # the function list) where the symbol map has none
         taken = set(self.name_at.values())
         for r in rows:
             va = int(r["va"], 16)

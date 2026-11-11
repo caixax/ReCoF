@@ -1,2 +1,0 @@
-?GiveFnptrsToDll@@YGXPAUenginefuncs_s@@PAUglobalvars_t@@@Z
-_DllMain@12

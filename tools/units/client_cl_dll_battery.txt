@@ -1,4 +1,0 @@
-?Init@CHudBattery@@UAEHXZ
-?VidInit@CHudBattery@@UAEHXZ
-?Draw@CHudBattery@@UAEHM@Z
-?MsgFunc_Battery@CHudBattery@@QAEHPBDHPAX@Z

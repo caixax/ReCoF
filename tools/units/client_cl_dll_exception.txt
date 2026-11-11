@@ -1,6 +1,0 @@
-?GetExceptionStrings@@YAXKPAPBD0@Z
-?LoadCrashRpt@@YAXXZ
-?UnloadCrashRpt@@YAXXZ
-?InstallExceptionHandler@@YAXXZ
-?UnInstallExceptionHandler@@YAXXZ
-?_exceptionCB@@YGJPAU_EXCEPTION_POINTERS@@@Z

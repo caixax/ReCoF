@@ -1,9 +1,0 @@
-_ResampleSfx
-_S_LoadSound
-_S_LoadStreamSound
-_GetLittleShort
-_GetLittleLong
-_FindNextChunk
-_FindChunk
-_DumpChunks
-_GetWavinfo

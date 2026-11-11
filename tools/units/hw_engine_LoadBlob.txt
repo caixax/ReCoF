@@ -1,5 +1,0 @@
-_FIsBlob
-_NLoadBlobFile
-_LoadBlobFile_guess
-?ProcessBlobImports_guess@@YAXPAUBlobHeader_s_guess@@@Z
-_FreeBlob

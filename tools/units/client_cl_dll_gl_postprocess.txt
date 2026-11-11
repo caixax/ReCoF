@@ -1,7 +1,0 @@
-?DrawQuad@@YAXHHHH@Z
-?InitPostEffects@@YAXXZ
-?MakeWeightsTexture@@YAXXZ
-?UseRectangleTextures@@YAHXZ
-?ApplyPostEffects@@YAXXZ
-?InitScreenTexture@@YAXXZ
-?GetGrayscaleFactor@@YAMXZ
