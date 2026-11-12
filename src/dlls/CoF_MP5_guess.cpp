@@ -513,7 +513,7 @@ void CMp5::TertiaryAttack( void )
 	if ( !( m_pPlayer->m_afButtonPressed & IN_CANCEL ) )
 		return;
 
-	if ( CVAR_GET_FLOAT( "ironsights_toggle" ) == 0 && m_bIronSights )
+	if ( UTIL_PlayerSetting_rc( m_pPlayer, "_rcis", "ironsights_toggle" ) == 0 && m_bIronSights )
 		return;
 
 	m_bIronSights = !m_bIronSights;
@@ -531,7 +531,7 @@ void CMp5::ItemPostFrame( void )
 
 	if ( !m_iSprintState && !m_iSuicideState && m_flNextPrimaryAttack < gpGlobals->time && m_flNextSecondaryAttack < gpGlobals->time && m_flNextTertiaryAttack < gpGlobals->time )
 	{
-		if ( CVAR_GET_FLOAT( "ironsights_toggle" ) == 0 && m_bIronSights && !( ( m_pPlayer->pev->button | m_pPlayer->m_afButtonReleased | m_pPlayer->m_afButtonPressed ) & IN_CANCEL ) )
+		if ( UTIL_PlayerSetting_rc( m_pPlayer, "_rcis", "ironsights_toggle" ) == 0 && m_bIronSights && !( ( m_pPlayer->pev->button | m_pPlayer->m_afButtonReleased | m_pPlayer->m_afButtonPressed ) & IN_CANCEL ) )
 		{
 			m_bIronSights = false;
 			IronsightsFrom();

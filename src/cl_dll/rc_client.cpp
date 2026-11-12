@@ -770,6 +770,31 @@ float RcWeaponSoundSpeed( void )
 	return gEngfuncs.pfnRandomFloat( -0.1, 0.1 ) + 1.0;
 }
 
+// B328: the player's own iron sights toggle and subtitle language, for multiplayer servers (hl.dll
+// UTIL_PlayerSetting_rc): mirrored into the private userinfo keys _rcis and _rcsl whenever they change. Both cvars
+// belong to the game DLL, which the client loads at start; a missing one is not sent.
+static void RcMirrorSetting( const char *cvar, const char *key, float *last )
+{
+	cvar_t *p = gEngfuncs.pfnGetCvarPointer( (char *)cvar );
+	if ( !p || p->value == *last )
+		return;
+
+	*last = p->value;
+	char value[16];
+	_snprintf( value, sizeof( value ), "%g", p->value );
+	value[sizeof( value ) - 1] = 0;
+	gEngfuncs.PlayerInfo_SetValueForKey( key, value );
+}
+
+void RcUserinfoFrame( void )
+{
+	static float s_flIronsights = -12345.0f;
+	static float s_flLanguage = -12345.0f;
+
+	RcMirrorSetting( "ironsights_toggle", "_rcis", &s_flIronsights );
+	RcMirrorSetting( "cof_subtitlelanguage", "_rcsl", &s_flLanguage );
+}
+
 // B304 rc_vsync: the engine never sets the swap interval, so the driver's default applied, which is vsync
 // on, and only the driver's control panel could turn it off. 0 turns it off, 1 on. It is set when the value
 // or the GL context changes; a setting forced in the driver's control panel still wins

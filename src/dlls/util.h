@@ -243,6 +243,8 @@ extern CBaseEntity	*UTIL_PlayerByIndex( int playerIndex );
 extern CBaseEntity	*UTIL_FirstPlayer_rc( void );
 extern CBaseEntity	*UTIL_FirstPlayerInstance_rc( void );
 extern edict_t		*UTIL_FirstPlayerEdict_rc( void );
+// ReCoF (B328): a player's own setting, from the private userinfo key ReCoF's client sends (util.cpp)
+extern float		UTIL_PlayerSetting_rc( CBaseEntity *pPlayer, const char *key, const char *cvar );
 
 #define UTIL_EntitiesInPVS(pent)			(*g_engfuncs.pfnEntitiesInPVS)(pent)
 extern void			UTIL_MakeVectors		(const Vector &vecAngles);

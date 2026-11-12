@@ -882,7 +882,7 @@ void CM16::TertiaryAttack( void )
 	if ( !( m_pPlayer->m_afButtonPressed & IN_CANCEL ) )
 		return;
 
-	if ( CVAR_GET_FLOAT( "ironsights_toggle" ) == 0 && m_bIronSights )
+	if ( UTIL_PlayerSetting_rc( m_pPlayer, "_rcis", "ironsights_toggle" ) == 0 && m_bIronSights )
 		return;
 
 	m_bIronSights = !m_bIronSights;

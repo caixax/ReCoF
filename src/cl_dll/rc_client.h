@@ -59,6 +59,9 @@ void RcViewmodelFovEnd( int on );
 // B318 rc_omgbruh_sound: the playback speed of a weapon sound played by irrKlang (called from mp3.cpp)
 float RcWeaponSoundSpeed( void );
 
+// B328: mirrors the player's iron sights and subtitle settings into userinfo for multiplayer servers (from HUD_Frame)
+void RcUserinfoFrame( void );
+
 // B184 rc_rawinput (called from inputw32.cpp)
 int RcRawInputOn( void );
 void RcRawMouseReset( void );

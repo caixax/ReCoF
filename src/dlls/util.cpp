@@ -1078,6 +1078,21 @@ edict_t *UTIL_FirstPlayerEdict_rc( void )
 }
 
 
+// ReCoF (B328): some settings are the player's, not the server's: iron sights toggle and subtitle language. In
+// multiplayer ReCoF's client sends its own in private userinfo keys (_rcis, _rcsl; client.dll RcUserinfoFrame); a
+// client that sends none (the original game, a bot) and single player read the server's cvar, as retail did
+float UTIL_PlayerSetting_rc( CBaseEntity *pPlayer, const char *key, const char *cvar )
+{
+	if ( gpGlobals->maxClients > 1 && pPlayer && pPlayer->IsPlayer() )
+	{
+		const char *value = g_engfuncs.pfnInfoKeyValue( g_engfuncs.pfnGetInfoKeyBuffer( pPlayer->edict() ), (char *)key );
+		if ( value && value[0] )
+			return (float)atof( value );
+	}
+	return CVAR_GET_FLOAT( cvar );
+}
+
+
 void UTIL_MakeVectors( const Vector &vecAngles )
 {
 	MAKE_VECTORS( vecAngles );

@@ -6826,7 +6826,7 @@ void CBasePlayer::PostThink()
 	{
 		m_sClientObjectiveText = m_sObjectiveText;
 
-		int language = CVAR_GET_FLOAT( "cof_subtitlelanguage" );
+		int language = (int)UTIL_PlayerSetting_rc( this, "_rcsl", "cof_subtitlelanguage" );	// ReCoF (B328)
 		char m_sLanguage[128];
 
 		switch ( language )
@@ -15035,7 +15035,7 @@ void CBasePlayer::ShowHint( int hint, bool showanyway )
 			char m_sLanguage[128];
 
 			int language = 0;
-			language = CVAR_GET_FLOAT( "cof_subtitlelanguage" );
+			language = (int)UTIL_PlayerSetting_rc( this, "_rcsl", "cof_subtitlelanguage" );	// ReCoF (B328)
 
 			switch ( language )
 			{

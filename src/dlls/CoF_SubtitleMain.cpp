@@ -57,13 +57,13 @@ void CSubtitle::KeyValue( KeyValueData *pkvd )
 		CBaseEntity::KeyValue( pkvd );
 }
 
-void CSubtitle::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+// ReCoF (B328): line CurrentLine of the subtitle file of a language into DestinationText (256 bytes); returns its
+// colour. Retail's CSubtitle::Use, which read it once in the server's language for everybody.
+static int RcSubtitleLine( int language, float CurrentLine, char *DestinationText )
 {
 	char sFileName[256];
 	GET_GAME_DIR( sFileName );
 
-	int language = 0;
-	language = CVAR_GET_FLOAT( "cof_subtitlelanguage" );
 
 	switch ( language )
 	{
@@ -98,10 +98,10 @@ void CSubtitle::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 
 	std::ifstream file( sFileName );
 	std::string line;
-	char DestinationText[256];
+	DestinationText[0] = 0;	// ReCoF: retail read it uninitialised when the line was missing
 	std::string SourceString;
 
-	line = CurrentLine;
+	line = CurrentLine;	// retail: a float into a string, kept
 
 	int colour = 5;
 	int i = 1;
@@ -138,14 +138,24 @@ void CSubtitle::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 		}
 	}
 
-	if ( strlen( DestinationText ) > 1 )
-	{
-		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-		{
-			CBasePlayer *plr = (CBasePlayer *)UTIL_PlayerByIndex( i );
+	return colour;
+}
 
-			if ( plr )
-				UTIL_ProMessage( plr, DestinationText, colour, false );
-		}
+void CSubtitle::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
+{
+	// ReCoF (B328): each player gets the line in his own language, which ReCoF's client sends (_rcsl); single
+	// player, and a player whose client sends none, get the server's cof_subtitlelanguage as before
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CBasePlayer *plr = (CBasePlayer *)UTIL_PlayerByIndex( i );
+		if ( !plr )
+			continue;
+
+		char DestinationText[256];
+		int language = (int)UTIL_PlayerSetting_rc( plr, "_rcsl", "cof_subtitlelanguage" );
+		int colour = RcSubtitleLine( language, CurrentLine, DestinationText );
+
+		if ( strlen( DestinationText ) > 1 )
+			UTIL_ProMessage( plr, DestinationText, colour, false );
 	}
 }

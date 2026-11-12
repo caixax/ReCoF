@@ -11680,7 +11680,7 @@ void CCoFGameBegin::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 			if ( !strcmp( STRING(gpGlobals->mapname), "c_nightmare" ) || !strcmp( STRING(gpGlobals->mapname), "c_doc_city" ) )
 				plr->playerstats.can_unlock_shit = true;
 
-			int language = CVAR_GET_FLOAT( "cof_subtitlelanguage" );
+			int language = (int)UTIL_PlayerSetting_rc( plr, "_rcsl", "cof_subtitlelanguage" );	// ReCoF (B328)
 
 			plr->playerstats.language = language;
 
