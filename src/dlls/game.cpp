@@ -510,7 +510,10 @@ cvar_t	*g_footsteps = NULL;
 // This gets called one time when the game is initialied
 void GameDLLInit( void )
 {
-	SteamAPI_Init();
+	// ReCoF (B325): a dedicated server has no Steam user of its own; the engine talks to Steam for the server, and the
+	// game DLL's calls (stats, the donator group) are for the player on the machine, which a server has not
+	if ( !IS_DEDICATED_SERVER() )
+		SteamAPI_Init();
 
 	// Register cvars here:
 	g_psv_gravity = CVAR_GET_POINTER( "sv_gravity" );
