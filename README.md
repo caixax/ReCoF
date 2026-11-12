@@ -46,6 +46,8 @@ python tools/make_dist.py --bin build/bin
 
 The binaries land in `build/bin`, and `dist/` becomes a copy of the game that runs them.
 
+The server game DLL also builds for Linux, as `hl.so`, for the [ReCoF Server](https://github.com/caixax/ReCoF-Server) on a Linux machine. On Linux (or WSL) with GCC's 32-bit libraries (`gcc-multilib g++-multilib`), run `python3 tools/build_linux.py`; it compiles the same files as `hl.dll` and writes `build/linux/hl.so`. Build it on the oldest system it has to run on: it needs that system's C library.
+
 ## Making a release
 
 Releases are installed and updated by the [ReCoF Launcher](https://github.com/caixax/ReCoF-Launcher), which only accepts the format described in its [docs/releases.md](https://github.com/caixax/ReCoF-Launcher/blob/master/docs/releases.md): `recof-<version>.zip`, `recof-manifest.json` and its Ed25519 signature `recof-manifest.json.sig`. After building every binary as above:

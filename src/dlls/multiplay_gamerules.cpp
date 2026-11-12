@@ -210,7 +210,7 @@ void DeleteAllCFGFiles( void )
 	char gamedir[1024];
 
 	GET_GAME_DIR( gamedir );
-	strcat( gamedir, "\\txtfiles\\" );
+	strcat( gamedir, "/txtfiles/" );	// ReCoF: / works on Windows and Linux
 
 	std::string path = gamedir;
 	std::string searchPattern = "*.cfg";
@@ -262,7 +262,7 @@ void ApplyCFGSettingToPlayer( CBasePlayer *pPlayer )
 	char gamedir[1024];
 
 	GET_GAME_DIR( gamedir );
-	strcat( gamedir, "\\txtfiles\\" );
+	strcat( gamedir, "/txtfiles/" );	// ReCoF: / works on Windows and Linux
 
 	std::string path = gamedir;
 	std::string searchPattern = "*.cfg";

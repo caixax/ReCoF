@@ -47,7 +47,9 @@ extern void RcSetupHLLadders( void );	// ReCoF (rc_hlmovement): CoF_Ladder.cpp
 #include "effects.h" //LRC
 #include "movewith.h" //LRC
 #include "animation.h"
+#ifdef _WIN32
 #include <direct.h>
+#endif
 #include <fstream>
 #include <vector>
 
