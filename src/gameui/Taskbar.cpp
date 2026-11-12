@@ -29,6 +29,7 @@
 #include "CreateMultiplayerGameDialog.h"
 #include "ChangeGameDialog.h"
 #include "PlayerListDialog.h"
+#include "RcServerBrowser.h"
 #include "CareerProfileFrame.h"
 #include "CareerMapFrame.h"
 #include "CareerBotFrame.h"
@@ -995,7 +996,15 @@ void CTaskbar::OnOpenOptionsDialog()
 //-----------------------------------------------------------------------------
 void CTaskbar::OnOpenServerBrowser()
 {
-	g_VModuleLoader.ActivateModule( "Servers" );
+	// ReCoF: Cry of Fear's server browser module (platform/servers) no longer lists any server; ReCoF's
+	// list asks Steam for the ReCoF servers itself
+	if ( !m_hRcServerBrowser.Get() )
+	{
+		m_hRcServerBrowser = new CRcServerBrowserDialog( this );
+		PositionDialog( m_hRcServerBrowser );
+	}
+
+	m_hRcServerBrowser->Activate();
 }
 
 //-----------------------------------------------------------------------------

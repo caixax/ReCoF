@@ -330,7 +330,7 @@ void CGameUI::OpenDialog_guess(int dialog)
 	switch (dialog)
 	{
 	case 0:
-		g_VModuleLoader.ActivateModule("Servers");
+		g_pTaskbar->OnOpenServerBrowser();	// ReCoF: its own server list
 		break;
 	case 1:
 		g_pTaskbar->OnOpenCreateMultiplayerGameDialog();

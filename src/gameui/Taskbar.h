@@ -98,6 +98,7 @@ private:
 	vgui2::DHANDLE<vgui2::Frame> m_hDemoPlayerDialog;
 	vgui2::DHANDLE<vgui2::Frame> m_hChangeGameDialog;
 	vgui2::DHANDLE<vgui2::Frame> m_hPlayerListDialog;
+	vgui2::DHANDLE<vgui2::Frame> m_hRcServerBrowser;	// ReCoF: the server list behind Join Server
 	vgui2::DHANDLE<vgui2::Frame> m_hCareerProfileDialog;
 	vgui2::DHANDLE<vgui2::Frame> m_hCareerDifficultyDialog;
 	vgui2::DHANDLE<vgui2::Frame> m_hCareerMapDialog;
