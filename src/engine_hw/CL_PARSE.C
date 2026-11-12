@@ -224,6 +224,13 @@ void AddNewUserMsg( void )
 				pList->iMsg = umsg.iMsg;
 				pList->iSize = umsg.iSize;
 			}
+			else if ( pList->iMsg == umsg.iMsg )
+			{
+				// ReCoF (B330): the list keeps every message of every server this client joined, and a server
+				// only renumbers its own. A number this server gives another message is no longer this one's:
+				// DispatchUserMsg takes the first match, so a stale entry read the other message at its size.
+				pList->iMsg = 0;
+			}
 			pList = pList->next;
 		}
 	}
