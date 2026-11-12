@@ -15337,6 +15337,9 @@ bool CBasePlayer::CheckBeatenEnding( int ending )
 
 void CBasePlayer::WriteBeatenEnding( int ending, int beaten )
 {
+	if ( IS_DEDICATED_SERVER() )	// ReCoF (B324): nobody plays on the server's own install
+		return;
+
 	char buf[16];
 	itoa( ending, buf, 10 );
 
@@ -16079,6 +16082,9 @@ bool CBasePlayer::CheckingEndingOrUnlockables( int type, bool ending6, bool endi
 
 void CBasePlayer::SetEndingOrUnlockables( int type, bool hasntgot, bool ending6, bool ending7 )
 {
+	if ( IS_DEDICATED_SERVER() )	// ReCoF (B324): nobody plays on the server's own install
+		return;
+
 	char sFileName[256];
 	GET_GAME_DIR( sFileName );
 	strcat( sFileName, "/scriptsettings.dat" );
@@ -17137,6 +17143,9 @@ bool GlobalCheckingEndingOrUnlockables( int type )
 
 void GlobalSetEndingOrUnlockables( int type, bool hasntgot )
 {
+	if ( IS_DEDICATED_SERVER() )	// ReCoF (B324): nobody plays on the server's own install
+		return;
+
 	char sFileName[256];
 	GET_GAME_DIR( sFileName );
 	strcat( sFileName, "/scriptsettings.dat" );
