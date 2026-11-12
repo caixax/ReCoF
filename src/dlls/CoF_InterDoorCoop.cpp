@@ -530,7 +530,8 @@ void CInterDoorCoop::EndGame( void )
 {
 	CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
-	if ( pPlayer )
+	// ReCoF (B326): on a dedicated server the map command would make that player leave and start a game of his own
+	if ( pPlayer && !IS_DEDICATED_SERVER() )
 		CLIENT_COMMAND( pPlayer->edict(), "map c_game_menu1\n" );
 }
 

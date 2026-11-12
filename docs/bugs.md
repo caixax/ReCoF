@@ -26,7 +26,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 
 | Binary | crash | save | gameplay | performance | visual | audio | cosmetic | latent | total |
 |---|---|---|---|---|---|---|---|---|---|
-| hl.dll | 11 | 3 | 50 | 10 | 10 | 12 | 5 | 42 | 143 |
+| hl.dll | 11 | 3 | 51 | 10 | 10 | 12 | 5 | 42 | 144 |
 | client.dll | 5 | 0 | 10 | 33 | 24 | 4 | 19 | 18 | 113 |
 | hw.dll | 2 | 2 | 6 | 22 | 5 | 3 | 8 | 31 | 79 |
 | GameUI.dll | 0 | 0 | 0 | 1 | 0 | 0 | 8 | 5 | 14 |
@@ -34,7 +34,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | cof.exe | 2 | 0 | 0 | 1 | 2 | 0 | 0 | 2 | 7 |
 | CoFLaunchApp.exe | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 0 | 4 |
 | unknown | 2 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 3 |
-| all issues | 20 | 5 | 61 | 59 | 39 | 17 | 31 | 93 | 325 |
+| all issues | 20 | 5 | 62 | 59 | 39 | 17 | 31 | 93 | 326 |
 
 ## User reports
 
@@ -298,6 +298,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | B323 | hl.dll | src/dlls/sound.cpp EMIT_SOUND_SUIT, EMIT_GROUPID_SUIT, EMIT_GROUPNAME_SUIT | On a dedicated server every suit sound (the HEV-style voice and beeps the game plays to the player) is silent. | Play on the ReCoF server and do what plays a suit sound. | The three functions read the client cvar suitvolume through CVAR_GET_FLOAT, which answers 0 when the cvar does not exist, and play nothing below 0.05; a dedicated server has no client cvars. On a listen server the host's value applies to everyone, as before. | audio | no | Done: without the cvar the volume is full (1); with it (single player, listen server) it is read as before. Test: on the ReCoF server the suit sounds play. | test |
 | B324 | hl.dll | src/dlls/player.cpp CBasePlayer::WriteBeatenEnding, CBasePlayer::SetEndingOrUnlockables, GlobalSetEndingOrUnlockables | A dedicated server writes endings and unlockables into its own scriptsettings.dat (through alt.dat) and the beaten ending flag into sound/ambience/windy<N>.wav, files of an install nobody plays. | Finish a co-op campaign on the ReCoF server; look at the server's scriptsettings.dat. | Research for the dedicated server (2026-11-11): cof_credits, cof_coop_stats and cof_stats call them; on a listen server they unlock things for the host only, and retail co-op never unlocked anything for joined players either. | latent | no | Done: on a dedicated server the three return at once; single player and listen servers unchanged. Test: none needed. | test |
 | B325 | hl.dll | src/dlls/game.cpp GameDLLInit | The game DLL starts the Steam API for the machine's own Steam user, also on a dedicated server, where nobody plays and the Steam user (if any) is the server owner's. | Start the ReCoF server: SteamAPI_Init() failed; no appID found or, with Steam running, the owner's account is used for stats requests. | Research for the dedicated server (2026-11-11): SteamAPI_Init in GameDLLInit, SteamUserStats for a developer stat and RequestCurrentStats on every connect, SteamFriends for the single-player donator group check; all NULL-tested. | latent | no | Done: not started on a dedicated server, so the NULL tests skip the calls; single player and listen servers unchanged. Test: the ReCoF server starts without the Steam API message. | test |
+| B326 | hl.dll | src/dlls/CoF_InterDoor.cpp CInterDoor::EndGame, CoF_InterDoorCoop.cpp CInterDoorCoop::EndGame | The demo end doors send map c_game_menu1 to the first player; on a dedicated server that player leaves the server and starts a local game. | A map with an inter_door targeting closegame1 to closegame4, on the ReCoF server. | Research for the dedicated server (2026-11-11): only the demo targets reach EndGame, and no shipped map uses them. On a listen server the host goes to the menu, which ends the game for everyone, as retail. | gameplay | no | Done: on a dedicated server EndGame sends nothing; single player and listen servers unchanged. Test: none needed in the shipped maps. | test |
 
 ## hw.dll
 
