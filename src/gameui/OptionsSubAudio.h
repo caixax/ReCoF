@@ -19,6 +19,7 @@ namespace vgui = vgui2;
 class CLabeledCommandComboBox;
 class CCvarSlider;
 class CCvarToggleCheckButton;
+class CRcOptionRow;
 
 //-----------------------------------------------------------------------------
 // Purpose: Audio Details, Part of OptionsDialog
@@ -36,6 +37,7 @@ public:
 
 private:
 	MESSAGE_FUNC( OnControlModified, "ControlModified" );
+	MESSAGE_FUNC( OnRcOptionChanged, "RcOptionChanged" );
 
 	CCvarToggleCheckButton		*m_pEAXCheckButton_guess;
 	CCvarToggleCheckButton		*m_pA3DCheckButton_guess;
@@ -45,6 +47,8 @@ private:
 	CCvarSlider					*m_pMP3Slider;
 
 	CLabeledCommandComboBox		*m_pSoundQualityCombo;
+
+	CRcOptionRow				*m_pRcSamePitch;	// ReCoF: rc_omgbruh_sound
 };
 
 #endif // OPTIONS_SUB_AUDIO_H

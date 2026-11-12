@@ -37,10 +37,10 @@ cvar_t	defaultteam = {"mp_defaultteam","0" };
 cvar_t	allowmonsters = {"mp_allowmonsters","0", FCVAR_SERVER };
 cvar_t	fragsleft = {"mp_fragsleft","0", FCVAR_SERVER | FCVAR_UNLOGGED };
 cvar_t	timeleft = {"mp_timeleft","0", FCVAR_SERVER | FCVAR_UNLOGGED };
-cvar_t	disablehints = {"sv_disablehints","0", FCVAR_SERVER };
+cvar_t	disablehints = {"sv_disablehints","0", FCVAR_SERVER | FCVAR_ARCHIVE };	// ReCoF (B332): saved, as the options set it
 cvar_t	difficulty = {"difficulty","2", FCVAR_ARCHIVE | FCVAR_SERVER };
 cvar_t	fogradius = {"sv_fogradius","384", FCVAR_SERVER };
-cvar_t	ironsights_toggle = {"ironsights_toggle","1", FCVAR_SERVER };
+cvar_t	ironsights_toggle = {"ironsights_toggle","1", FCVAR_SERVER | FCVAR_ARCHIVE };	// ReCoF (B332)
 cvar_t	sv_coop_music = {"sv_coop_music","0", FCVAR_SERVER };
 cvar_t	sv_votekick_time = {"sv_votekick_time","30", FCVAR_ARCHIVE | FCVAR_SERVER };
 cvar_t	sv_lobby_time = {"sv_lobby_time","60", FCVAR_ARCHIVE | FCVAR_SERVER };
@@ -59,17 +59,17 @@ cvar_t	mp_chattime = {"mp_chattime","10", FCVAR_SERVER };
 cvar_t	cf_recordmodels = {"cf_recordmodels","0", FCVAR_SERVER };
 cvar_t	cf_recordsounds = {"cf_recordsounds","0", FCVAR_SERVER };
 // ReCoF: 1 brings back the retail behavior of every balance fix (damage, health, AI, collision), for runners
-cvar_t	rc_retail_gameplay = {"rc_retail_gameplay","0", FCVAR_SERVER };
+cvar_t	rc_retail_gameplay = {"rc_retail_gameplay","0", FCVAR_SERVER | FCVAR_ARCHIVE };
 // ReCoF: 0 removes the bunny hop speed cap (retail and default: 1); sent to client prediction as physinfo "nbh"
-cvar_t	rc_bhopcap = {"rc_bhopcap","1", FCVAR_SERVER };
+cvar_t	rc_bhopcap = {"rc_bhopcap","1", FCVAR_SERVER | FCVAR_ARCHIVE };
 // ReCoF: 1 brings back the Half-Life ducktap (retail and default: 0); sent to client prediction as physinfo "dkt"
-cvar_t	rc_ducktap = {"rc_ducktap","0", FCVAR_SERVER };
+cvar_t	rc_ducktap = {"rc_ducktap","0", FCVAR_SERVER | FCVAR_ARCHIVE };
 // ReCoF: 1 gives every player infinite stamina (retail and default: 0), the flag retail kept but never set
-cvar_t	rc_infinite_stamina = {"rc_infinite_stamina","0", FCVAR_SERVER };
+cvar_t	rc_infinite_stamina = {"rc_infinite_stamina","0", FCVAR_SERVER | FCVAR_ARCHIVE };
 // ReCoF: 1 gives Half-Life 1 movement (retail and default: 0); sent to client prediction as physinfo "hlm"
-cvar_t	rc_hlmovement = {"rc_hlmovement","0", FCVAR_SERVER };
+cvar_t	rc_hlmovement = {"rc_hlmovement","0", FCVAR_SERVER | FCVAR_ARCHIVE };
 // ReCoF: 1 skips the black fade of the doors that move the player to the other side (retail and default: 0)
-cvar_t	rc_door_skip = {"rc_door_skip","0", FCVAR_SERVER };
+cvar_t	rc_door_skip = {"rc_door_skip","0", FCVAR_SERVER | FCVAR_ARCHIVE };
 // ReCoF (B317), BunnymodXT's bxt_disable_changelevel: 1 keeps level changes from starting, for routing
 cvar_t	rc_disable_changelevel = {"rc_disable_changelevel","0" };
 // ReCoF (B317), BunnymodXT's bxt_render_far_entities: with sv_cheats 1, the server sends every entity of the map,

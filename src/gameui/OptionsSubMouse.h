@@ -20,6 +20,7 @@ class CCvarNegateCheckButton;
 class CKeyToggleCheckButton;
 class CCvarToggleCheckButton;
 class CCvarSlider;
+class CRcOptionRow;
 
 namespace vgui2
 {
@@ -45,6 +46,7 @@ protected:
 
 	MESSAGE_FUNC_PTR( OnControlModified, "ControlModified", panel );
 	MESSAGE_FUNC_PTR( OnTextChanged, "TextChanged", panel );
+	MESSAGE_FUNC( OnRcOptionChanged, "RcOptionChanged" );
 
 	void UpdateSensitivityLabel();
 
@@ -59,6 +61,8 @@ protected:
 	vgui::TextEntry				*m_pMouseSensitivityLabel;
 
 	CCvarToggleCheckButton		*m_pAutoAimCheckBox;
+
+	CRcOptionRow				*m_pRcRawInput;	// ReCoF: rc_rawinput
 };
 
 #endif // OPTIONS_SUB_MOUSE_H

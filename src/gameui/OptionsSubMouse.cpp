@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 #include "OptionsSubMouse.h"
+#include "RcOptions.h"
 #include "CvarNegateCheckButton.h"
 #include "CvarToggleCheckButton.h"
 #include "KeyToggleCheckButton.h"
@@ -45,6 +46,11 @@ COptionsSubMouse::COptionsSubMouse( vgui::Panel *parent ) : PropertyPage( parent
 
 	LoadControlSettings( "Resource\\OptionsSubMouse.res" );
 
+	// ReCoF: raw mouse input (rc_rawinput), in the empty space under the sensitivity slider
+	m_pRcRawInput = RcCreateOptionRow( this, "rc_rawinput", this );
+	if ( m_pRcRawInput )
+		m_pRcRawInput->SetBounds( 40, 250, 440, 28 );
+
 	float sensitivity = engine->pfnGetCvarFloat( "sensitivity" );
 
 	char buf[ 64 ];
@@ -72,6 +78,9 @@ void COptionsSubMouse::OnResetData()
 	m_pJoystickLookCheckBox->Reset();
 	m_pMouseSensitivitySlider->Reset();
 	m_pAutoAimCheckBox->Reset();
+
+	if ( m_pRcRawInput )
+		m_pRcRawInput->Load();
 }
 
 //-----------------------------------------------------------------------------
@@ -86,6 +95,17 @@ void COptionsSubMouse::OnApplyChanges()
 	m_pJoystickLookCheckBox->ApplyChanges();
 	m_pMouseSensitivitySlider->ApplyChanges();
 	m_pAutoAimCheckBox->ApplyChanges();
+
+	if ( m_pRcRawInput )
+		m_pRcRawInput->Apply();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: ReCoF: the raw input row changed
+//-----------------------------------------------------------------------------
+void COptionsSubMouse::OnRcOptionChanged()
+{
+	PostActionSignal( new KeyValues( "ApplyButtonEnable" ) );
 }
 
 //-----------------------------------------------------------------------------

@@ -4239,6 +4239,7 @@
           "GameUI/OptionsSubVoice",
           "GameUI/OptionsSubSpray",
           "GameUI/RcServerBrowser",
+          "GameUI/RcOptions",
           "vgui2/controls/controls",
           "vgui2/controls/Button",
           "vgui2/controls/Label",
@@ -4603,6 +4604,10 @@
         {
           "name": "GameUI/RcServerBrowser",
           "source": "src/gameui/RcServerBrowser.cpp"
+        },
+        {
+          "name": "GameUI/RcOptions",
+          "source": "src/gameui/RcOptions.cpp"
         },
         {
           "name": "GameUI/ScriptObject",

@@ -12,7 +12,7 @@
 #include "OptionsSubVideo.h"
 #include "OptionsSubVoice.h"
 #include "OptionsSubSpray.h"
-#include "MultiplayerAdvancedDialog.h"
+#include "RcOptions.h"
 #include "Taskbar.h"
 
 #include <vgui/ILocalize.h>
@@ -26,23 +26,56 @@ using namespace vgui;
 //-----------------------------------------------------------------------------
 COptionsDialog::COptionsDialog( vgui::Panel *parent ) : PropertyDialog( parent, "OptionsDialog" )
 {
-	SetBounds( 0, 0, 560, 406 );	// ReCoF: 48 wider for the seventh tab (Spray); retail 512
+	// ReCoF (B332): seven tabs, each with a second row of tabs, and every ReCoF option in them; retail had seven
+	// pages in a 512 x 406 window, with Cry of Fear's own options in one long Advanced list
+	SetBounds( 0, 0, 660, 500 );
 	SetSizeable( false );
 
 	g_pTaskbar->AddTask( GetVPanel() );
 
 	SetTitle( "#GameUI_Options", true );
 
-	AddPage( new COptionsSubKeyboard( this ), "#GameUI_Keyboard" );
-	AddPage( new COptionsSubMouse( this ), "#GameUI_Mouse" );
-	AddPage( new COptionsSubAudio( this ), "#GameUI_Audio" );
-	AddPage( new COptionsSubVideo( this ), "#GameUI_Video" );
-	AddPage( new COptionsSubVoice( this ), "#GameUI_Voice" );
-	AddPage( new CMultiplayerAdvancedPage( this ), "#GameUI_AdvancedNoEllipsis" );
-	AddPage( new COptionsSubSpray( this ), "Spray" );	// ReCoF: the spray logo
+	CRcOptionsSheet *sheet;
+
+	sheet = new CRcOptionsSheet( this, "GameSheet" );
+	sheet->AddPage( new CRcOptionsPage( sheet, "game_general", "Point at an option to see what it does." ), "General" );
+	sheet->AddPage( new CRcOptionsPage( sheet, "game_gameplay", "Point at an option to see what it does." ), "Gameplay" );
+	sheet->AddPage( new CRcOptionsPage( sheet, "game_movement", "Point at an option to see what it does." ), "Movement" );
+	AddPage( sheet, "Game" );
+
+	sheet = new CRcOptionsSheet( this, "ControlsSheet" );
+	sheet->AddPage( new COptionsSubKeyboard( sheet ), "#GameUI_Keyboard" );
+	sheet->AddPage( new COptionsSubMouse( sheet ), "#GameUI_Mouse" );
+	AddPage( sheet, "Controls" );
+
+	sheet = new CRcOptionsSheet( this, "GraphicsSheet" );
+	sheet->AddPage( new COptionsSubVideo( sheet ), "Display" );
+	sheet->AddPage( new CRcOptionsPage( sheet, "gfx_effects", "Point at an option to see what it does." ), "Effects" );
+	sheet->AddPage( new CRcOptionsPage( sheet, "gfx_quality", "Point at an option to see what it does." ), "Quality" );
+	sheet->AddPage( new CRcOptionsPage( sheet, "gfx_performance", "Point at an option to see what it does." ), "Performance" );
+	sheet->AddPage( new CRcOptionsPage( sheet, "gfx_weapon", "Point at an option to see what it does." ), "Weapon view" );
+	AddPage( sheet, "Graphics" );
+
+	sheet = new CRcOptionsSheet( this, "HudSheet" );
+	sheet->AddPage( new CRcOptionsPage( sheet, "hud_crosshair", "Point at an option to see what it does." ), "Crosshair" );
+	sheet->AddPage( new CRcOptionsPage( sheet, "hud_info", "Point at an option to see what it does." ), "Info panel" );
+	sheet->AddPage( new CRcOptionsPage( sheet, "hud_speedrun", "Point at an option to see what it does." ), "Speedrun" );
+	AddPage( sheet, "HUD" );
+
+	sheet = new CRcOptionsSheet( this, "AudioSheet" );
+	sheet->AddPage( new COptionsSubAudio( sheet ), "Sound" );
+	sheet->AddPage( new COptionsSubVoice( sheet ), "#GameUI_Voice" );
+	AddPage( sheet, "Audio" );
+
+	sheet = new CRcOptionsSheet( this, "MultiplayerSheet" );
+	sheet->AddPage( new CRcOptionsPage( sheet, "mp_player", "Point at an option to see what it does." ), "Player" );
+	sheet->AddPage( new COptionsSubSpray( sheet ), "Spray" );
+	AddPage( sheet, "Multiplayer" );
+
+	AddPage( new CRcAboutPage( this ), "ReCoF" );
 
 	SetApplyButtonVisible( true );
-	GetPropertySheet()->SetTabWidth( 72 );
+	GetPropertySheet()->SetTabWidth( 84 );
 }
 
 //-----------------------------------------------------------------------------

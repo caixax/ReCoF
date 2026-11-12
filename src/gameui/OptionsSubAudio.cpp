@@ -6,6 +6,7 @@
 //=============================================================================
 
 #include "OptionsSubAudio.h"
+#include "RcOptions.h"
 #include "CvarSlider.h"
 #include "CvarToggleCheckButton.h"
 #include "LabeledCommandComboBox.h"
@@ -34,6 +35,11 @@ COptionsSubAudio::COptionsSubAudio( vgui::Panel *parent ) : PropertyPage( parent
 	m_pSoundQualityCombo->SetInitialItem( engine->pfnGetCvarFloat( "hisound" ) != 0.0f ? 0 : 1 );
 
 	LoadControlSettings( "Resource\\OptionsSubAudio.res" );
+
+	// ReCoF: the weapon sounds' pitch (rc_omgbruh_sound), in the empty space under the music volume
+	m_pRcSamePitch = RcCreateOptionRow( this, "rc_omgbruh_sound", this );
+	if ( m_pRcSamePitch )
+		m_pRcSamePitch->SetBounds( 40, 180, 440, 28 );
 
 	// multiplayer only mods have no HEV suit
 	if ( ModInfo().IsMultiplayerOnly() )
@@ -70,6 +76,9 @@ void COptionsSubAudio::OnResetData()
 	m_pHEVSlider->Reset();
 	m_pMP3Slider->Reset();
 	m_pSoundQualityCombo->Reset();
+
+	if ( m_pRcSamePitch )
+		m_pRcSamePitch->Load();
 }
 
 //-----------------------------------------------------------------------------
@@ -88,6 +97,9 @@ void COptionsSubAudio::OnApplyChanges()
 	m_pMP3Slider->ApplyChanges();
 	m_pSoundQualityCombo->ApplyChanges();
 
+	if ( m_pRcSamePitch )
+		m_pRcSamePitch->Apply();
+
 	if ( bRcDevice )
 		engine->pfnClientCmd( "rc_snd_restart\n" );
 }
@@ -96,6 +108,14 @@ void COptionsSubAudio::OnApplyChanges()
 // Purpose:
 //-----------------------------------------------------------------------------
 void COptionsSubAudio::OnControlModified()
+{
+	PostActionSignal( new KeyValues( "ApplyButtonEnable" ) );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: ReCoF: the same pitch row changed
+//-----------------------------------------------------------------------------
+void COptionsSubAudio::OnRcOptionChanged()
 {
 	PostActionSignal( new KeyValues( "ApplyButtonEnable" ) );
 }
