@@ -1031,6 +1031,11 @@ CBaseEntity	*UTIL_PlayerByIndex( int playerIndex )
 		if ( pPlayerEdict && !pPlayerEdict->free )
 		{
 			pPlayer = CBaseEntity::Instance( pPlayerEdict );
+
+			// ReCoF (B320): in multiplayer a player who left keeps his CBasePlayer until the next map (ClientDisconnect
+			// only marks it), but the engine has cleared his client's edict, so GETPLAYERUSERID answers -1 for him
+			if ( pPlayer && gpGlobals->maxClients > 1 && GETPLAYERUSERID( pPlayerEdict ) == -1 )
+				pPlayer = NULL;
 		}
 	}
 	
