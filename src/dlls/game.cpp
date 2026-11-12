@@ -81,6 +81,9 @@ cvar_t	rc_novis = {"rc_novis","0" };
 // ReCoF (B317), BunnymodXT's bxt_show_triggers: with sv_cheats 1, triggers are sent and drawn see-through, coloured by
 // what they do
 cvar_t	rc_show_triggers = {"rc_show_triggers","0" };
+// ReCoF (B319): 1, the default, lets only ReCoF players into a multiplayer game; the original game's client is turned
+// away with a message that names ReCoF. Bots are let in.
+cvar_t	rc_require_recof = {"rc_require_recof","1", FCVAR_SERVER };
 cvar_t	cof_walksteptime = {"cof_walksteptime","410", FCVAR_SERVER };
 cvar_t	cof_runsteptime = {"cof_runsteptime","375", FCVAR_SERVER };
 cvar_t	cof_sprintsteptime = {"cof_sprintsteptime","300", FCVAR_SERVER };
@@ -564,6 +567,7 @@ void GameDLLInit( void )
 	CVAR_REGISTER (&rc_render_far_entities);
 	CVAR_REGISTER (&rc_novis);
 	CVAR_REGISTER (&rc_show_triggers);
+	CVAR_REGISTER (&rc_require_recof);
 	CVAR_REGISTER (&cof_walksteptime);
 	CVAR_REGISTER (&cof_runsteptime);
 	CVAR_REGISTER (&cof_sprintsteptime);

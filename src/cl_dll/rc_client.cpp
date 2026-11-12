@@ -12,6 +12,7 @@
 #include "const.h"
 #include "pm_defs.h"
 #include "rc_client.h"
+#include "rc_version.h"
 #include "rc_prof.h"
 #include "glmanager.h"
 #include "vgui_TeamFortressViewport.h"
@@ -143,6 +144,10 @@ void RcClient_Init( void )
 	RcSmooth_Init();	// rc_smooth.cpp (B315): smooth frames
 	RcDiscord_Init();	// rc_discord.cpp (B316): Discord Rich Presence
 	RcPractice_Init();	// rc_practice.cpp (B317): wallhack, novis, disable_vgui
+
+	// B319: tells a multiplayer server this is ReCoF, through the private userinfo key _recof (sent with the connect
+	// request, and again when it changes); servers take ReCoF players only (hl.dll ClientConnect, rc_require_recof)
+	gEngfuncs.PlayerInfo_SetValueForKey( "_recof", RECOF_VERSION );
 
 	rc_rawinput = gEngfuncs.pfnRegisterVariable( "rc_rawinput", "2", FCVAR_ARCHIVE );
 	rc_vsync = gEngfuncs.pfnRegisterVariable( "rc_vsync", "0", FCVAR_ARCHIVE );	// B304

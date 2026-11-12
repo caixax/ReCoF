@@ -611,6 +611,22 @@ called when a player connects to a server
 */
 BOOL ClientConnect( edict_t *pEntity, const char *pszName, const char *pszAddress, char szRejectReason[ 128 ]  )
 {
+	// ReCoF (B319): a multiplayer game takes ReCoF clients only (rc_require_recof 1, the default). ReCoF's client.dll
+	// puts its version in the private userinfo key _recof (rc_client.cpp RcClient_Init); the original client sends
+	// none. Bots, which the engine marks FL_FAKECLIENT before this call, are let in.
+	if ( gpGlobals->maxClients > 1 && rc_require_recof.value && !( pEntity->v.flags & FL_FAKECLIENT ) )
+	{
+		const char *pszRecof = g_engfuncs.pfnInfoKeyValue( g_engfuncs.pfnGetInfoKeyBuffer( pEntity ), "_recof" );
+		if ( !pszRecof || !pszRecof[0] )
+		{
+			strncpy( szRejectReason, "This server is for ReCoF players: github.com/caixax/ReCoF\n", 127 );
+			szRejectReason[127] = '\0';
+			ALERT( at_console, "%s turned away: not ReCoF\n", pszName );
+			return FALSE;
+		}
+		ALERT( at_console, "%s joins with ReCoF %s\n", pszName, pszRecof );
+	}
+
 	return g_pGameRules->ClientConnected( pEntity, pszName, pszAddress, szRejectReason );
 
 // a client connecting during an intermission can cause problems
