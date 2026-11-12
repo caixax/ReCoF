@@ -451,6 +451,11 @@ public:
 	float m_fTrippingTime;
 	bool m_bHasVomited;
 	int m_iOldRoomType;
+	// ReCoF (B329): the room type (sound effect) this player's client has, in multiplayer; RcRoomType and
+	// RcSetRoomType use it there and the room_type cvar in single player
+	int m_iRcRoomType;
+	int RcRoomType( void );
+	void RcSetRoomType( int type );
 	int InventoryIsFull( void );
 	void KeypadNumberCheck( int number );
 	void ViewKnock( float Amount );

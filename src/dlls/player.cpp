@@ -4190,8 +4190,8 @@ void CBasePlayer::PreThink(void)
 		m_iGameOverCounter--;
 	}
 
-	if ( m_bIsTripping && (int)CVAR_GET_FLOAT( "room_type" ) != 16 )
-		CVAR_SET_FLOAT( "room_type", 16 );
+	if ( m_bIsTripping && RcRoomType() != 16 )
+		RcSetRoomType( 16 );
 
 	if ( m_iFlashlightFlags & 64 )
 	{
@@ -4203,14 +4203,14 @@ void CBasePlayer::PreThink(void)
 
 	if ( m_iHeadShieldOn == 1 )
 	{
-		if ( (int)CVAR_GET_FLOAT( "room_type" ) != 14 )
-			CVAR_SET_FLOAT( "room_type", 14 );
+		if ( RcRoomType() != 14 )
+			RcSetRoomType( 14 );
 	}
 
 	if ( !m_iHeadShieldOn )
 	{
-		if ( (int)CVAR_GET_FLOAT( "room_type" ) != m_iOldRoomType )
-			CVAR_SET_FLOAT( "room_type", m_iOldRoomType );
+		if ( RcRoomType() != m_iOldRoomType )
+			RcSetRoomType( m_iOldRoomType );
 	}
 
 	if ( pev->health < 25 && !m_bChoking )
@@ -14077,14 +14077,38 @@ void CBasePlayer::MorphineTrip( void )
 
 		m_iBlurActive = 1;
 
-		m_iOldRoomType = CVAR_GET_FLOAT( "room_type" );
-		CVAR_SET_FLOAT( "room_type", 16 );
+		m_iOldRoomType = RcRoomType();
+		RcSetRoomType( 16 );
 
 		MESSAGE_BEGIN( MSG_ONE, gmsgConcuss, NULL, pev );
 			WRITE_BYTE( 10 );
 			WRITE_BYTE( 1 );
 		MESSAGE_END();
 	}
+}
+
+// ReCoF (B329): room_type is the client's sound effect (DSP) cvar. In single player the game DLL and the client share
+// it, as retail used it; in multiplayer each player keeps his own, sent to his client the way env_sound sends one
+// (SVC_ROOMTYPE), so the morphine and head shield effects reach the player they belong to, on a dedicated server too
+int CBasePlayer::RcRoomType( void )
+{
+	if ( gpGlobals->maxClients <= 1 )
+		return (int)CVAR_GET_FLOAT( "room_type" );
+	return m_iRcRoomType;
+}
+
+void CBasePlayer::RcSetRoomType( int type )
+{
+	if ( gpGlobals->maxClients <= 1 )
+	{
+		CVAR_SET_FLOAT( "room_type", type );
+		return;
+	}
+
+	m_iRcRoomType = type;
+	MESSAGE_BEGIN( MSG_ONE, SVC_ROOMTYPE, NULL, edict() );
+		WRITE_SHORT( (short)type );
+	MESSAGE_END();
 }
 
 void CBasePlayer::StopMorphineTrip( void )
@@ -14100,7 +14124,7 @@ void CBasePlayer::StopMorphineTrip( void )
 
 		m_iBlurActive = 0;
 
-		CVAR_SET_FLOAT( "room_type", m_iOldRoomType );
+		RcSetRoomType( m_iOldRoomType );
 
 		MESSAGE_BEGIN( MSG_ONE, gmsgConcuss, NULL, pev );
 			WRITE_BYTE( 0 );
