@@ -1711,12 +1711,20 @@ void EMIT_SOUND_DYN(edict_t *entity, int channel, const char *sample, float volu
 
 // play a specific sentence over the HEV suit speaker - just pass player entity, and !sentencename
 
+// ReCoF (B323): suitvolume is a client cvar; a dedicated server has none and CVAR_GET_FLOAT gave 0, so every suit
+// sound was silent there. Without the cvar the volume is full; a listen server keeps the host's value.
+static float RcSuitVolume( void )
+{
+	cvar_t *pSuitVolume = CVAR_GET_POINTER( "suitvolume" );
+	return pSuitVolume ? pSuitVolume->value : 1.0f;
+}
+
 void EMIT_SOUND_SUIT(edict_t *entity, const char *sample)
 {
 	float fvol;
 	int pitch = PITCH_NORM;
 
-	fvol = CVAR_GET_FLOAT("suitvolume");
+	fvol = RcSuitVolume();
 	if (RANDOM_LONG(0,1))
 		pitch = RANDOM_LONG(0,6) + 98;
 
@@ -1731,7 +1739,7 @@ void EMIT_GROUPID_SUIT(edict_t *entity, int isentenceg)
 	float fvol;
 	int pitch = PITCH_NORM;
 
-	fvol = CVAR_GET_FLOAT("suitvolume");
+	fvol = RcSuitVolume();
 	if (RANDOM_LONG(0,1))
 		pitch = RANDOM_LONG(0,6) + 98;
 
@@ -1746,7 +1754,7 @@ void EMIT_GROUPNAME_SUIT(edict_t *entity, const char *groupname)
 	float fvol;
 	int pitch = PITCH_NORM;
 
-	fvol = CVAR_GET_FLOAT("suitvolume");
+	fvol = RcSuitVolume();
 	if (RANDOM_LONG(0,1))
 		pitch = RANDOM_LONG(0,6) + 98;
 
