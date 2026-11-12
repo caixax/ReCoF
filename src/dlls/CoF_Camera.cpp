@@ -27,20 +27,8 @@
 extern int gmsgCustomDLight;
 extern int gmsgTakePhoto;
 
-class CCameraSpot : public CBaseEntity
-{
-	void Spawn( void );
-};
-
-void CCameraSpot::Spawn( void )
-{
-	UTIL_SetOrigin( this, pev->origin );
-	pev->solid = SOLID_NOT;
-	pev->effects = EF_NODRAW;
-	pev->v_angle = g_vecZero;
-}
-
-LINK_ENTITY_TO_CLASS( camera_spot, CCameraSpot );
+// B035: camera_spot is linked in bmodels.cpp, to the class retail's linker gave it. Retail also had a CCameraSpot
+// here (Spawn: UTIL_SetOrigin, SOLID_NOT, EF_NODRAW, v_angle zero) that no entity ever got.
 
 
 LINK_ENTITY_TO_CLASS( weapon_camera, CCamera );

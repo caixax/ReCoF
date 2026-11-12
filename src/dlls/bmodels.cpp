@@ -1101,6 +1101,9 @@ public:
 };
 
 LINK_ENTITY_TO_CLASS( camera_spot_trigger, CCameraSpot );
+// B035: retail had a second class of this name for camera_spot in CoF_Camera.cpp, and its linker kept this one for
+// both; ReCoF links camera_spot here, which gives every build that behaviour (GCC refused the two definitions)
+LINK_ENTITY_TO_CLASS( camera_spot, CCameraSpot );
 
 void CCameraSpot :: Spawn( void )
 {
