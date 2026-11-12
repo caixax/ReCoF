@@ -6068,6 +6068,8 @@ public:
 		{
 			pActivator = UTIL_FirstPlayerInstance_rc();
 		}
+		if ( !pActivator )	// ReCoF (B322): nobody in the game
+			return;
 
 		MESSAGE_BEGIN( MSG_ONE, gmsgTextWindow, NULL, pActivator->pev );
 			WRITE_STRING(STRING(pev->message));
@@ -6163,6 +6165,8 @@ public:
 		{
 			pActivator = UTIL_FirstPlayerInstance_rc();
 		}
+		if ( !pActivator )	// ReCoF (B322): nobody in the game
+			return;
 
 		CBasePlayer* pPlayer = (CBasePlayer*)pActivator;
 		pPlayer->PlayerSetGoalDesc(pev->message, pev->netname, pev->noise);

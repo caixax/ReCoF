@@ -11288,6 +11288,8 @@ void CHudSprite::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE us
 	{
 		pActivator = UTIL_FirstPlayerInstance_rc();
 	}
+	if ( !pActivator )	// ReCoF (B322): nobody in the game
+		return;
 
 	if (ShouldToggle(useType))
 	{
