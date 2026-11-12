@@ -575,7 +575,7 @@ void CPhoneCall::ChangeSubtitle( void )
 
 	if ( pSubMain )
 	{
-		CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+		CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 		if ( pPlayer )
 		{

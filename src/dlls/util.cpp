@@ -950,7 +950,7 @@ CBaseEntity *UTIL_FollowReference( CBaseEntity *pStartEntity, const char* szName
 	{
 		if (FStrEq(szName, "*player"))
 		{
-			CBaseEntity* pPlayer = UTIL_FindEntityByClassname(NULL, "player");
+			CBaseEntity* pPlayer = UTIL_FirstPlayer_rc();
 			if (pPlayer && (pStartEntity == NULL || pPlayer->eoffset() > pStartEntity->eoffset()))
 				return pPlayer;
 			else
@@ -1040,6 +1040,40 @@ CBaseEntity	*UTIL_PlayerByIndex( int playerIndex )
 	}
 	
 	return pPlayer;
+}
+
+
+// ReCoF (B321): "the player" for code written for one player. In single player exactly the old lookups (the first
+// entity named player, the entity or edict of slot 1); in multiplayer the first player who is in the game, so an empty
+// slot 1 or a player who left (B320) is skipped, as happens on a dedicated server, where nobody plays on the server
+CBaseEntity *UTIL_FirstPlayer_rc( void )
+{
+	if ( gpGlobals->maxClients <= 1 )
+		return UTIL_FindEntityByClassname( NULL, "player" );
+
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CBaseEntity *pPlayer = UTIL_PlayerByIndex( i );
+		if ( pPlayer && pPlayer->IsPlayer() )
+			return pPlayer;
+	}
+	return NULL;
+}
+
+CBaseEntity *UTIL_FirstPlayerInstance_rc( void )
+{
+	if ( gpGlobals->maxClients <= 1 )
+		return CBaseEntity::Instance( INDEXENT( 1 ) );
+	return UTIL_FirstPlayer_rc();
+}
+
+edict_t *UTIL_FirstPlayerEdict_rc( void )
+{
+	if ( gpGlobals->maxClients <= 1 )
+		return INDEXENT( 1 );
+
+	CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
+	return pPlayer ? pPlayer->edict() : NULL;
 }
 
 

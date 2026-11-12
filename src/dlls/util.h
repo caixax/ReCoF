@@ -239,6 +239,10 @@ extern CBaseEntity	*UTIL_FindEntityGeneric(const char *szName, Vector &vecSrc, f
 // otherwise returns NULL
 // Index is 1 based
 extern CBaseEntity	*UTIL_PlayerByIndex( int playerIndex );
+// ReCoF (B321): the first player who is in the game; in single player the old lookups exactly (util.cpp)
+extern CBaseEntity	*UTIL_FirstPlayer_rc( void );
+extern CBaseEntity	*UTIL_FirstPlayerInstance_rc( void );
+extern edict_t		*UTIL_FirstPlayerEdict_rc( void );
 
 #define UTIL_EntitiesInPVS(pent)			(*g_engfuncs.pfnEntitiesInPVS)(pent)
 extern void			UTIL_MakeVectors		(const Vector &vecAngles);

@@ -128,7 +128,7 @@ void CRealCamera::StartAnimation( void )
 
 	SetSequenceByName( (char *)STRING( pev->message ) );
 
-	CBasePlayer *pPlayer = (CBasePlayer *)UTIL_FindEntityByClassname( NULL, "player" );
+	CBasePlayer *pPlayer = (CBasePlayer *)UTIL_FirstPlayer_rc();
 
 	if ( pPlayer )
 		pPlayer->m_pCamera = this;

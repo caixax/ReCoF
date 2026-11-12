@@ -753,7 +753,7 @@ void CRoofBoss :: MonsterThink( void )
 				{
 					int nextmoveseconds = RANDOM_LONG( 2, 7 );
 
-					CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+					CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 					if ( pPlayer )
 					{
@@ -778,7 +778,7 @@ void CRoofBoss :: MonsterThink( void )
 	}
 	else
 	{
-		CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+		CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 		if ( pPlayer && FVisible( pPlayer ) )
 		{
@@ -812,7 +812,7 @@ void CRoofBoss :: MonsterThink( void )
 			if ( attack == 1 )
 			{
 				// attack
-				CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+				CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 				if ( pPlayer && FVisible( pPlayer ) && !m_bStartingAttack )
 				{
@@ -911,7 +911,7 @@ void CRoofBoss :: MonsterThink( void )
 
 				if ( pHeadMonster )
 				{
-					CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+					CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 					if ( pPlayer )
 						pHeadMonster->m_hEnemy = pPlayer;

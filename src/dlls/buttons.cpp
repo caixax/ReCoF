@@ -871,7 +871,7 @@ void CBaseButton::Spawn( )
 void CBaseButton::UnlockDoor( void )
 {
 	CBaseEntity *pPlayer = NULL;
-	pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+	pPlayer = UTIL_FirstPlayer_rc();
 
 	if ( !pPlayer )
 		return;

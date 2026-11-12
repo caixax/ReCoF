@@ -52,7 +52,7 @@ void CItemPadlock::Spawn( void )
 
 void CItemPadlock::Finished( void )
 {
-	CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 	if ( pPlayer )
 	{
@@ -107,7 +107,7 @@ int GetRotationForNumber( int number )
 
 void CItemPadlock::Cancel( void )
 {
-	CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 	if ( pPlayer )
 	{
@@ -138,7 +138,7 @@ void CItemPadlock::Check( void )
 
 		pev->body = 1;
 
-		CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+		CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 		if ( pPlayer )
 		{

@@ -2197,7 +2197,7 @@ void CEnvModel::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE use
 
 		int codenumber = atoi( szTempKey );
 
-		CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+		CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 		if ( player )
 		{
@@ -2234,7 +2234,7 @@ void CEnvModel::Think( void )
 
 	if ( pev->spawnflags & 8 )
 	{
-		CBaseEntity *pent = UTIL_FindEntityByClassname( NULL, "player" );
+		CBaseEntity *pent = UTIL_FirstPlayer_rc();
 
 		if ( pent && !m_gbIsInCutscene )
 		{
@@ -3080,7 +3080,7 @@ Vector CBlood::BloodPosition( CBaseEntity *pActivator )
 			pPlayer = pActivator->edict();
 		}
 		else
-			pPlayer = g_engfuncs.pfnPEntityOfEntIndex( 1 );
+			pPlayer = UTIL_FirstPlayerEdict_rc();
 		if ( pPlayer )
 			return (pPlayer->v.origin + pPlayer->v.view_ofs) + Vector( RANDOM_FLOAT(-10,10), RANDOM_FLOAT(-10,10), RANDOM_FLOAT(-10,10) );
 		// if no player found, fall through
@@ -3411,7 +3411,7 @@ void CMessage::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useT
 			pPlayer = pActivator;
 		else
 		{
-			pPlayer = CBaseEntity::Instance( g_engfuncs.pfnPEntityOfEntIndex( 1 ) );
+			pPlayer = UTIL_FirstPlayerInstance_rc();
 		}
 		if ( pPlayer )
 			UTIL_ShowMessage( STRING(pev->message), pPlayer );
@@ -5125,7 +5125,7 @@ CParticle *CParticle::CreateParticle( int message, bool starton, Vector origin, 
 	pParticle->pev->message = message;
 	pParticle->Spawn();
 
-	CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 	if ( pPlayer )
 	{
@@ -5255,7 +5255,7 @@ void CRainModify::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 	}
 
 	CBasePlayer *pPlayer;
-	pPlayer = (CBasePlayer *)CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex(1));
+	pPlayer = (CBasePlayer *)UTIL_FirstPlayerInstance_rc();
 
 	if (fadeTime)
 	{ // write to 'ideal' settings
@@ -5580,7 +5580,7 @@ public:
 	
 	void Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 	{
-		CBaseEntity *pEnt = CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex(1));
+		CBaseEntity *pEnt = UTIL_FirstPlayerInstance_rc();
 		if (pEnt && pEnt->IsPlayer())
 		{
 			USE_TYPE send = USE_TOGGLE;
@@ -6841,7 +6841,7 @@ void CCofKeypad4::Spawn( void )
 
 void CCofKeypad4::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 	if ( player )
 	{
@@ -7010,7 +7010,7 @@ void CCofKillMP3::Spawn( void )
 
 void CCofKillMP3::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 	if ( player )
 	{
@@ -7784,7 +7784,7 @@ void CCofStressTest::ReportEffect( void )
 	}
 
 	CBaseEntity *pTarget = NULL;
-	CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 
 	if ( !pPlayer )
@@ -8594,7 +8594,7 @@ void CCofPhoneDisable::Spawn( void )
 
 void CCofPhoneDisable::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 	if ( player )
 	{
@@ -9323,7 +9323,7 @@ void CCoFDoctorWeaponSet::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, US
 	if ( !pActivator )
 		return;
 
-	CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 	if ( pPlayer )
 		GetClassPtr( (CBasePlayer *)pPlayer->pev )->m_iDoctorWeapon = pev->iuser1;
@@ -9353,7 +9353,7 @@ void CCoFDoctorWeaponTrigger::Use( CBaseEntity *pActivator, CBaseEntity *pCaller
 	if ( !pActivator )
 		return;
 
-	CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 	if ( pPlayer )
 	{
@@ -9397,7 +9397,7 @@ void CCoFLookAt::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE us
 	if ( !pActivator )
 		return;
 
-	CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 	if ( pPlayer )
 	{
@@ -9745,7 +9745,7 @@ void CCoFMDLCutscene::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TY
 		return;
 
 	CBasePlayer *pPlayer = NULL;
-	CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 	if ( player )
 		pPlayer = GetClassPtr( (CBasePlayer *)player->pev );
@@ -10297,7 +10297,7 @@ void CCofCodeNote::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE 
 	if ( !pActivator )
 		return;
 
-	CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 	if ( player )
 	{
@@ -11716,7 +11716,7 @@ void CCoFGreyFade::Spawn( void )
 
 void CCoFGreyFade::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 	if ( player )
 	{
@@ -11753,7 +11753,7 @@ void CCoFStopWheelchair::Spawn( void )
 
 void CCoFStopWheelchair::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 	if ( player )
 	{
@@ -11831,7 +11831,7 @@ void CCoFClothesMenu::SendInitMessage( CBasePlayer *player )
 
 void CCoFClothesMenu::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 	if ( player )
 	{
@@ -12313,7 +12313,7 @@ void CCoFObjective::Spawn( void )
 
 void CCoFObjective::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 	if ( player )
 	{
@@ -12354,7 +12354,7 @@ void CCoFStartDoctorMode::Spawn( void )
 
 void CCoFStartDoctorMode::GiveGun( void )
 {
-	CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 	if ( player )
 	{
@@ -12380,7 +12380,7 @@ void CCoFStartDoctorMode::GiveGun( void )
 
 void CCoFStartDoctorMode::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 	if ( player )
 	{
@@ -12443,7 +12443,7 @@ void CCoFStats::Spawn( void )
 
 void CCoFStats::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
-	CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 	if ( player )
 	{
@@ -12820,7 +12820,7 @@ void CCoFLobbyStart::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 
 
 
-	CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 	if ( player )
 	{
@@ -13020,7 +13020,7 @@ void CCoFSimpleText::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 	if ( pev->spawnflags & 1 )
 		all = true;
 
-	CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 	if ( player )
 		UTIL_ProMessage( player, STRING(pev->message), pev->iuser1, all );
@@ -13088,7 +13088,7 @@ void CCoFSurvivalMode::SurvivalThink( void )
 
 			if ( m_iCurrentSurvivalTime >= m_iSurvivalTimeInSeconds )
 			{
-				CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+				CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 				if ( player && m_sSurvivalTriggerWhenWon && !pev->iuser3 )
 				{
@@ -13589,7 +13589,7 @@ void CCoFPlayerCheck::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TY
 	else
 		players = CountConnectedPlayers();
 
-	CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 	if ( pPlayer )
 	{

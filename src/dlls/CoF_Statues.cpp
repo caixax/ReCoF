@@ -154,7 +154,7 @@ void CheckStatuePuzzle( void )
 	{
 		if ( GetClassPtr( (CStatueEagle *)pEagle->pev )->m_iPosition == 2 && GetClassPtr( (CStatueHorse *)pHorse->pev )->m_iPosition == 1 && GetClassPtr( (CStatueLion *)pLion->pev )->m_iPosition == 1 && GetClassPtr( (CStatueOwl *)pOwl->pev )->m_iPosition == 4 )
 		{
-			CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+			CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 			pStatueEnd->Use( pPlayer, pPlayer, USE_TOGGLE, 0 );
 		}
 	}

@@ -584,7 +584,7 @@ void CBookSimon :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE 
 		{
 			m_bIsBoss = true;
 
-			CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+			CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 			if ( player && player->IsPlayer() )
 			{
@@ -810,7 +810,7 @@ void CBookSimon :: MonsterThink( void )
 	{
 		if ( !pPlayer )
 		{
-			CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+			CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 			if ( player && player->IsPlayer() )
 			{

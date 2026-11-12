@@ -232,7 +232,7 @@ void CGenericMonster :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_
 
 	int codenumber = atoi( szTempKey );
 
-	CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 	if ( player )
 	{

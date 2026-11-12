@@ -133,7 +133,7 @@ void CKeypadNew::KeypadUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_T
 	if ( !pActivator )
 		return;
 
-	CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 	if ( pPlayer && pPlayer->IsPlayer() && pPlayer->IsAlive() )
 	{

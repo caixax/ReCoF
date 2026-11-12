@@ -288,7 +288,7 @@ void CAmbientGeneric :: StartPlayFrom( void )
 
 	if (FBitSet(pev->spawnflags, AMBIENT_SOUND_FROM_PLAYER)) // buz
 	{
-		CBaseEntity *pPlayer = CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex(1));
+		CBaseEntity *pPlayer = UTIL_FirstPlayerInstance_rc();
 		EMIT_SOUND_SUIT( pPlayer->edict(), szSoundFile);
 	}
 	else
@@ -350,7 +350,7 @@ void CAmbientGeneric :: RampThink( void )
 			}
 			else if (FBitSet(pev->spawnflags, AMBIENT_SOUND_FROM_PLAYER)) // buz
 			{
-				CBaseEntity *pPlayer = CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex(1));
+				CBaseEntity *pPlayer = UTIL_FirstPlayerInstance_rc();
 				STOP_SOUND( pPlayer->edict(), CHAN_STATIC, szSoundFile);
 			}
 			else
@@ -404,7 +404,7 @@ void CAmbientGeneric :: RampThink( void )
 			}
 			else if (FBitSet(pev->spawnflags, AMBIENT_SOUND_FROM_PLAYER)) // buz
 			{
-				CBaseEntity *pPlayer = CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex(1));
+				CBaseEntity *pPlayer = UTIL_FirstPlayerInstance_rc();
 				STOP_SOUND( pPlayer->edict(), CHAN_STATIC, szSoundFile);
 			}
 			else
@@ -518,7 +518,7 @@ void CAmbientGeneric :: RampThink( void )
 		}
 		else if (FBitSet(pev->spawnflags, AMBIENT_SOUND_FROM_PLAYER)) // buz
 		{
-			CBaseEntity *pPlayer = CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex(1));
+			CBaseEntity *pPlayer = UTIL_FirstPlayerInstance_rc();
 			EMIT_SOUND_SUIT( pPlayer->edict(), szSoundFile);
 		}
 		else
@@ -655,7 +655,7 @@ void CAmbientGeneric :: ToggleUse ( CBaseEntity *pActivator, CBaseEntity *pCalle
 		}
 		else if (FBitSet(pev->spawnflags, AMBIENT_SOUND_FROM_PLAYER)) // buz
 		{
-			CBaseEntity *pPlayer = CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex(1));
+			CBaseEntity *pPlayer = UTIL_FirstPlayerInstance_rc();
 			EMIT_SOUND_SUIT( pPlayer->edict(), szSoundFile);
 		}
 		else
@@ -721,7 +721,7 @@ void CAmbientGeneric :: ToggleUse ( CBaseEntity *pActivator, CBaseEntity *pCalle
 			}
 			else if (FBitSet(pev->spawnflags, AMBIENT_SOUND_FROM_PLAYER)) // buz
 			{
-				CBaseEntity *pPlayer = CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex(1));
+				CBaseEntity *pPlayer = UTIL_FirstPlayerInstance_rc();
 				STOP_SOUND( pPlayer->edict(), CHAN_STATIC, szSoundFile);
 			}
 			else
@@ -760,7 +760,7 @@ void CAmbientGeneric :: ToggleUse ( CBaseEntity *pActivator, CBaseEntity *pCalle
 		}
 		else if (FBitSet(pev->spawnflags, AMBIENT_SOUND_FROM_PLAYER)) // buz
 		{
-			CBaseEntity *pPlayer = CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex(1));
+			CBaseEntity *pPlayer = UTIL_FirstPlayerInstance_rc();
 			STOP_SOUND( pPlayer->edict(), CHAN_STATIC, szSoundFile);
 		}
 		else
@@ -781,7 +781,7 @@ void CAmbientGeneric :: ToggleUse ( CBaseEntity *pActivator, CBaseEntity *pCalle
 		}
 		else if (FBitSet(pev->spawnflags, AMBIENT_SOUND_FROM_PLAYER)) // buz
 		{
-			CBaseEntity *pPlayer = CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex(1));
+			CBaseEntity *pPlayer = UTIL_FirstPlayerInstance_rc();
 			EMIT_SOUND_SUIT( pPlayer->edict(), szSoundFile);
 		}
 		else
@@ -2410,7 +2410,7 @@ void CRadio::Precache()
 void CRadio::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
 {
 	char* szSoundFile = (char*) STRING(pev->message);
-	CBaseEntity *pPlayer = CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex(1));
+	CBaseEntity *pPlayer = UTIL_FirstPlayerInstance_rc();
 	if ( !FStringNull( pev->message ) && strlen( szSoundFile ) > 1 )
 	{		
 		EMIT_SOUND_SUIT( pPlayer->edict(), szSoundFile);

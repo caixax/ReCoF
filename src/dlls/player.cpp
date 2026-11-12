@@ -11045,7 +11045,7 @@ void CStripWeapons :: Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TY
 	}
 	else if ( g_pGameRules && !g_pGameRules->IsDeathmatch() )
 	{
-		pPlayer = (CBasePlayer *)CBaseEntity::Instance( g_engfuncs.pfnPEntityOfEntIndex( 1 ) );
+		pPlayer = (CBasePlayer *)UTIL_FirstPlayerInstance_rc();
 	}
 
 	if ( pPlayer )
@@ -11166,7 +11166,7 @@ void CPlayerFreeze::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE
 {
 	if (!(pev->spawnflags & SF_FREEZE_LOCUS))
 	{
-		pActivator = UTIL_FindEntityByClassname(NULL, "player");
+		pActivator = UTIL_FirstPlayer_rc();
 	}
 
 	if (pActivator && pActivator->pev->flags & FL_CLIENT)
@@ -11286,7 +11286,7 @@ void CHudSprite::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE us
 {
 	if ( !pActivator || !pActivator->IsPlayer() )
 	{
-		pActivator = CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex( 1 ));
+		pActivator = UTIL_FirstPlayerInstance_rc();
 	}
 
 	if (ShouldToggle(useType))

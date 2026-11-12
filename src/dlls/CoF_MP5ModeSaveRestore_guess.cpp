@@ -81,7 +81,7 @@ void CMP5ModeSaveRestoreMP5::Use( CBaseEntity *pActivator, CBaseEntity *pCaller,
 
 		if ( !( flAmmo <= 0 ) )
 		{
-			CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+			CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 			if ( pPlayer )
 				pPlayer->GiveAmmo( flAmmo, "mp5", flAmmo, true );
@@ -90,7 +90,7 @@ void CMP5ModeSaveRestoreMP5::Use( CBaseEntity *pActivator, CBaseEntity *pCaller,
 	else
 	{
 		// save the weapon of the player
-		CBasePlayer *pPlayer = (CBasePlayer *)UTIL_FindEntityByClassname( NULL, "player" );
+		CBasePlayer *pPlayer = (CBasePlayer *)UTIL_FirstPlayer_rc();
 
 		if ( !pPlayer )
 			return;

@@ -1079,7 +1079,7 @@ void CScriptedSentence :: FindThink( void )
 {
 	if (!m_iszEntity) //LRC- no target monster given: speak through HEV
 	{
-		CBasePlayer* pPlayer = (CBasePlayer*)UTIL_FindEntityByClassname( NULL, "player" );
+		CBasePlayer* pPlayer = (CBasePlayer*)UTIL_FirstPlayer_rc();
 		if (pPlayer)
 		{
 			m_playing = TRUE;

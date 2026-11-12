@@ -195,7 +195,7 @@ void CPuzzleBar::BarCheck( void )
 	else
 		return;
 
-	CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 	if ( !pPlayer )
 		return;
@@ -388,7 +388,7 @@ void CPuzzleBar2::BarCheck( void )
 	else
 		return;
 
-	CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 	if ( !pPlayer )
 		return;
@@ -581,7 +581,7 @@ void CPuzzleBar3::BarCheck( void )
 	else
 		return;
 
-	CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 	if ( !pPlayer )
 		return;
@@ -774,7 +774,7 @@ void CPuzzleBar4::BarCheck( void )
 	else
 		return;
 
-	CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 	if ( !pPlayer )
 		return;
@@ -967,7 +967,7 @@ void CPuzzleBar5::BarCheck( void )
 	else
 		return;
 
-	CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 	if ( !pPlayer )
 		return;

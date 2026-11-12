@@ -630,7 +630,7 @@ void CCrazyBitch :: MonsterThink( void )
 		if ( m_hEnemy != NULL && m_hEnemy->IsPlayer() )
 			pPlayer = GetClassPtr( (CBasePlayer *)m_hEnemy->pev );
 		else
-			pPlayer = (CBasePlayer *)CBaseEntity::Instance( INDEXENT( 1 ) );
+			pPlayer = (CBasePlayer *)UTIL_FirstPlayerInstance_rc();
 
 		if ( pPlayer && pPlayer->m_pActiveItem && IsAlive() )
 		{

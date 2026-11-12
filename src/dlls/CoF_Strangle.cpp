@@ -144,7 +144,7 @@ void CCoFStrangle::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE 
 	if ( !pActivator )
 		return;
 
-	CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *player = UTIL_FirstPlayer_rc();
 	CBasePlayer *pPlayer = NULL;
 
 	if ( player )

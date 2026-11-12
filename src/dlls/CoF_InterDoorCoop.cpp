@@ -528,7 +528,7 @@ void CInterDoorCoop::StartSequence( void )
 
 void CInterDoorCoop::EndGame( void )
 {
-	CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+	CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 	if ( pPlayer )
 		CLIENT_COMMAND( pPlayer->edict(), "map c_game_menu1\n" );

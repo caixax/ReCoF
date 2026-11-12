@@ -73,7 +73,7 @@ void CSubtitleChange::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TY
 
 	if ( pSubMain )
 	{
-		CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+		CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 		if ( pPlayer )
 		{

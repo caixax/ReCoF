@@ -107,7 +107,7 @@ void CCoFDevCommentary::DevThink( void )
 		}
 		else
 		{
-			CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+			CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 			if ( pPlayer )
 				pev->euser1 = pPlayer->edict();

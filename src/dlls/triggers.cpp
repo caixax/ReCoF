@@ -201,7 +201,7 @@ void CAutoTrigger::DesiredAction( void )
 	{
 		if (pev->spawnflags & SF_AUTO_FROMPLAYER)
 		{
-			CBaseEntity* pPlayer = UTIL_FindEntityByClassname(NULL, "player");
+			CBaseEntity* pPlayer = UTIL_FirstPlayer_rc();
 			if (pPlayer)
 				SUB_UseTargets( pPlayer, triggerType, 0 );
 			else
@@ -2705,7 +2705,7 @@ void PlayCDTrack( int iTrack )
 	edict_t *pClient;
 	
 	// manually find the single player. 
-	pClient = g_engfuncs.pfnPEntityOfEntIndex( 1 );
+	pClient = UTIL_FirstPlayerEdict_rc();
 	
 	// Can't play if the client is not connected!
 	if ( !pClient )
@@ -2786,7 +2786,7 @@ void CTargetCDAudio::Think( void )
 	edict_t *pClient;
 	
 	// manually find the single player. 
-	pClient = g_engfuncs.pfnPEntityOfEntIndex( 1 );
+	pClient = UTIL_FirstPlayerEdict_rc();
 	
 	// Can't play if the client is not connected!
 	if ( !pClient )
@@ -3457,7 +3457,7 @@ void CChangeLevel :: ChangeLevelNow( CBaseEntity *pActivator )
 	pev->dmgtime = gpGlobals->time;
 
 
-	CBaseEntity *pPlayer = CBaseEntity::Instance( g_engfuncs.pfnPEntityOfEntIndex( 1 ) );
+	CBaseEntity *pPlayer = UTIL_FirstPlayerInstance_rc();
 	if ( !InTransitionVolume( pPlayer, m_szLandmarkName ) )
 	{
 		ALERT( at_aiconsole, "Player isn't in the transition volume %s, aborting\n", m_szLandmarkName );
@@ -4260,7 +4260,7 @@ BOOL CTriggerOnSight :: VisionCheck( void )
 	}
 	else
 	{
-		pLooker = UTIL_FindEntityByClassname(NULL, "player");
+		pLooker = UTIL_FirstPlayer_rc();
 		if (!pLooker)
 		{
 			ALERT(at_error, "trigger_onsight can't find player!?\n");
@@ -5625,7 +5625,7 @@ void CTriggerCamera::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYP
 	}
 	if ( !pActivator || !pActivator->IsPlayer() )
 	{
-		pActivator = CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex( 1 ));
+		pActivator = UTIL_FirstPlayerInstance_rc();
 	}
 
 	m_hPlayer = pActivator;
@@ -5945,7 +5945,7 @@ void CTriggerCamera::FollowTarget( )
 
 			if ( pSkipTarget )
 			{
-				CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+				CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 				if ( pPlayer )
 					pSkipTarget->Use( pPlayer, pPlayer, USE_TOGGLE, 0 );
@@ -6066,7 +6066,7 @@ public:
 	{
 		if ( !pActivator || !pActivator->IsPlayer() )
 		{
-			pActivator = CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex( 1 ));
+			pActivator = UTIL_FirstPlayerInstance_rc();
 		}
 
 		MESSAGE_BEGIN( MSG_ONE, gmsgTextWindow, NULL, pActivator->pev );
@@ -6104,7 +6104,7 @@ void CTriggerMP3::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE u
 {
 	if ( !pActivator || !pActivator->IsPlayer() )
 	{
-		pActivator = CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex( 1 ));
+		pActivator = UTIL_FirstPlayerInstance_rc();
 	}
 
 	if ( !pev->message )
@@ -6161,7 +6161,7 @@ public:
 	{
 		if ( !pActivator || !pActivator->IsPlayer() )
 		{
-			pActivator = CBaseEntity::Instance(g_engfuncs.pfnPEntityOfEntIndex( 1 ));
+			pActivator = UTIL_FirstPlayerInstance_rc();
 		}
 
 		CBasePlayer* pPlayer = (CBasePlayer*)pActivator;
@@ -7006,7 +7006,7 @@ void CTriggerPlayerCheckArea :: Use( CBaseEntity *pActivator, CBaseEntity *pCall
 
 	if ( !pActivatingNerd )
 	{
-		CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+		CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 		if ( pPlayer )
 			pActivatingNerd = GetClassPtr( (CBasePlayer *)pPlayer->pev );

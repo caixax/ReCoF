@@ -169,7 +169,7 @@ void CDoctorBoss :: SendInitMessage( CBasePlayer *player )
 
 	if ( !pPlayer )
 	{
-		CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+		CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 		if ( player && player->IsPlayer() )
 		{
@@ -252,7 +252,7 @@ void CDoctorBoss :: Spawn()
 
 	if ( !pPlayer )
 	{
-		CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+		CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 		if ( player && player->IsPlayer() )
 		{
@@ -274,7 +274,7 @@ void CDoctorBoss :: Killed( entvars_t *pevAttacker, int iGib )
 
 	if ( pev->target )
 	{
-		CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+		CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 		if ( pPlayer && pPlayer->IsPlayer() )
 			FireTargets( STRING( pev->target ), pPlayer, pPlayer, USE_TOGGLE, 0 );
@@ -558,7 +558,7 @@ void CDoctorBoss :: MonsterThink( void )
 	if ( m_iGunType == 0 )
 	{
 		// wait for the player to choose the weapon
-		CBaseEntity *pPlayer = UTIL_FindEntityByClassname( NULL, "player" );
+		CBaseEntity *pPlayer = UTIL_FirstPlayer_rc();
 
 		if ( pPlayer )
 		{
@@ -933,7 +933,7 @@ void CDoctorBoss :: MonsterThink( void )
 
 	if ( !pPlayer )
 	{
-		CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+		CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 		if ( player && player->IsPlayer() )
 		{

@@ -153,7 +153,7 @@ int CBookSimonSledgehammer :: TakeDamage( entvars_t *pevInflictor, entvars_t *pe
 	if ( pTarget )
 	{
 		CBaseMonster *pMonster = pTarget->MyMonsterPointer();
-		CBaseEntity *player = UTIL_FindEntityByClassname( NULL, "player" );
+		CBaseEntity *player = UTIL_FirstPlayer_rc();
 
 		// fire its death trigger now, the player gets the credit
 		if ( flDamage >= pev->health && pMonster && player && pMonster->m_iszTriggerTarget )
