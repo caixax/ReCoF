@@ -1023,6 +1023,9 @@ void CRECBInventory::setVisible( bool state )
 	Panel::setVisible( state );
 }
 
+// ReCoF (B334): the bag or pocket item whose picture m_pItemImages_guess[8] shows (CRECBInventory::solve)
+static char s_szRcHoverItem[128];
+
 void CRECBInventory::solve()
 {
 	int i;
@@ -1087,11 +1090,20 @@ void CRECBInventory::solve()
 		if ( m_pPopupImage_guess->isVisible() )
 			m_pPopupImage_guess->setVisible( false );
 
+		// ReCoF (B334): retail loaded the item's picture from disk again on every frame while the item was pointed
+		// at, and kept every copy with a texture of its own; it is loaded when the item pointed at changes, as the
+		// quick slots below already did
 		for ( i = 1; i <= 6; i++ )
 		{
 			if ( m_pItemButtons_guess[i - 1]->isArmed() && strlen( gHUD.GetSlotItem_guess( i ) ) > 1 )
 			{
-				m_pItemImages_guess[8]->setImage( vgui_LoadTGA( gHUD.CheckItem( "check_picture", gHUD.GetSlotItem_guess( i ) ) ) );
+				if ( m_iHoverItem_guess != i || strcmp( s_szRcHoverItem, gHUD.GetSlotItem_guess( i ) ) )
+				{
+					m_pItemImages_guess[8]->setImage( vgui_LoadTGA( gHUD.CheckItem( "check_picture", gHUD.GetSlotItem_guess( i ) ) ) );
+					strncpy( s_szRcHoverItem, gHUD.GetSlotItem_guess( i ), sizeof( s_szRcHoverItem ) - 1 );
+					s_szRcHoverItem[sizeof( s_szRcHoverItem ) - 1] = 0;
+				}
+
 				m_iHoverItem_guess = i;
 			}
 		}
