@@ -26,7 +26,9 @@
 //
 // Pacing: the pictures split each game frame evenly, at the monitor's refresh rate or faster (rc_smoothframes_fps
 // sets another rate when it is above the game frames' rate), and one is drawn only when it should end before the next game frame is due, so the game frames
-// keep their timing and the msec of the player's commands. How long a picture takes is judged from the slowest recent
+// keep their timing and the msec of the player's commands. When fewer pictures fit than the monitor takes, each game
+// frame gets as many as fit, still evenly spaced (RcSmoothPlan, B336): leaving the last one out of some game frames
+// and not others put the pictures at uneven times, which showed as a stutter. How long a picture takes is judged from the slowest recent
 // picture in between, which is forgotten with time (the game frame's own picture is no guide: it also sets up the
 // models' new poses and the lights, which the pictures reuse), and from RC_SMOOTH_FIRST when none was drawn lately, with
 // a margin of a quarter of that and 0.5 ms; a picture that still ends too late adds the time it overran to the margin,
@@ -58,11 +60,16 @@ int IN_RcMouseLooks( void );		// inputw32.cpp
 #define RC_SMOOTH_MARGIN	0.0005		// seconds left free before the next game frame, besides RC_SMOOTH_SHARE of the picture
 #define RC_SMOOTH_SHARE		0.25
 #define RC_SMOOTH_EARLY		0.0005		// a picture due this soon is drawn now (the engine's loop sleeps 1 ms at a time)
+#define RC_SMOOTH_SPIN		0.0025		// a picture due this soon is waited for, so it starts on time (B336)
 #define RC_SMOOTH_FIRST		0.002		// what a picture is taken to need when none was drawn in the last RC_SMOOTH_RECENT s
 #define RC_SMOOTH_RECENT	0.5
 #define RC_SMOOTH_LEAST		0.0005		// the least a picture is taken to need
 #define RC_SMOOTH_DECAY		0.98		// per game frame: the slowest recent picture is half forgotten in a third of a second
 #define RC_SMOOTH_LATE_DECAY	0.99	// per game frame: the margin a late picture added is half forgotten in 0.7 s
+#define RC_SMOOTH_ROOM		0.5			// one picture more each game frame only when this much more than it would fit (B336)
+#define RC_SMOOTH_ROOM_FRAMES	25		// for this many game frames in a row, at first
+#define RC_SMOOTH_ROOM_MAX	800		// doubled up to this when the count drops within a second of going up
+#define RC_SMOOTH_ROOM_RESET	5.0		// and back to RC_SMOOTH_ROOM_FRAMES after this many seconds without a drop
 
 static cvar_t	*rc_smoothframes;
 static cvar_t	*rc_smoothframes_fps;
@@ -86,7 +93,12 @@ static double	s_flRenderCost;			// the slowest recent picture, forgotten with ti
 static double	s_flLastPicture;		// when the last picture ended
 static double	s_flFramePicture;		// the game frame's own picture, from its view to the end of its HUD (rc_smoothframes_debug)
 static double	s_flLateMargin;			// what pictures that ended too late overran, forgotten with time
-static int		s_iSlot;				// the next picture of this game frame, 1 to n
+static int		s_iSlot;				// the next picture of this game frame, 1 to s_iSlots
+static int		s_iSlots = RC_SMOOTH_MAX;	// the pictures each game frame gets now, evenly spaced (RcSmoothPlan)
+static int		s_iRoomFrames;			// game frames in a row with room for one more
+static int		s_iRoomWait = RC_SMOOTH_ROOM_FRAMES;	// the game frames with room it takes to go up
+static double	s_flPlanUp;				// when the count last went up
+static double	s_flPlanDown;			// and down
 
 // rc_smoothframes_debug: what happened over the last second
 enum
@@ -97,6 +109,7 @@ enum
 	RCS_CAMERA,		// not the player's own first person view: a cutscene camera, third person, the wheelchair (B333)
 	RCS_MENU,		// a menu has the mouse: its cursor is shown, or it took the mouse (B335)
 	RCS_RATE,		// the monitor (or rc_smoothframes_fps) is no faster than the game frames
+	RCS_SLOW,		// no picture fits evenly in the game frame (B336)
 	RCS_NOTIME,		// pictures left out: not enough time before the next game frame
 	RCS_LATE,		// pictures that ended too late
 	RCS_COUNT
@@ -113,6 +126,7 @@ struct RcSmoothStats_t
 	double	flLeftMin;		// the time left before the next game frame when a game frame was over, least and most
 	double	flLeftMax;
 	int		iLeft;			// game frames those two are taken from
+	int		iPlanChanges;	// times the pictures each game frame gets changed (RcSmoothPlan)
 };
 
 static RcSmoothStats_t	s_Stats;		// this second
@@ -223,6 +237,56 @@ static double RcSmoothNeed( double now )
 {
 	double flCost = RcSmoothCost( now );
 	return flCost * ( 1.0 + RC_SMOOTH_SHARE ) + RC_SMOOTH_MARGIN + s_flLateMargin;
+}
+
+// the pictures this game frame gets, evenly spaced (B336). k pictures split the game frame into k + 1 even parts
+// after its view, so the last starts k / (k + 1) of a game frame after the view and must end, with its margin,
+// before the next game frame. When fewer fit than the monitor takes, every game frame gets that many, rather than
+// the last left out of some game frames and not others. The count drops at once to what fits, and goes up by one
+// only after a quarter of a second with room for half a picture more; when it drops again within a second, the
+// next rise waits twice as long, so a scene just at the edge stays at the lower count
+static void RcSmoothPlan( int n, double flFrame, double now )
+{
+	double r = ( s_flFrameStart + flFrame - RcSmoothNeed( now ) - s_flFrameView ) / flFrame;
+	double fit;
+
+	if ( r <= 0 )
+		fit = 0;
+	else if ( r >= 0.95 )
+		fit = RC_SMOOTH_MAX + 1;
+	else
+		fit = r / ( 1.0 - r );	// k / (k + 1) <= r
+
+	if ( s_iSlots > n )
+		s_iSlots = n;
+
+	if ( s_iRoomWait > RC_SMOOTH_ROOM_FRAMES && now - s_flPlanDown > RC_SMOOTH_ROOM_RESET && now >= s_flPlanDown )
+		s_iRoomWait = RC_SMOOTH_ROOM_FRAMES;
+
+	if ( fit < s_iSlots )
+	{
+		s_iSlots = (int)fit;
+		s_iRoomFrames = 0;
+		s_Stats.iPlanChanges++;
+
+		if ( now - s_flPlanUp < 1.0 && now >= s_flPlanUp )
+			s_iRoomWait = ( s_iRoomWait * 2 < RC_SMOOTH_ROOM_MAX ) ? s_iRoomWait * 2 : RC_SMOOTH_ROOM_MAX;
+		s_flPlanDown = now;
+	}
+	else if ( s_iSlots < n && fit >= s_iSlots + 1 + RC_SMOOTH_ROOM )
+	{
+		if ( ++s_iRoomFrames >= s_iRoomWait )
+		{
+			s_iSlots++;
+			s_iRoomFrames = 0;
+			s_Stats.iPlanChanges++;
+			s_flPlanUp = now;
+		}
+	}
+	else
+	{
+		s_iRoomFrames = 0;
+	}
 }
 
 void RcSmooth_Init( void )
@@ -340,6 +404,12 @@ extern "C" __declspec( dllexport ) void RcSmooth_Frame( void ( *pfnUpdateScreen 
 	else if ( n < 1 )
 		iWhy = RCS_RATE;
 
+	if ( iWhy < 0 && bNewFrame )
+		RcSmoothPlan( n, flFrame, now );
+
+	if ( iWhy < 0 && s_iSlots < 1 )
+		iWhy = RCS_SLOW;
+
 	if ( iWhy >= 0 )
 	{
 		if ( bNewFrame )
@@ -347,13 +417,20 @@ extern "C" __declspec( dllexport ) void RcSmooth_Frame( void ( *pfnUpdateScreen 
 		return;
 	}
 
-	double flSlot = flFrame / ( n + 1 );
+	double flSlot = flFrame / ( s_iSlots + 1 );
 
-	if ( s_iSlot > n || now < s_flFrameView + s_iSlot * flSlot - RC_SMOOTH_EARLY )
+	if ( s_iSlot > s_iSlots || now < s_flFrameView + s_iSlot * flSlot - RC_SMOOTH_SPIN )
 		return;
 
+	// a picture due within RC_SMOOTH_SPIN is waited for here (B336): the engine's loop sleeps 1 to 2 ms at a time, and
+	// a picture started that late came at an uneven time, with less time left before the next game frame
+	while ( now < s_flFrameView + s_iSlot * flSlot && now >= s_flCallEnd )
+		now = RcSmoothNow();
+
+	s_flCallEnd = now;
+
 	// the parts already over are not drawn late
-	while ( s_iSlot <= n && now >= s_flFrameView + s_iSlot * flSlot - RC_SMOOTH_EARLY )
+	while ( s_iSlot <= s_iSlots && now >= s_flFrameView + s_iSlot * flSlot - RC_SMOOTH_EARLY )
 		s_iSlot++;
 
 	// the next game frame must not wait for this picture
@@ -548,12 +625,14 @@ static void RcSmoothDebug_f( void )
 	if ( n < 0 )
 		n = 0;
 
-	gEngfuncs.Con_Printf( "rc_smoothframes %s, monitor %i Hz, target %i, game frame %.1f ms, %i pictures in each\n",
-		( rc_smoothframes && rc_smoothframes->value ) ? "on" : "off", s_iRefresh, iRate, flFrame * 1000, n );
-	gEngfuncs.Con_Printf( "last second: %i game frames, %i pictures in between\n", s.iFrames, s.iPictures );
+	gEngfuncs.Con_Printf( "rc_smoothframes %s, monitor %i Hz, target %i, game frame %.1f ms, %i pictures in each, %i fit now\n",
+		( rc_smoothframes && rc_smoothframes->value ) ? "on" : "off", s_iRefresh, iRate, flFrame * 1000, n,
+		( s_iSlots < n ) ? s_iSlots : n );
+	gEngfuncs.Con_Printf( "last second: %i game frames, %i pictures in between, %i changes of the pictures that fit\n",
+		s.iFrames, s.iPictures, s.iPlanChanges );
 	gEngfuncs.Con_Printf( "game frames without pictures: %i off, %i no game view, %i paused or demo, %i camera or not "
-		"first person, %i menu, %i monitor too slow\n", s.iWhy[RCS_OFF], s.iWhy[RCS_NOVIEW], s.iWhy[RCS_PAUSED],
-		s.iWhy[RCS_CAMERA], s.iWhy[RCS_MENU], s.iWhy[RCS_RATE] );
+		"first person, %i menu, %i monitor too slow, %i pictures too slow\n", s.iWhy[RCS_OFF], s.iWhy[RCS_NOVIEW],
+		s.iWhy[RCS_PAUSED], s.iWhy[RCS_CAMERA], s.iWhy[RCS_MENU], s.iWhy[RCS_RATE], s.iWhy[RCS_SLOW] );
 	gEngfuncs.Con_Printf( "pictures left out: %i no time before the next game frame; %i ended too late\n",
 		s.iWhy[RCS_NOTIME], s.iWhy[RCS_LATE] );
 	gEngfuncs.Con_Printf( "longest: game logic %.2f ms, game frame's picture %.2f ms, picture in between %.2f ms\n",
