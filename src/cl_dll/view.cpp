@@ -2111,7 +2111,8 @@ extern int iPlayerMode_guess;	// entity.cpp
 
 // ReCoF (B315): the player's own first person view, which a smooth frame may move ahead by the player's velocity
 // (rc_smooth.cpp): not the wheelchair, boat, telescope, attached or spectator tank cameras, a camera entity or a model
-// attachment, third person, the player modes that move the camera, or a dead player
+// attachment, third person, the player modes that move the camera, or a dead player. Smooth frames draw pictures
+// for this view only (B333)
 static int V_IsOwnView( struct ref_params_s *pparams )
 {
 	if ( iWheelchair_guess || iBoat_guess || pTelescopeEnt_guess || ( pAttachCamEnt_guess && bAttachCam_guess ) || bUnknown104CE4A3_guess )

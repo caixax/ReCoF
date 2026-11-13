@@ -15,6 +15,11 @@
 //    real position.
 // Monsters, doors, animations and the HUD stay as the game frame left them. Code that would change something on
 // every picture, rather than with time, asks RcSmooth_RenderOnly() and leaves it for the game frames.
+// Pictures are drawn only after a game frame that showed the player's own first person view (view.cpp
+// V_IsOwnView). A cutscene camera, a model's attachment, third person, the wheelchair or the telescope keep one
+// picture per game frame, as without smooth frames: such a view is not kept between game frames (B333: the
+// particles' draw, ParticleSystem::DrawSystem, writes the player's view angles into the camera entity, so a
+// picture after it showed the player's own view, turned by the mouse, between the cutscene's pictures).
 //
 // Pacing: the pictures split each game frame evenly, at the monitor's refresh rate or faster (rc_smoothframes_fps
 // sets another rate when it is above the game frames' rate), and one is drawn only when it should end before the next game frame is due, so the game frames
@@ -68,7 +73,7 @@ static int		s_iGameFrames;			// game frames (HUD_Frame)
 static int		s_iSeenFrames;			// s_iGameFrames at the last RcSmooth_Frame
 static int		s_iViewFrames = -1;		// s_iGameFrames when the game frame's picture computed the view
 static int		s_bViewSmooth;			// that view allows pictures in between: not paused, no intermission or demo
-static int		s_bViewMove;			// and it is the player's own first person view, which may move ahead
+static int		s_bViewMove;			// and it is the player's own first person view, the only one pictures are drawn for
 static double	s_flCallEnd;			// when the last RcSmooth_Frame returned
 static double	s_flFrameStart;			// when the game frame started, at the latest
 static double	s_flFrameView;			// when the game frame's picture computed the view
@@ -85,6 +90,7 @@ enum
 	RCS_OFF = 0,	// game frames with rc_smoothframes 0
 	RCS_NOVIEW,		// game frames that drew no game view (menus, loading)
 	RCS_PAUSED,		// paused, intermission, demo
+	RCS_CAMERA,		// not the player's own first person view: a cutscene camera, third person, the wheelchair (B333)
 	RCS_RATE,		// the monitor (or rc_smoothframes_fps) is no faster than the game frames
 	RCS_NOTIME,		// pictures left out: not enough time before the next game frame
 	RCS_LATE,		// pictures that ended too late
@@ -322,6 +328,8 @@ extern "C" __declspec( dllexport ) void RcSmooth_Frame( void ( *pfnUpdateScreen 
 		iWhy = RCS_NOVIEW;
 	else if ( !s_bViewSmooth )
 		iWhy = RCS_PAUSED;
+	else if ( !s_bViewMove )
+		iWhy = RCS_CAMERA;
 	else if ( n < 1 )
 		iWhy = RCS_RATE;
 
@@ -410,9 +418,9 @@ extern "C" __declspec( dllexport ) void RcSmooth_Frame( void ( *pfnUpdateScreen 
 }
 
 // V_CalcRefdef, after V_CalcNormalRefdef, once per picture (not in the head shield's second pass). In a game frame
-// it notes the view and returns 0; in a picture of RcSmooth_Frame it returns 1 with the move of the camera and the
-// weapon models in move: the player's velocity for the time since the game frame's picture, when bMove (the
-// player's own first person view)
+// it notes the view and returns 0: bMove says it is the player's own first person view, the only view the pictures
+// in between are drawn for. In a picture of RcSmooth_Frame it returns 1 with the move of the camera and the weapon
+// models in move: the player's velocity for the time since the game frame's picture
 int RcSmooth_View( struct ref_params_s *pparams, int bMove, float *move )
 {
 	s_iCountDrawn++;
@@ -536,8 +544,9 @@ static void RcSmoothDebug_f( void )
 	gEngfuncs.Con_Printf( "rc_smoothframes %s, monitor %i Hz, target %i, game frame %.1f ms, %i pictures in each\n",
 		( rc_smoothframes && rc_smoothframes->value ) ? "on" : "off", s_iRefresh, iRate, flFrame * 1000, n );
 	gEngfuncs.Con_Printf( "last second: %i game frames, %i pictures in between\n", s.iFrames, s.iPictures );
-	gEngfuncs.Con_Printf( "game frames without pictures: %i off, %i no game view, %i paused or demo, %i monitor too slow\n",
-		s.iWhy[RCS_OFF], s.iWhy[RCS_NOVIEW], s.iWhy[RCS_PAUSED], s.iWhy[RCS_RATE] );
+	gEngfuncs.Con_Printf( "game frames without pictures: %i off, %i no game view, %i paused or demo, %i camera or not "
+		"first person, %i monitor too slow\n", s.iWhy[RCS_OFF], s.iWhy[RCS_NOVIEW], s.iWhy[RCS_PAUSED], s.iWhy[RCS_CAMERA],
+		s.iWhy[RCS_RATE] );
 	gEngfuncs.Con_Printf( "pictures left out: %i no time before the next game frame; %i ended too late\n",
 		s.iWhy[RCS_NOTIME], s.iWhy[RCS_LATE] );
 	gEngfuncs.Con_Printf( "longest: game logic %.2f ms, game frame's picture %.2f ms, picture in between %.2f ms\n",
