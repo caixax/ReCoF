@@ -504,6 +504,13 @@ void IN_SmoothMouseMove( void )
 	IN_MouseMove( 0, &cmd );
 }
 
+// ReCoF (B335): the mouse turns the view now: no menu took the mouse (IN_DeactivateMouse), none shows its cursor,
+// and the camera is not moved with it. Smooth frames (rc_smooth.cpp) draw pictures in between only then
+int IN_RcMouseLooks( void )
+{
+	return mouseactive && !g_iVisibleMouse && !iMouseInUse;
+}
+
 /*
 ===========
 IN_Accumulate

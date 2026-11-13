@@ -20,6 +20,9 @@
 // picture per game frame, as without smooth frames: such a view is not kept between game frames (B333: the
 // particles' draw, ParticleSystem::DrawSystem, writes the player's view angles into the camera entity, so a
 // picture after it showed the player's own view, turned by the mouse, between the cutscene's pictures).
+// Nor while a menu has the mouse, with its cursor shown or the mouse taken (the main menu, the inventory, a note,
+// the keypad): its panels move in the game frames only, and the paint of a full screen menu made a picture too
+// slow to fit in every game frame, so the pictures came at uneven times and the menus stuttered (B335).
 //
 // Pacing: the pictures split each game frame evenly, at the monitor's refresh rate or faster (rc_smoothframes_fps
 // sets another rate when it is above the game frames' rate), and one is drawn only when it should end before the next game frame is due, so the game frames
@@ -49,6 +52,7 @@
 #include <string.h>
 
 void IN_SmoothMouseMove( void );	// inputw32.cpp
+int IN_RcMouseLooks( void );		// inputw32.cpp
 
 #define RC_SMOOTH_MAX		15			// pictures between two game frames at most
 #define RC_SMOOTH_MARGIN	0.0005		// seconds left free before the next game frame, besides RC_SMOOTH_SHARE of the picture
@@ -91,6 +95,7 @@ enum
 	RCS_NOVIEW,		// game frames that drew no game view (menus, loading)
 	RCS_PAUSED,		// paused, intermission, demo
 	RCS_CAMERA,		// not the player's own first person view: a cutscene camera, third person, the wheelchair (B333)
+	RCS_MENU,		// a menu has the mouse: its cursor is shown, or it took the mouse (B335)
 	RCS_RATE,		// the monitor (or rc_smoothframes_fps) is no faster than the game frames
 	RCS_NOTIME,		// pictures left out: not enough time before the next game frame
 	RCS_LATE,		// pictures that ended too late
@@ -330,6 +335,8 @@ extern "C" __declspec( dllexport ) void RcSmooth_Frame( void ( *pfnUpdateScreen 
 		iWhy = RCS_PAUSED;
 	else if ( !s_bViewMove )
 		iWhy = RCS_CAMERA;
+	else if ( !IN_RcMouseLooks() )
+		iWhy = RCS_MENU;
 	else if ( n < 1 )
 		iWhy = RCS_RATE;
 
@@ -545,8 +552,8 @@ static void RcSmoothDebug_f( void )
 		( rc_smoothframes && rc_smoothframes->value ) ? "on" : "off", s_iRefresh, iRate, flFrame * 1000, n );
 	gEngfuncs.Con_Printf( "last second: %i game frames, %i pictures in between\n", s.iFrames, s.iPictures );
 	gEngfuncs.Con_Printf( "game frames without pictures: %i off, %i no game view, %i paused or demo, %i camera or not "
-		"first person, %i monitor too slow\n", s.iWhy[RCS_OFF], s.iWhy[RCS_NOVIEW], s.iWhy[RCS_PAUSED], s.iWhy[RCS_CAMERA],
-		s.iWhy[RCS_RATE] );
+		"first person, %i menu, %i monitor too slow\n", s.iWhy[RCS_OFF], s.iWhy[RCS_NOVIEW], s.iWhy[RCS_PAUSED],
+		s.iWhy[RCS_CAMERA], s.iWhy[RCS_MENU], s.iWhy[RCS_RATE] );
 	gEngfuncs.Con_Printf( "pictures left out: %i no time before the next game frame; %i ended too late\n",
 		s.iWhy[RCS_NOTIME], s.iWhy[RCS_LATE] );
 	gEngfuncs.Con_Printf( "longest: game logic %.2f ms, game frame's picture %.2f ms, picture in between %.2f ms\n",
