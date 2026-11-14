@@ -429,9 +429,31 @@ PROC sys_wglGetProcAddress(LPCSTR ProcName)
 	return orig_wglGetProcAddress(ProcName);
 }
 
+// ReCoF (B347): the time each buffer swap takes in the driver, for the client's perf log (rc_prof.cpp), which tells a
+// frame that waited in the swap (the driver, the compositor or a full queue) from one that waited elsewhere
+static LARGE_INTEGER	s_liRcSwapFreq;
+static double			s_flRcSwapLast, s_flRcSwapTotal;
+static int				s_iRcSwaps;
+
 void sys_wglSwapBuffers(HDC hDC)
 {
+	LARGE_INTEGER a, b;
+	QueryPerformanceCounter( &a );
 	(*orig_wglSwapBuffers) (hDC);
+	QueryPerformanceCounter( &b );
+	if ( !s_liRcSwapFreq.QuadPart )
+		QueryPerformanceFrequency( &s_liRcSwapFreq );
+	s_flRcSwapLast = (double)( b.QuadPart - a.QuadPart ) * 1000.0 / (double)s_liRcSwapFreq.QuadPart;
+	s_flRcSwapTotal += s_flRcSwapLast;
+	s_iRcSwaps++;
+}
+
+// ReCoF (B347): exported as RcSwapTimes: the last swap's ms, the ms of all swaps so far and their number
+void sys_RcSwapTimes( double *pflLast, double *pflTotal, int *piSwaps )
+{
+	*pflLast = s_flRcSwapLast;
+	*pflTotal = s_flRcSwapTotal;
+	*piSwaps = s_iRcSwaps;
 }
 
 

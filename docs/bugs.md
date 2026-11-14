@@ -27,14 +27,14 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | Binary | crash | save | gameplay | performance | visual | audio | cosmetic | latent | total |
 |---|---|---|---|---|---|---|---|---|---|
 | hl.dll | 11 | 3 | 53 | 12 | 10 | 13 | 7 | 42 | 151 |
-| client.dll | 5 | 0 | 11 | 42 | 27 | 4 | 21 | 18 | 128 |
+| client.dll | 5 | 0 | 11 | 43 | 27 | 4 | 21 | 18 | 129 |
 | hw.dll | 3 | 2 | 6 | 22 | 5 | 3 | 8 | 31 | 80 |
 | GameUI.dll | 0 | 0 | 1 | 1 | 0 | 0 | 9 | 5 | 16 |
-| opengl32.dll | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 |
+| opengl32.dll | 0 | 0 | 0 | 1 | 1 | 0 | 0 | 0 | 2 |
 | cof.exe | 2 | 0 | 0 | 1 | 2 | 0 | 0 | 2 | 7 |
 | CoFLaunchApp.exe | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 0 | 4 |
 | unknown | 2 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 3 |
-| all issues | 21 | 5 | 65 | 68 | 42 | 18 | 33 | 93 | 345 |
+| all issues | 21 | 5 | 65 | 69 | 42 | 18 | 33 | 93 | 346 |
 
 ## User reports
 
@@ -318,6 +318,7 @@ Issues by binary and severity. An issue in two binaries counts in both rows; the
 | B344 | client.dll | src/cl_dll/rc_prof.cpp RcPerfSecond, RcPerfHeader | A player's perf logs (Ryzen 9 5900X, RTX 2070 Super, 1440 x 1080) show the GPU at 8 to 11 ms of a 10 ms frame on c_park3 and c_stad and 18 to 20 ms in the slow seconds, so the game waits for the GPU, and the main thread's wait lands in whatever scope is drawing when the driver's queue is full (transparent, 14 ms, in those seconds). The log wrote only the GPU frame, not which pass takes it; rc_prof 2 shows that, but only on screen. | A perf log of a game that waits for the GPU. | Player logs (2026-11-14), sent by the user. | performance | no | Done: each second's line gives after the GPU frame the GPU ms of every scope that took 0.05 ms or more of it, from the last half second; the header explains the line, the counts of B341 and the PAUSE lines. | fixed |
 | B345 | client.dll | src/cl_dll/rc_bones.cpp RcBones_Launch, RcBonesWorker, RcBones_Debug | After the main thread took its share of the bone jobs (B339), it waited until every worker had woken up, looked for work and gone back to sleep, even when every job was already done. A worker that the system woke late (an efficiency core, a core asleep, below normal priority) held up the whole frame: on the user's laptop (i5-13420H, 4 P and 4 E cores) rc_stress_32 had a 20.5 ms frame with 9.3 ms in bone jobs. | rc_stress_32 on a hybrid laptop processor with the perf log on and rc_threads -1. | Test on the user's laptop over SSH (2026-11-14). | performance | no | Done: a worker's state goes from woken (1) to working (2) when it starts; once every job is taken the main thread lets go every worker still at 1 (compare and swap to 0, ResetEvent), and such a worker goes back to sleep without touching the work, so only workers that are really working are waited for. rc_threads_debug counts them. Tested 2026-11-14 on the laptop: rc_stress_32 for 58 s, 0 stutters and worst 14.2 ms (before: 1 stutter, worst 20.6), 22 workers let go in the last second; rc_threads 0 worst 19.6 ms. | fixed |
 | B346 | hl.dll, client.dll | src/dlls/rc_cheats.cpp RcCheatCommand; src/cl_dll/rc_practice.cpp RcPracticeCommands | Cry of Fear has no give command, so a fight cannot be set up for practice or for a test: the performance of shooting (a player reported 50 fps while shooting and 100 fps less with the Book Laser) could only be measured by playing up to a point with the weapons. | Type give weapon_glock: Unknown command. | Tests for a player's performance report (2026-11-14). | cosmetic | no | Done: rc_ch_give <weapon_, ammo_ or item_ name> [<count>] (sv_cheats 1) gives the entity at the player's feet through CBasePlayer::GiveNamedItem, the name kept with ALLOC_STRING as the entity's classname, at most 20 at once; the client forwards it like the other practice commands. | test |
+| B347 | client.dll, opengl32.dll | src/opengl32/opengl32.cpp sys_wglSwapBuffers, sys_RcSwapTimes (new, exported as RcSwapTimes); src/cl_dll/rc_prof.cpp RcPerfOpen, RcPerfFrame, RcPerfSecond | Laptop tests (i5-13420H, RTX 3050) show STUTTER frames of 20 to 30 ms with the main thread running only 3 to 10 ms and the time outside every scope, as the player's logs show at 40 to 120 ms, and one test showed a sustained 42 fps that was only the engine sleeping 20 ms a frame because another window had come in front (CEngine::Frame). The log could tell neither a wait in the buffer swap (driver, compositor, a full queue) from one elsewhere, nor a window out of focus from a slow game. | rc_perflog 1 and click another window: the log shows 42 fps as if the game were slow. | Laptop tests over SSH (2026-11-14). | performance | no | Done: ReCoF's opengl32.dll times each wglSwapBuffers with QueryPerformanceCounter and exports RcSwapTimes (the last, the total and the count); the perf log reads it every frame and writes each second the average and longest swap and the share of frames whose foreground window belongs to another process, and on a STUTTER line the frame's swap and the window not in front. | fixed |
 
 ## hw.dll
 

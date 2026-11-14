@@ -361,3 +361,4 @@ EXPORTS
 	wglUseFontBitmapsW = sys_wglUseFontBitmapsW @365
 	wglUseFontOutlinesA = sys_wglUseFontOutlinesA @366
 	wglUseFontOutlinesW = sys_wglUseFontOutlinesW @367
+	RcSwapTimes = sys_RcSwapTimes

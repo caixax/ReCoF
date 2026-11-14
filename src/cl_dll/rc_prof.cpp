@@ -336,6 +336,7 @@ typedef LONG ( WINAPI *RcRtlGetVersion_t )( OSVERSIONINFOW * );
 typedef BOOL ( WINAPI *RcQueryThreadCycleTime_t )( HANDLE, unsigned __int64 * );
 typedef DWORD ( WINAPI *RcPowerGetActiveScheme_t )( HKEY, GUID ** );
 typedef DWORD ( WINAPI *RcPowerReadFriendlyName_t )( HKEY, const GUID *, const GUID *, const GUID *, UCHAR *, DWORD * );
+typedef void ( __stdcall *RcSwapTimes_t )( double *, double *, int * );	// opengl32.dll (B347)
 
 #define RC_PERF_TIMES	4096	// frames a second kept for the slowest 1%
 
@@ -347,6 +348,8 @@ static unsigned __int64			s_ullPerfTsc0, s_ullPerfCycles;
 static LONGLONG					s_llPerfQpc0;
 static ULONGLONG				s_ullPerfReads, s_ullPerfReadBytes;
 static DWORD					s_dwPerfFaults;
+static RcSwapTimes_t			s_pfnPerfSwap;		// B347
+static double					s_flPerfSwapTotal;	// the wrapper's ms of all swaps at the last frame
 static double					s_flPerfAvg;		// the recent frame time, which stutters are measured against
 static int						s_iPerfSkip;		// frames not judged after the log starts or the map changes
 static char						s_szPerfMap[64];
@@ -359,6 +362,8 @@ static float		s_flPerfTimes[RC_PERF_TIMES];
 static double		s_flPerfCpu[RCP_COUNT];
 static double		s_flPerfCount[RCC_COUNT];	// B341
 static double		s_flPerfPause;				// ms of this second spent in times without HUD frames (B341)
+static double		s_flPerfSecSwap, s_flPerfSecSwapMax;	// B347: ms in buffer swaps this second, and the longest
+static int			s_iPerfSecAway;				// B347: frames this second with another program's window in front
 static ULONGLONG	s_ullPerfSecReads, s_ullPerfSecReadBytes;
 static DWORD		s_dwPerfSecFaults;
 
@@ -512,6 +517,8 @@ static void RcPerfHeader( void )
 		"or more, and the models, monsters, particles and "
 		"particle systems of an average frame. STUTTER lines: one frame, its ms against the recent average, how many of "
 		"them the main thread was running, its disk reads and page faults, and the parts that took 0.5 ms or more in it. "
+		"Then the buffer swap (average and longest ms) and the share of frames another program's window was in front, "
+		"when the engine sleeps up to 20 ms a frame. "
 		"PAUSE lines: a time of pictures without HUD frames (a menu, the inventory, a note, a cutscene or a load), left out "
 		"of the numbers.\n\n" );
 	fflush( s_pPerf );
@@ -550,6 +557,15 @@ static void RcPerfOpen( LONGLONG qpcNow )
 		s_pfnPerfMem = (RcGetProcessMemoryInfo_t)GetProcAddress( GetModuleHandleA( "kernel32.dll" ), "K32GetProcessMemoryInfo" );
 	if ( !s_pfnPerfCycles )
 		s_pfnPerfCycles = (RcQueryThreadCycleTime_t)GetProcAddress( GetModuleHandleA( "kernel32.dll" ), "QueryThreadCycleTime" );
+	if ( !s_pfnPerfSwap )
+		s_pfnPerfSwap = (RcSwapTimes_t)GetProcAddress( GetModuleHandleA( "opengl32.dll" ), "RcSwapTimes" );	// B347
+	s_flPerfSwapTotal = 0;
+	if ( s_pfnPerfSwap )
+	{
+		double last;
+		int swaps;
+		s_pfnPerfSwap( &last, &s_flPerfSwapTotal, &swaps );
+	}
 
 	RcPerfHeader();
 	gEngfuncs.Con_Printf( "rc_perflog: writing %s (rc_perflog 0 ends it)\n", path );
@@ -579,6 +595,8 @@ static void RcPerfOpen( LONGLONG qpcNow )
 	memset( s_flPerfCpu, 0, sizeof( s_flPerfCpu ) );
 	memset( s_flPerfCount, 0, sizeof( s_flPerfCount ) );
 	s_flPerfPause = 0;
+	s_flPerfSecSwap = s_flPerfSecSwapMax = 0;
+	s_iPerfSecAway = 0;
 	s_ullPerfSecReads = s_ullPerfSecReadBytes = 0;
 	s_dwPerfSecFaults = 0;
 }
@@ -621,9 +639,14 @@ static void RcPerfSecond( LONGLONG qpcNow )
 			fprintf( s_pPerf, " %s %.2f", name, s_flShowGpu[i] );
 		}
 	}
-	fprintf( s_pPerf, " | models %.0f monsters %.0f particles %.0f psystems %.0f\n", s_flPerfCount[RCC_MODELS] / s_iPerfFrames,
+	fprintf( s_pPerf, " | models %.0f monsters %.0f particles %.0f psystems %.0f", s_flPerfCount[RCC_MODELS] / s_iPerfFrames,
 		s_flPerfCount[RCC_MONSTERS] / s_iPerfFrames, s_flPerfCount[RCC_PARTICLES] / s_iPerfFrames,
 		s_flPerfCount[RCC_PSYSTEMS] / s_iPerfFrames );	// B341
+	if ( s_pfnPerfSwap )
+		fprintf( s_pPerf, " | swap %.2f max %.2f", s_flPerfSecSwap / s_iPerfFrames, s_flPerfSecSwapMax );	// B347
+	if ( s_iPerfSecAway )
+		fprintf( s_pPerf, " | game window not in front %d%%", s_iPerfSecAway * 100 / s_iPerfFrames );
+	fprintf( s_pPerf, "\n" );
 	fflush( s_pPerf );
 
 	s_llPerfSecStart = qpcNow;
@@ -632,6 +655,8 @@ static void RcPerfSecond( LONGLONG qpcNow )
 	memset( s_flPerfCpu, 0, sizeof( s_flPerfCpu ) );
 	memset( s_flPerfCount, 0, sizeof( s_flPerfCount ) );
 	s_flPerfPause = 0;
+	s_flPerfSecSwap = s_flPerfSecSwapMax = 0;
+	s_iPerfSecAway = 0;
 	s_ullPerfSecReads = s_ullPerfSecReadBytes = 0;
 	s_dwPerfSecFaults = 0;
 }
@@ -659,6 +684,23 @@ static void RcPerfFrame( double frame, LONGLONG qpcNow )
 		faults = mem.PageFaultCount - s_dwPerfFaults;
 		s_dwPerfFaults = mem.PageFaultCount;
 	}
+
+	// B347: the buffer swaps of this frame (opengl32.dll), and whether the game's window is the one in front: when it is
+	// not, the engine sleeps up to 20 ms a frame (CEngine::Frame), which a log would otherwise show as a slow game
+	double swap = 0;
+	if ( s_pfnPerfSwap )
+	{
+		double last, total;
+		int swaps;
+		s_pfnPerfSwap( &last, &total, &swaps );
+		swap = total - s_flPerfSwapTotal;
+		s_flPerfSwapTotal = total;
+	}
+	DWORD pid = 0;
+	HWND fg = GetForegroundWindow();
+	if ( fg )
+		GetWindowThreadProcessId( fg, &pid );
+	int away = pid != GetCurrentProcessId();
 
 	// a map change starts over: its loading is not a stutter of play
 	const char *map = RcPerfMap();
@@ -697,6 +739,10 @@ static void RcPerfFrame( double frame, LONGLONG qpcNow )
 	s_ullPerfSecReads += reads;
 	s_ullPerfSecReadBytes += readBytes;
 	s_dwPerfSecFaults += faults;
+	s_flPerfSecSwap += swap;
+	if ( swap > s_flPerfSecSwapMax )
+		s_flPerfSecSwapMax = swap;
+	s_iPerfSecAway += away;
 
 	if ( s_iPerfSkip > 0 )
 	{
@@ -711,9 +757,9 @@ static void RcPerfFrame( double frame, LONGLONG qpcNow )
 
 		cl_entity_t *player = gEngfuncs.GetLocalPlayer();
 		fprintf( s_pPerf, "STUTTER %8.3f s %s at %.0f %.0f %.0f: frame %.2f ms (average %.2f), main thread running %.2f, reads "
-			"%llu/%llu KB, faults %lu |", gEngfuncs.GetClientTime(), map, player ? player->origin[0] : 0.0f,
+			"%llu/%llu KB, faults %lu, swap %.2f ms%s |", gEngfuncs.GetClientTime(), map, player ? player->origin[0] : 0.0f,
 			player ? player->origin[1] : 0.0f, player ? player->origin[2] : 0.0f, frame, s_flPerfAvg, busy, reads,
-			readBytes / 1024, faults );
+			readBytes / 1024, faults, swap, away ? ", the game window not in front" : "" );
 
 		char name[32];
 		for ( int i = 0; i < RCP_COUNT; i++ )
