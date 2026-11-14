@@ -51,6 +51,8 @@ static double	s_flLast;					// the last scope change
 static double	s_flWinStart;
 static int		s_iWinFrames;
 static double	s_flWinExcl[RCSV_COUNT], s_flWinIncl[RCSV_COUNT];
+static double	s_flFrameExcl[RCSV_COUNT];	// this frame's own times, added to the second at its end (B338)
+static double	s_flWinWorst, s_flWinWorstExcl[RCSV_COUNT];	// the second's slowest frame
 static int		s_iWinCalls[RCSV_COUNT];
 
 // the last full second
@@ -59,6 +61,7 @@ static double	s_flShowSeconds;
 static double	s_flShowExcl[RCSV_COUNT], s_flShowIncl[RCSV_COUNT];
 static int		s_iShowCalls[RCSV_COUNT];
 static int		s_iShowMonsters, s_iShowCombat, s_iShowEdicts, s_iShowHighest;
+static double	s_flShowWorst, s_flShowWorstExcl[RCSV_COUNT];
 
 static double RcSvNow( void )
 {
@@ -84,7 +87,7 @@ void RcSvProf_Push( int scope )
 	double now = RcSvNow();
 
 	if ( s_iDepth )
-		s_flWinExcl[s_iStack[s_iDepth - 1]] += now - s_flLast;
+		s_flFrameExcl[s_iStack[s_iDepth - 1]] += now - s_flLast;
 	s_flLast = now;
 
 	s_iStack[s_iDepth] = scope;
@@ -108,7 +111,7 @@ void RcSvProf_Pop( void )
 	double now = RcSvNow();
 	int scope = s_iStack[--s_iDepth];
 
-	s_flWinExcl[scope] += now - s_flLast;
+	s_flFrameExcl[scope] += now - s_flLast;
 	s_flLast = now;
 
 	if ( --s_iOpen[scope] == 0 )
@@ -335,8 +338,14 @@ static void RcSvPrintLine( void )
 			hl += s_flShowExcl[i];
 	}
 
-	len = sprintf( line, "rcsv t=%.1f fr=%d mon=%d cmb=%d ed=%d hi=%d hl=%.3f eng=%.3f", gpGlobals->time, s_iShowFrames,
-		s_iShowMonsters, s_iShowCombat, s_iShowEdicts, s_iShowHighest, hl * f, eng * f );
+	len = sprintf( line, "rcsv t=%.1f fr=%d mon=%d cmb=%d ed=%d hi=%d hl=%.3f eng=%.3f worst=%.3f", gpGlobals->time,
+		s_iShowFrames, s_iShowMonsters, s_iShowCombat, s_iShowEdicts, s_iShowHighest, hl * f, eng * f, s_flShowWorst );
+
+	for ( int i = 0; i < RCSV_COUNT; i++ )
+	{
+		if ( s_flShowWorstExcl[i] >= 0.2 )
+			len += sprintf( line + len, " w_%s=%.2f", s_szRcSvName[i], s_flShowWorstExcl[i] );
+	}
 
 	for ( int i = 0; i < RCSV_COUNT; i++ )
 	{
@@ -366,8 +375,8 @@ static void RcSvProf_Dump( void )
 
 	double f = 1.0 / s_iShowFrames;
 
-	sprintf( line, "rc_svprof: %d frames in %.2f s, %d monsters alive (%d in combat), %d edicts in use, the highest %d\n",
-		s_iShowFrames, s_flShowSeconds, s_iShowMonsters, s_iShowCombat, s_iShowEdicts, s_iShowHighest );
+	sprintf( line, "rc_svprof: %d frames in %.2f s, %d monsters alive (%d in combat), %d edicts in use, the highest %d, the slowest frame %.3f ms\n",
+		s_iShowFrames, s_flShowSeconds, s_iShowMonsters, s_iShowCombat, s_iShowEdicts, s_iShowHighest, s_flShowWorst );
 	g_engfuncs.pfnServerPrint( line );
 	g_engfuncs.pfnServerPrint( "rc_svprof: scope          own ms/frame  with calls  calls/frame\n" );
 
@@ -387,6 +396,8 @@ static void RcSvClearWindow( double now )
 	memset( s_flWinExcl, 0, sizeof( s_flWinExcl ) );
 	memset( s_flWinIncl, 0, sizeof( s_flWinIncl ) );
 	memset( s_iWinCalls, 0, sizeof( s_iWinCalls ) );
+	memset( s_flWinWorstExcl, 0, sizeof( s_flWinWorstExcl ) );
+	s_flWinWorst = 0;
 	s_iWinFrames = 0;
 	s_flWinStart = now;
 }
@@ -402,6 +413,19 @@ void RcSvProf_Frame( void )
 	s_iDepth = 0;
 	s_iOverflow = 0;
 	memset( s_iOpen, 0, sizeof( s_iOpen ) );
+
+	double frame = 0;
+	for ( int i = 0; i < RCSV_COUNT; i++ )
+	{
+		s_flWinExcl[i] += s_flFrameExcl[i];
+		frame += s_flFrameExcl[i];
+	}
+	if ( frame > s_flWinWorst )
+	{
+		s_flWinWorst = frame;
+		memcpy( s_flWinWorstExcl, s_flFrameExcl, sizeof( s_flWinWorstExcl ) );
+	}
+	memset( s_flFrameExcl, 0, sizeof( s_flFrameExcl ) );
 
 	if ( on != g_iRcSvProf )
 	{
@@ -424,6 +448,8 @@ void RcSvProf_Frame( void )
 	memcpy( s_flShowExcl, s_flWinExcl, sizeof( s_flShowExcl ) );
 	memcpy( s_flShowIncl, s_flWinIncl, sizeof( s_flShowIncl ) );
 	memcpy( s_iShowCalls, s_iWinCalls, sizeof( s_iShowCalls ) );
+	s_flShowWorst = s_flWinWorst;
+	memcpy( s_flShowWorstExcl, s_flWinWorstExcl, sizeof( s_flShowWorstExcl ) );
 	RcSvClearWindow( now );
 
 	RcSvCensus();

@@ -73,6 +73,7 @@ static int			s_iWinFrames, s_iWinGpuFrames, s_iWinCount[RCC_COUNT];
 
 static double		s_flShowCpu[RCP_COUNT], s_flShowGpu[RCP_COUNT];
 static double		s_flShowFrame, s_flShowGpuFrame, s_flShowWorst, s_flShowCount[RCC_COUNT];
+static double		s_flWinWorstCpu[RCP_COUNT], s_flShowWorstCpu[RCP_COUNT];	// the scopes of the worst frame (B338)
 static int			s_iShowGpuValid;
 
 static int						s_iGpuState;	// 0 not set up, 1 working, -1 not supported
@@ -275,6 +276,18 @@ static void RcProfLogLine( void )
 		len += sprintf( line + len, "=%.3f", s_flShowCpu[i] );
 	}
 
+	// the scopes that took 0.5 ms or more in the worst frame, with w_ before their names (B338)
+	for ( int i = 0; i < RCP_COUNT && len < (int)sizeof( line ) - 40; i++ )
+	{
+		if ( s_flShowWorstCpu[i] < 0.5 )
+			continue;
+
+		len += sprintf( line + len, " w_" );
+		for ( const char *s = s_szScopeName[i]; *s; s++ )
+			line[len++] = ( *s == ' ' ) ? '_' : *s;
+		len += sprintf( line + len, "=%.2f", s_flShowWorstCpu[i] );
+	}
+
 	// rc_prof 2: the GPU frame and the GPU time of each scope, with g_ before its name
 	if ( s_iOn >= 2 && s_iGpuState == 1 && s_iShowGpuValid )
 	{
@@ -316,7 +329,11 @@ void RcProf_Frame( void )
 
 		s_flWinFrame += frame;
 		if ( frame > s_flWinWorst )
+		{
 			s_flWinWorst = frame;
+			for ( int i = 0; i < RCP_COUNT; i++ )
+				s_flWinWorstCpu[i] = s_llCpu[i] * s_flTickMs;
+		}
 		s_iWinFrames++;
 
 		if ( s_iOn >= 2 && s_iGpuState == 1 )
@@ -342,6 +359,7 @@ void RcProf_Frame( void )
 				s_flShowCount[c] = (double)s_iWinCount[c] / s_iWinFrames;
 			s_flShowFrame = s_flWinFrame / s_iWinFrames;
 			s_flShowWorst = s_flWinWorst;
+			memcpy( s_flShowWorstCpu, s_flWinWorstCpu, sizeof( s_flShowWorstCpu ) );
 
 			if ( s_iOn && rc_prof_log && rc_prof_log->value )
 				RcProfLogLine();

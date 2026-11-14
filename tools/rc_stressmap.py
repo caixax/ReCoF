@@ -2,7 +2,8 @@
 
   python tools/rc_stressmap.py [--counts 0 16 32 64] [--install]
 
-Writes build/stressmaps/rc_stress_<n>.map, one per monster count, and compiles each
+Writes build/stressmaps/rc_stress_<n>.map, one per monster count (with --glass
+rc_stressview_<n>.map, where a wall the player sees through keeps them idle), and compiles each
 with SDHLT (sdHLCSG, sdHLBSP, sdHLVIS, sdHLRAD; set SDHLT to the folder of the
 Win64 tools, I:/Tools/sdhlt/sdhlt-v1.3.1/tools/Win64 by default). --install copies
 the .bsp files to dist/cryoffear/maps.
@@ -93,7 +94,7 @@ def monster_spots(count):
     return spots
 
 
-def make_map(count):
+def make_map(count, glass=False):
     h, t = HALF, HEIGHT
     world = [
         box(-h - WALL, -h - WALL, -WALL, h + WALL, h + WALL, 0, "c3_crete1"),			# floor
@@ -130,6 +131,12 @@ def make_map(count):
             if not near_pillar(x, y, 40):
                 ents.append(entity({"classname": "info_node", "origin": "%d %d 16" % (x, y)}))
 
+    if glass:
+        # a solid wall the player sees through across the middle: the monsters never see the player or reach
+        # the player, so they stay where they are, idle, and the picture stays the same from run to run
+        ents.append(entity({"classname": "func_wall", "rendermode": "2", "renderamt": "70"},
+                           [box(-h, -8, 0, h, 8, t, "c3_wall1")]))
+
     for i, (x, y) in enumerate(monster_spots(count)):
         cls, extra = MONSTERS[i % len(MONSTERS)]
         keys = {"classname": cls, "origin": "%d %d 36" % (x, y), "angles": "0 270 0"}
@@ -152,12 +159,14 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--counts", type=int, nargs="+", default=[0, 16, 32, 64])
     ap.add_argument("--install", action="store_true")
+    ap.add_argument("--glass", action="store_true",
+                    help="rc_stressview_<n>: a wall the player sees through keeps the monsters idle")
     a = ap.parse_args()
 
     os.makedirs(OUT, exist_ok=True)
     for n in a.counts:
-        name = "rc_stress_%d" % n
-        open(os.path.join(OUT, name + ".map"), "w", newline="\n").write(make_map(n))
+        name = ("rc_stressview_%d" if a.glass else "rc_stress_%d") % n
+        open(os.path.join(OUT, name + ".map"), "w", newline="\n").write(make_map(n, a.glass))
         run("sdHLCSG_x64.exe", ["-nowadtextures", name], OUT)
         run("sdHLBSP_x64.exe", [name], OUT)
         run("sdHLVIS_x64.exe", ["-fast", name], OUT)

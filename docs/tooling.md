@@ -28,6 +28,7 @@ python tools/compare_build.py               compare build/bin with the baseline 
 python tools/name_addr.py hw.dll <offset>   name an address from a crash report
 python tools/make_dist.py --keep --bin build/bin    a playable copy in dist/
 python tools/rc_stressmap.py --install      test maps with 0, 16, 32 and 64 monsters into dist/ (rc_svprof, B337)
+python tools/rc_stressmap.py --glass --install    the same behind a wall the player sees through, the monsters idle in view (B338)
 python tools/make_release.py --version X.Y.Z [--channel stable]    the release files for GitHub and the launcher
 ```
 
