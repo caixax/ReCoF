@@ -39,6 +39,17 @@ cl_entity_t *UTIL_GetClientEntityWithServerIndex( int sv_index )
 {
 	cl_entity_t *e;
 
+	// ReCoF (B342): the server gives every entity its own index as colormap (client.cpp AddToFullPack), so the
+	// entity at sv_index is the one the search below finds first whenever it carries that colormap. Retail ran the
+	// search every picture for every particle system, through the entities up to sv_index or, for an entity gone
+	// from the packets, all of them; the search is left for the cases the direct look does not settle
+	if ( sv_index > 0 )
+	{
+		e = gEngfuncs.GetEntityByIndex( sv_index );
+		if ( e && e->model && e->curstate.colormap == sv_index )
+			return e;
+	}
+
 	for (int ic=1;ic<MAX_EDICTS;ic++)
 	{
 		e = gEngfuncs.GetEntityByIndex( ic );
