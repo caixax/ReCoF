@@ -370,12 +370,12 @@ static DWORD		s_dwPerfSecFaults;
 //-----------------------------------------------------------------------------
 // B348: where a long frame waits. While the perf log is open, a thread of its own looks every 2 ms at how long the
 // frame has run; past 12 ms and 1.3 times the recent frame it holds the main thread still for a moment (SuspendThread),
-// copies its instruction pointer and the top of its stack, and lets it go. Nothing else runs while it is held, so no
+// copies its instruction pointer and the top 4 KB of its stack, and lets it go. Nothing else runs while it is held, so no
 // lock the main thread may own is touched. The frame's STUTTER line then names the place and the code addresses on
 // the stack (module+offset): a wait in the driver, the sound system or Windows shows as such.
 //-----------------------------------------------------------------------------
 #define RC_STALL_SLOTS		16
-#define RC_STALL_WORDS		256
+#define RC_STALL_WORDS		1024	// 4 KB: a driver's wait sits deep under the game's code
 #define RC_STALL_PER_FRAME	6
 
 struct RcStallSample_t
@@ -530,10 +530,12 @@ static void RcStallWrite( LONG seq, bool bPrint )
 			RcStallName( s->eip, name, sizeof( name ) );
 			fprintf( s_pPerf, "    at %.1f ms: %s", s->ms, name );
 			int found = 0;
-			for ( DWORD w = 0; w < s->words && found < 12; w++ )
+			DWORD last = s->eip;
+			for ( DWORD w = 0; w < s->words && found < 20; w++ )
 			{
-				if ( !RcStallIsCode( s->stack[w] ) )
+				if ( s->stack[w] == last || !RcStallIsCode( s->stack[w] ) )
 					continue;
+				last = s->stack[w];
 				RcStallName( s->stack[w], name, sizeof( name ) );
 				fprintf( s_pPerf, " < %s", name );
 				found++;
