@@ -17,6 +17,7 @@
 #include "GameStudioModelRenderer.h"
 #include "particlemgr.h"
 #include "rc_client.h"	// ReCoF
+#include "rc_prof.h"	// ReCoF
 
 extern engine_studio_api_t IEngineStudio;
 extern CGameStudioModelRenderer g_StudioRenderer;
@@ -1167,6 +1168,7 @@ void ParticleSystem::DrawParticle(particle *part, vec3_t &right, vec3_t &up)
 		if (m_iState_guess == 1)
 			flAlpha = pDraw->m_fAlpha - flFade * 5;
 
+		RcProf_Count( RCC_PARTICLES );	// ReCoF (B341)
 		gEngfuncs.pTriAPI->RenderMode(pDraw->pType->m_iRenderMode);
 		gEngfuncs.pTriAPI->Color4f( pDraw->m_fRed, pDraw->m_fGreen, pDraw->m_fBlue, max( 0, flAlpha ) );
 		gEngfuncs.pTriAPI->Begin( TRI_QUADS );

@@ -42,7 +42,7 @@ static const char *s_szScopeName[RCP_COUNT] =
 {
 	"other", "server", "view", "entities", "client frame", "world", "world 1st", "bump", "dlights", "world 2nd",
 	"specular", "brush ents", "decals", "sky", "models", "mdl vertices", "mdl lighting", "mdl drawing",
-	"mdl bones", "mdl studiolt", "bone jobs", "transparent", "water", "post fx", "hud"
+	"mdl bones", "mdl studiolt", "bone jobs", "transparent", "particles", "water", "post fx", "hud"
 };
 
 // the scopes that issue GL work get their own GPU time; the GPU time of the others falls to "other"
@@ -50,7 +50,7 @@ static const bool s_bGLScope[RCP_COUNT] =
 {
 	false, false, false, false, false, true, true, true, true, true,
 	true, true, true, true, true, false, false, false,
-	false, false, false, true, true, true, true
+	false, false, false, true, true, true, true, true
 };
 
 static cvar_t		*rc_prof;
@@ -261,9 +261,10 @@ static void RcClearWindow( void )
 static void RcProfLogLine( void )
 {
 	char line[2048];
-	int len = sprintf( line, "rcp t=%.1f frame=%.3f fps=%.1f worst=%.2f models=%.1f monsters=%.1f gpumeshes=%.0f",
-		gEngfuncs.GetClientTime(), s_flShowFrame, s_flShowFrame > 0 ? 1000.0 / s_flShowFrame : 0.0, s_flShowWorst,
-		s_flShowCount[RCC_MODELS], s_flShowCount[RCC_MONSTERS], s_flShowCount[RCC_GPUMESHES] );
+	int len = sprintf( line, "rcp t=%.1f frame=%.3f fps=%.1f worst=%.2f models=%.1f monsters=%.1f gpumeshes=%.0f "
+		"psystems=%.0f particles=%.0f", gEngfuncs.GetClientTime(), s_flShowFrame, s_flShowFrame > 0 ? 1000.0 / s_flShowFrame : 0.0,
+		s_flShowWorst, s_flShowCount[RCC_MODELS], s_flShowCount[RCC_MONSTERS], s_flShowCount[RCC_GPUMESHES],
+		s_flShowCount[RCC_PSYSTEMS], s_flShowCount[RCC_PARTICLES] );
 
 	for ( int i = 0; i < RCP_COUNT && len < (int)sizeof( line ) - 40; i++ )
 	{
@@ -356,6 +357,8 @@ static int			s_iPerfFrames, s_iPerfHitches;
 static double		s_flPerfSum, s_flPerfWorst, s_flPerfBusy;
 static float		s_flPerfTimes[RC_PERF_TIMES];
 static double		s_flPerfCpu[RCP_COUNT];
+static double		s_flPerfCount[RCC_COUNT];	// B341
+static double		s_flPerfPause;				// ms of this second spent in times without HUD frames (B341)
 static ULONGLONG	s_ullPerfSecReads, s_ullPerfSecReadBytes;
 static DWORD		s_dwPerfSecFaults;
 
@@ -570,6 +573,8 @@ static void RcPerfOpen( LONGLONG qpcNow )
 	s_iPerfFrames = s_iPerfHitches = 0;
 	s_flPerfSum = s_flPerfWorst = s_flPerfBusy = 0;
 	memset( s_flPerfCpu, 0, sizeof( s_flPerfCpu ) );
+	memset( s_flPerfCount, 0, sizeof( s_flPerfCount ) );
+	s_flPerfPause = 0;
 	s_ullPerfSecReads = s_ullPerfSecReadBytes = 0;
 	s_dwPerfSecFaults = 0;
 }
@@ -579,7 +584,7 @@ static void RcPerfSecond( LONGLONG qpcNow )
 	if ( !s_iPerfFrames )
 		return;
 
-	double secs = ( qpcNow - s_llPerfSecStart ) * s_flTickMs / 1000.0;
+	double secs = ( ( qpcNow - s_llPerfSecStart ) * s_flTickMs - s_flPerfPause ) / 1000.0;
 	double avg = s_flPerfSum / s_iPerfFrames;
 	int n = s_iPerfFrames < RC_PERF_TIMES ? s_iPerfFrames : RC_PERF_TIMES;
 	qsort( s_flPerfTimes, n, sizeof( float ), RcPerfCompare );
@@ -601,13 +606,17 @@ static void RcPerfSecond( LONGLONG qpcNow )
 	}
 	if ( s_iShowGpuValid )
 		fprintf( s_pPerf, " | gpu %.2f", s_flShowGpuFrame );
-	fprintf( s_pPerf, "\n" );
+	fprintf( s_pPerf, " | models %.0f monsters %.0f particles %.0f psystems %.0f\n", s_flPerfCount[RCC_MODELS] / s_iPerfFrames,
+		s_flPerfCount[RCC_MONSTERS] / s_iPerfFrames, s_flPerfCount[RCC_PARTICLES] / s_iPerfFrames,
+		s_flPerfCount[RCC_PSYSTEMS] / s_iPerfFrames );	// B341
 	fflush( s_pPerf );
 
 	s_llPerfSecStart = qpcNow;
 	s_iPerfFrames = s_iPerfHitches = 0;
 	s_flPerfSum = s_flPerfWorst = s_flPerfBusy = 0;
 	memset( s_flPerfCpu, 0, sizeof( s_flPerfCpu ) );
+	memset( s_flPerfCount, 0, sizeof( s_flPerfCount ) );
+	s_flPerfPause = 0;
 	s_ullPerfSecReads = s_ullPerfSecReadBytes = 0;
 	s_dwPerfSecFaults = 0;
 }
@@ -647,6 +656,18 @@ static void RcPerfFrame( double frame, LONGLONG qpcNow )
 		s_flPerfAvg = 0;
 	}
 
+	// B341: a long time in which many pictures were drawn without a HUD frame (a menu, the inventory, a note, a
+	// cutscene or a saved game loading) is not one slow frame: it is written as a pause and left out of the second
+	if ( s_iCount[RCC_PICTURES] >= 10 && frame >= 500.0 )
+	{
+		fprintf( s_pPerf, "PAUSE   %8.3f s %s: %.0f ms without HUD frames, %d pictures (a menu, the inventory, a note, a "
+			"cutscene or a load), reads %llu/%llu KB\n", gEngfuncs.GetClientTime(), map, frame, s_iCount[RCC_PICTURES], reads,
+			readBytes / 1024 );
+		s_flPerfPause += frame;
+		s_iPerfSkip = 10;
+		return;
+	}
+
 	if ( s_iPerfFrames < RC_PERF_TIMES )
 		s_flPerfTimes[s_iPerfFrames] = (float)frame;
 	s_iPerfFrames++;
@@ -656,6 +677,8 @@ static void RcPerfFrame( double frame, LONGLONG qpcNow )
 		s_flPerfWorst = frame;
 	for ( int i = 0; i < RCP_COUNT; i++ )
 		s_flPerfCpu[i] += s_llCpu[i] * s_flTickMs;
+	for ( int c = 0; c < RCC_COUNT; c++ )
+		s_flPerfCount[c] += s_iCount[c];
 	s_ullPerfSecReads += reads;
 	s_ullPerfSecReadBytes += readBytes;
 	s_dwPerfSecFaults += faults;
@@ -858,6 +881,9 @@ void RcProf_Draw( void )
 
 	sprintf( text, "models %.1f (monsters %.1f), dlights %.1f, world draws %.0f, gpu meshes %.0f", s_flShowCount[RCC_MODELS],
 		s_flShowCount[RCC_MONSTERS], s_flShowCount[RCC_DLIGHTS], s_flShowCount[RCC_WORLDDRAWS], s_flShowCount[RCC_GPUMESHES] );
+	RcDrawLine( x, y, text );
+	y += h;
+	sprintf( text, "particles %.0f in %.0f systems", s_flShowCount[RCC_PARTICLES], s_flShowCount[RCC_PSYSTEMS] );	// B341
 	RcDrawLine( x, y, text );
 	y += h;
 

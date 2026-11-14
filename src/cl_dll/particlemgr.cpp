@@ -8,6 +8,7 @@
 #include "triangleapi.h"
 #include "particlemgr.h"
 #include "particlesys.h"
+#include "rc_prof.h"	// ReCoF
 
 //ParticleSystemManager*	g_pParticleSystems = NULL;
 ParticleSystemManager	g_pParticleSystems; // buz - static single object
@@ -107,6 +108,7 @@ void ParticleSystemManager::SortSystems()
 
 void ParticleSystemManager::UpdateSystems( float frametime, int sky ) //LRC - now with added time!
 {
+	RcProfScope prof( RCP_PARTICLES );	// ReCoF (B341)
 //	gEngfuncs.pTriAPI->RenderMode(kRenderTransAdd);
 //	gEngfuncs.pTriAPI->RenderMode(kRenderTransAlpha);
 	ParticleSystem* pSystem;
@@ -123,6 +125,8 @@ void ParticleSystemManager::UpdateSystems( float frametime, int sky ) //LRC - no
 	pSystem = m_pFirstSystem;
 	while( pSystem )
 	{
+		RcProf_Count( RCC_PSYSTEMS );	// ReCoF (B341)
+
 		// buz
 		cl_entity_t *ent = pSystem->GetEntity();
 

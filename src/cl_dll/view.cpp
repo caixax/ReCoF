@@ -2131,6 +2131,8 @@ void DLLEXPORT V_CalcRefdef( struct ref_params_s *pparams )
 {
 	RcProfScope prof( RCP_VIEW );	// ReCoF
 	int bFirstPass = !pparams->nextView;	// ReCoF (B315): the head shield's second pass is not a picture of its own
+	if ( bFirstPass )
+		RcProf_Count( RCC_PICTURES );	// ReCoF (B341)
 	vec3_t vecWheelchair = vecWheelchairOrigin_guess;	// ReCoF (B315)
 	RcSpeedrun_View( pparams->paused, pparams->health );	// ReCoF (B312): the run timer's pause, health and drawn map
 

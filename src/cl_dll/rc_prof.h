@@ -28,7 +28,8 @@ enum
 	RCP_MDL_BONES,		// models: StudioSetupBones and StudioMergeBones (B337)
 	RCP_MDL_SLIGHT,		// models: the engine's studio lighting, StudioDynamicLight, StudioEntityLight and StudioSetupLighting (B337)
 	RCP_BONEJOBS,		// the bones of the frame's models on the worker threads, the main thread's share and its wait (B339)
-	RCP_TRANS,			// transparent triangles: fog, particles, objects, grass, weather, glows
+	RCP_TRANS,			// transparent triangles: fog, objects, grass, weather, glows
+	RCP_PARTICLES,		// the aurora particle systems, updated and drawn (B341)
 	RCP_WATER,			// Cg water
 	RCP_POST,			// post effects
 	RCP_HUD,			// the HUD
@@ -42,6 +43,9 @@ enum
 	RCC_WORLDDRAWS,		// draw calls of world and brush polygons from the vertex buffer (B195)
 	RCC_GPUMESHES,		// studio model meshes moved and lit by the vertex shader (B287 step 4)
 	RCC_MONSTERS,		// studio models drawn that are monsters (MOVETYPE_STEP), apart from props (B337)
+	RCC_PSYSTEMS,		// aurora particle systems gone through, each picture (B341)
+	RCC_PARTICLES,		// aurora particles drawn (B341)
+	RCC_PICTURES,		// 3D pictures (V_CalcRefdef), which tell a slow frame from a time without HUD frames (B341)
 	RCC_COUNT
 };
 
