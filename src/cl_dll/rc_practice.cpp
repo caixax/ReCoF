@@ -103,7 +103,7 @@ static void RcForwardToServer_f( void )
 static void RcPracticeCommands( void )
 {
 	static const char *s_pszCommands[] = { "rc_ch_set_health", "rc_ch_set_pos", "rc_ch_set_pos_offset", "rc_ch_get_pos",
-		"rc_ch_set_vel", "rc_ch_set_vel_angles", "rc_set_angles", "rc_ch_set_angles" };
+		"rc_ch_set_vel", "rc_ch_set_vel_angles", "rc_set_angles", "rc_ch_set_angles", "rc_ch_give" };	// rc_ch_give: B346
 
 	for ( int i = 0; i < ARRAYSIZE( s_pszCommands ); i++ )
 		gEngfuncs.pfnAddCommand( (char *)s_pszCommands[i], RcForwardToServer_f );

@@ -1,7 +1,8 @@
 // ReCoF practice commands (B317): BunnymodXT's bxt_ch_* commands and bxt_set_angles for Cry of Fear, with rc_ in
 // place of bxt_: health, position, velocity and view angles. They are planning tools, so they need sv_cheats 1 as
 // BunnymodXT's do. The client sends a command it does not know to the server, and ClientCommand (client.cpp) hands
-// it here for the player who typed it. bxt_ch_set_armor is left out: Cry of Fear has no armor.
+// it here for the player who typed it. bxt_ch_set_armor is left out: Cry of Fear has no armor. rc_ch_give (B346) is
+// ReCoF's own, as Cry of Fear has no give command: tests and practice of a fight need the weapons.
 
 #include "extdll.h"
 #include "util.h"
@@ -141,6 +142,35 @@ bool RcCheatCommand( edict_t *pEntity, const char *pcmd )
 		pev->angles = Vector( RcArg( 1 ), RcArg( 2 ), argc == 4 ? RcArg( 3 ) : 0 );
 		pev->v_angle = pev->angles;
 		pev->fixangle = TRUE;
+		return true;
+	}
+
+	// B346: a weapon, ammo or item given at the player's feet, as if picked up there; the unlockable weapons keep
+	// their own tests (GiveNamedItem)
+	if ( FStrEq( pcmd, "rc_ch_give" ) )
+	{
+		if ( !RcCheatsOn( pPlayer ) )
+			return true;
+		if ( argc != 2 && argc != 3 )
+		{
+			RcUsage( pPlayer, "rc_ch_give <weapon_, ammo_ or item_ name> [<count>]" );
+			return true;
+		}
+		const char *pszName = CMD_ARGV( 1 );
+		if ( strncmp( pszName, "weapon_", 7 ) && strncmp( pszName, "ammo_", 5 ) && strncmp( pszName, "item_", 5 ) )
+		{
+			RcUsage( pPlayer, "rc_ch_give <weapon_, ammo_ or item_ name> [<count>]" );
+			return true;
+		}
+		int iCount = argc == 3 ? atoi( CMD_ARGV( 2 ) ) : 1;
+		if ( iCount < 1 )
+			iCount = 1;
+		if ( iCount > 20 )
+			iCount = 20;
+		// the entity keeps the name as its classname, so it must outlive the command line
+		const char *pszKept = STRING( ALLOC_STRING( pszName ) );
+		for ( int i = 0; i < iCount; i++ )
+			pPlayer->GiveNamedItem( pszKept, false, true );
 		return true;
 	}
 
