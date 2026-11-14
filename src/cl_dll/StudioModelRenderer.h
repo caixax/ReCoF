@@ -65,6 +65,7 @@ public:
 
 	// Set up model bone positions
 	virtual void StudioSetupBones ( void );	
+	void StudioSetupBonesNow ( void );	// ReCoF (B339): the work of StudioSetupBones, on any thread
 
 	// Find final attachment points
 	virtual void StudioCalcAttachments ( void );

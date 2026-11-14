@@ -29,6 +29,7 @@
 
 #include "gl_renderer.h"
 #include "rc_prof.h"	// ReCoF
+#include "rc_bones.h"	// ReCoF (B339)
 #include "rc_client.h"	// ReCoF
 
 //
@@ -64,6 +65,7 @@ R_StudioDrawPlayer
 int R_StudioDrawPlayer( int flags, entity_state_t *pplayer )
 {
 	RcProfScope prof( RCP_MODELS );	// ReCoF
+	RcBones_Launch();	// ReCoF (B339): the bones of the frame's models on the workers, before the first one
 	RcProf_Count( RCC_MODELS );
 
 	RendererDrawNormal(); // buz: make shure that world draws before any studiomodel
@@ -79,6 +81,7 @@ R_StudioDrawModel
 int R_StudioDrawModel( int flags )
 {
 	RcProfScope prof( RCP_MODELS );	// ReCoF
+	RcBones_Launch();	// ReCoF (B339): the bones of the frame's models on the workers, before the first one
 	RcProf_Count( RCC_MODELS );
 	if ( IEngineStudio.GetCurrentEntity() && IEngineStudio.GetCurrentEntity()->curstate.movetype == MOVETYPE_STEP )
 		RcProf_Count( RCC_MONSTERS );	// ReCoF (B337)

@@ -42,7 +42,7 @@ static const char *s_szScopeName[RCP_COUNT] =
 {
 	"other", "server", "view", "entities", "client frame", "world", "world 1st", "bump", "dlights", "world 2nd",
 	"specular", "brush ents", "decals", "sky", "models", "mdl vertices", "mdl lighting", "mdl drawing",
-	"mdl bones", "mdl studiolt", "transparent", "water", "post fx", "hud"
+	"mdl bones", "mdl studiolt", "bone jobs", "transparent", "water", "post fx", "hud"
 };
 
 // the scopes that issue GL work get their own GPU time; the GPU time of the others falls to "other"
@@ -50,7 +50,7 @@ static const bool s_bGLScope[RCP_COUNT] =
 {
 	false, false, false, false, false, true, true, true, true, true,
 	true, true, true, true, true, false, false, false,
-	false, false, true, true, true, true
+	false, false, false, true, true, true, true
 };
 
 static cvar_t		*rc_prof;

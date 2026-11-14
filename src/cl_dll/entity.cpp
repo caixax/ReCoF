@@ -25,6 +25,7 @@
 #include "gl_dlight.h" // buz
 #include "particlemgr.h"
 #include "rc_prof.h"	// ReCoF
+#include "rc_bones.h"	// ReCoF (B339)
 
 #define DLLEXPORT __declspec( dllexport )
 
@@ -121,6 +122,8 @@ int DLLEXPORT HUD_AddEntity( int type, struct cl_entity_s *ent, const char *mode
 			return 0;	// don't draw the player we are following in eye
 
 	}
+
+	RcBones_Add( ent );	// ReCoF (B339): rc_threads
 
 	return 1;
 }

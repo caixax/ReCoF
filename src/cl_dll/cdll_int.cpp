@@ -39,6 +39,7 @@ extern "C"
 #include "interface.h"
 #include "mp3.h"
 #include "rc_prof.h"	// ReCoF
+#include "rc_bones.h"	// ReCoF (B339)
 #include "rc_client.h"	// ReCoF
 
 #define DLLEXPORT __declspec( dllexport )
@@ -271,6 +272,7 @@ Called by engine every frame that client .dll is loaded
 void DLLEXPORT HUD_Frame( double time )
 {
 	RcProf_PopIf( RCP_SERVER );	// ReCoF (B337): the local server's frame ends here (CL_CreateMove)
+	RcBones_NewFrame();	// ReCoF (B339): rc_threads, the entities of this game frame come next
 	RcProfScope prof( RCP_CLFRAME );	// ReCoF
 	RcCrash_Frame();	// ReCoF (B314): the hang watchdog's heartbeat
 	RcSmooth_GameFrame();	// ReCoF (B315): smooth frames count the game frames

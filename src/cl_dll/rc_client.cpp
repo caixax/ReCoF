@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 #include <windows.h>
+#include "rc_bones.h"	// ReCoF (B339)
 
 #ifndef M_PI
 #define M_PI		3.14159265358979323846	// matches value in gcc v2 math.h
@@ -175,6 +176,7 @@ void RcClient_Init( void )
 	rc_cross_right_line = gEngfuncs.pfnRegisterVariable( "rc_cross_right_line", "1", FCVAR_ARCHIVE );
 
 	RcProf_Init();
+	RcBones_Init();	// ReCoF (B339)
 }
 
 //-----------------------------------------------------------------------------

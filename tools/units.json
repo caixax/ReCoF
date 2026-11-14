@@ -1529,6 +1529,10 @@
           "source": "src/cl_dll/rc_prof.cpp"
         },
         {
+          "name": "cl_dll/rc_bones",
+          "source": "src/cl_dll/rc_bones.cpp"
+        },
+        {
           "name": "cl_dll/rc_glsl",
           "source": "src/cl_dll/rc_glsl.cpp"
         },
@@ -1793,6 +1797,7 @@
           "cl_dll/view",
           "cl_dll/rc_client",
           "cl_dll/rc_prof",
+          "cl_dll/rc_bones",
           "cl_dll/rc_glsl",
           "cl_dll/rc_gpumodel",
           "cl_dll/rc_speedrun",

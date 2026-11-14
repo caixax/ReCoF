@@ -36,6 +36,8 @@
 #include "r_efx.h"
 #include "event_api.h"
 #include "rc_prof.h"	// ReCoF (B337)
+#include "rc_bones.h"	// ReCoF (B339)
+extern CGameStudioModelRenderer g_StudioRenderer;	// ReCoF (B339): GameStudioModelRenderer.cpp
 
 // Global engine <-> studio model rendering code interface
 engine_studio_api_t IEngineStudio;
@@ -804,7 +806,26 @@ StudioSetupBones
 */
 void CStudioModelRenderer::StudioSetupBones ( void )
 {
-	RcProfScope prof( RCP_MDL_BONES );	// ReCoF (B337)
+	// ReCoF (B339): the main renderer takes the bones the workers set up (rc_threads, rc_bones.cpp) when the
+	// model's inputs are the ones they started from; the workers' own renderers, and the main one otherwise,
+	// set them up here
+	if ( this == &g_StudioRenderer )
+	{
+		RcProfScope prof( RCP_MDL_BONES );	// ReCoF (B337)
+
+		if ( !RcBones_Replay( this ) )
+			StudioSetupBonesNow();
+		return;
+	}
+
+	StudioSetupBonesNow();
+}
+
+// ReCoF (B339): the body of StudioSetupBones, which the worker threads run as well: its arrays are on the stack
+// rather than static, and g_iRcBonesPrevframeSet tells the thread whether it stored the frame in
+// latched.prevframe
+void CStudioModelRenderer::StudioSetupBonesNow ( void )
+{
 	int					i;
 	double				f;
 
@@ -812,16 +833,18 @@ void CStudioModelRenderer::StudioSetupBones ( void )
 	mstudioseqdesc_t	*pseqdesc;
 	mstudioanim_t		*panim;
 
-	static float		pos[MAXSTUDIOBONES][3];
-	static vec4_t		q[MAXSTUDIOBONES];
+	float				pos[MAXSTUDIOBONES][3];
+	vec4_t				q[MAXSTUDIOBONES];
 	float				bonematrix[3][4];
 
-	static float		pos2[MAXSTUDIOBONES][3];
-	static vec4_t		q2[MAXSTUDIOBONES];
-	static float		pos3[MAXSTUDIOBONES][3];
-	static vec4_t		q3[MAXSTUDIOBONES];
-	static float		pos4[MAXSTUDIOBONES][3];
-	static vec4_t		q4[MAXSTUDIOBONES];
+	float				pos2[MAXSTUDIOBONES][3];
+	vec4_t				q2[MAXSTUDIOBONES];
+	float				pos3[MAXSTUDIOBONES][3];
+	vec4_t				q3[MAXSTUDIOBONES];
+	float				pos4[MAXSTUDIOBONES][3];
+	vec4_t				q4[MAXSTUDIOBONES];
+
+	g_iRcBonesPrevframeSet = 0;
 
 	if (m_pCurrentEntity->curstate.sequence >=  m_pStudioHeader->numseq) 
 	{
@@ -875,8 +898,8 @@ void CStudioModelRenderer::StudioSetupBones ( void )
 		( m_pCurrentEntity->latched.prevsequence < m_pStudioHeader->numseq ))
 	{
 		// blend from last sequence
-		static float		pos1b[MAXSTUDIOBONES][3];
-		static vec4_t		q1b[MAXSTUDIOBONES];
+		float				pos1b[MAXSTUDIOBONES][3];
+		vec4_t				q1b[MAXSTUDIOBONES];
 		float				s;
 
 		pseqdesc = (mstudioseqdesc_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqindex) + m_pCurrentEntity->latched.prevsequence;
@@ -915,6 +938,7 @@ void CStudioModelRenderer::StudioSetupBones ( void )
 	{
 		//Con_DPrintf("prevframe = %4.2f\n", f);
 		m_pCurrentEntity->latched.prevframe = f;
+		g_iRcBonesPrevframeSet = 1;	// ReCoF (B339)
 	}
 
 	pbones = (mstudiobone_t *)((byte *)m_pStudioHeader + m_pStudioHeader->boneindex);

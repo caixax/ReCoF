@@ -24,6 +24,7 @@
 #include "Padlock_guess.h"
 #include "windows.h"
 #include <math.h>
+#include "rc_bones.h"	// ReCoF (B339)
 #undef fabs
 
 #define MOUSE_BUTTON_COUNT 5
@@ -257,6 +258,7 @@ void IN_Shutdown (void)
 {
 	IN_DeactivateMouse ();
 	RcRawMouseShutdown();	// ReCoF (B299): before the engine unloads client.dll
+	RcBones_Shutdown();	// ReCoF (B339): the rc_threads workers end before client.dll goes
 }
 
 /*

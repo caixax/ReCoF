@@ -27,6 +27,7 @@ enum
 	RCP_MDL_DRAW,		// models: the meshes sent to the driver (GL_DrawPoints)
 	RCP_MDL_BONES,		// models: StudioSetupBones and StudioMergeBones (B337)
 	RCP_MDL_SLIGHT,		// models: the engine's studio lighting, StudioDynamicLight, StudioEntityLight and StudioSetupLighting (B337)
+	RCP_BONEJOBS,		// the bones of the frame's models on the worker threads, the main thread's share and its wait (B339)
 	RCP_TRANS,			// transparent triangles: fog, particles, objects, grass, weather, glows
 	RCP_WATER,			// Cg water
 	RCP_POST,			// post effects
