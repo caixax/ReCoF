@@ -962,6 +962,14 @@ static void RcPerfFrame( double frame, LONGLONG qpcNow )
 	s_flPerfAvg = s_flPerfAvg * 0.95 + ( frame < s_flPerfAvg * 3.0 ? frame : s_flPerfAvg * 3.0 ) * 0.05;
 }
 
+// B348: a quit that comes before the next frame (rc_perflog 0;quit) leaves the log open and its sampler running, and
+// the sampler's code goes away with client.dll: the log is closed here, from IN_Shutdown
+void RcProf_Shutdown( void )
+{
+	RcPerfClose();
+	RcStallStop();
+}
+
 //-----------------------------------------------------------------------------
 // the frame boundary, at the start of HUD_Redraw: closes the frame that ends here and opens the next
 //-----------------------------------------------------------------------------

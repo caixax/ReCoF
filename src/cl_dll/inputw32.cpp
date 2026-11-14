@@ -25,6 +25,7 @@
 #include "windows.h"
 #include <math.h>
 #include "rc_bones.h"	// ReCoF (B339)
+#include "rc_prof.h"	// ReCoF (B348)
 #undef fabs
 
 #define MOUSE_BUTTON_COUNT 5
@@ -259,6 +260,7 @@ void IN_Shutdown (void)
 	IN_DeactivateMouse ();
 	RcRawMouseShutdown();	// ReCoF (B299): before the engine unloads client.dll
 	RcBones_Shutdown();	// ReCoF (B339): the rc_threads workers end before client.dll goes
+	RcProf_Shutdown();	// ReCoF (B348): the perf log's sampler thread too
 }
 
 /*

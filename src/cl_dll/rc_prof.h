@@ -51,6 +51,7 @@ enum
 
 void RcProf_Init( void );			// cvars and commands (RcClient_Init)
 void RcProf_Frame( void );			// frame boundary (start of HUD_Redraw)
+void RcProf_Shutdown( void );		// closes the perf log and ends its sampler thread before client.dll goes (IN_Shutdown, B348)
 void RcProf_Draw( void );			// the overlay (end of CHud::Redraw)
 void RcProf_Push( int scope );
 void RcProf_Pop( void );
