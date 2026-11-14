@@ -34,6 +34,7 @@ extern "C"
 #include "HUDControl_guess.h"
 #include "RECBInventory_guess.h"
 #include "rc_client.h"
+#include "rc_prof.h"	// ReCoF (B337)
 #include "rc_version.h"
 #include "windows.h"
 
@@ -1287,6 +1288,9 @@ void DLLEXPORT CL_CreateMove ( float frametime, struct usercmd_s *cmd, int activ
 	}
 
 	cmd->is_donator = iDonator_guess;
+
+	// ReCoF (B337): rc_prof times the local server's frame, which the engine runs next, until HUD_Frame
+	RcProf_Push( RCP_SERVER );
 }
 
 /*

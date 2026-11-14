@@ -33,6 +33,7 @@
 #include "movewith.h"
 #include "locus.h"
 #include <cmath>
+#include "rc_svprof.h"	// ReCoF (B337)
 
 char *GetCustomMPModel( char *s )
 {
@@ -600,6 +601,7 @@ void UTIL_MoveToOrigin( edict_t *pent, const Vector &vecGoal, float flDist, int 
 
 int UTIL_EntitiesInBox( CBaseEntity **pList, int listMax, const Vector &mins, const Vector &maxs, int flagMask )
 {
+	RcSvScope rcsv( RCSV_ENTSINBOX );	// ReCoF (B337): rc_svprof
 	edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
 	CBaseEntity *pEntity;
 	int			count;
@@ -642,6 +644,7 @@ int UTIL_EntitiesInBox( CBaseEntity **pList, int listMax, const Vector &mins, co
 
 int UTIL_MonstersInSphere( CBaseEntity **pList, int listMax, const Vector &center, float radius )
 {
+	RcSvScope rcsv( RCSV_ENTSINBOX );	// ReCoF (B337): rc_svprof
 	edict_t		*pEdict = g_engfuncs.pfnPEntityOfEntIndex( 1 );
 	CBaseEntity *pEntity;
 	int			count;

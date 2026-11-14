@@ -44,6 +44,7 @@
 #include "shake.h"
 
 #include	"skill.h" // buz
+#include "rc_svprof.h"	// ReCoF (B337)
 
 //=========================================================
 // Declarations this file takes from headers that are not rebuilt yet:
@@ -2521,6 +2522,7 @@ Called every frame before physics are run
 */
 void PlayerPreThink( edict_t *pEntity )
 {
+	RcSvScope rcsv( RCSV_PLAYER );	// ReCoF (B337): rc_svprof
 	entvars_t *pev = &pEntity->v;
 	CBasePlayer *pPlayer = (CBasePlayer *)GET_PRIVATE(pEntity);
 
@@ -2539,6 +2541,7 @@ Called every frame after physics are run
 */
 void PlayerPostThink( edict_t *pEntity )
 {
+	RcSvScope rcsv( RCSV_PLAYER );	// ReCoF (B337): rc_svprof
 	entvars_t *pev = &pEntity->v;
 	CBasePlayer *pPlayer = (CBasePlayer *)GET_PRIVATE(pEntity);
 
@@ -2575,6 +2578,8 @@ void ParmsChangeLevel( void )
 //
 void StartFrame( void )
 {
+	RcSvProf_Frame();	// ReCoF (B337): rc_svprof, before any scope is open
+	RcSvScope rcsv( RCSV_STARTFRAME );	// ReCoF (B337): rc_svprof
 	if ( g_pGameRules )
 		g_pGameRules->Think();
 
@@ -3166,6 +3171,7 @@ static void RcTriggerColour( edict_t *ent, struct entity_state_s *state )
 
 int AddToFullPack( struct entity_state_s *state, int e, edict_t *ent, edict_t *host, int hostflags, int player, unsigned char *pSet )
 {
+	RcSvScope rcsv( RCSV_FULLPACK );	// ReCoF (B337): rc_svprof
 	int					i;
 	bool				bShowTrigger = RcShowTrigger( ent );	// ReCoF (B317)
 

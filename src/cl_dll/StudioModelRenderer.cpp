@@ -35,6 +35,7 @@
 #include "entity_types.h"
 #include "r_efx.h"
 #include "event_api.h"
+#include "rc_prof.h"	// ReCoF (B337)
 
 // Global engine <-> studio model rendering code interface
 engine_studio_api_t IEngineStudio;
@@ -803,6 +804,7 @@ StudioSetupBones
 */
 void CStudioModelRenderer::StudioSetupBones ( void )
 {
+	RcProfScope prof( RCP_MDL_BONES );	// ReCoF (B337)
 	int					i;
 	double				f;
 
@@ -1008,6 +1010,7 @@ StudioMergeBones
 */
 void CStudioModelRenderer::StudioMergeBones ( model_t *m_pSubModel )
 {
+	RcProfScope prof( RCP_MDL_BONES );	// ReCoF (B337)
 	int					i, j;
 	double				f;
 	int					do_hunt = true;

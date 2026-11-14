@@ -25,6 +25,7 @@
 #include "animation.h"
 #include "saverestore.h"
 #include "soundent.h"
+#include "rc_svprof.h"	// ReCoF (B337)
 
 //=========================================================
 // SetState
@@ -61,6 +62,7 @@ void CBaseMonster :: SetState ( MONSTERSTATE State )
 //=========================================================
 void CBaseMonster :: RunAI ( void )
 {
+	RcSvScope rcsv( RCSV_RUNAI );	// ReCoF (B337): rc_svprof
 	// to test model's eye height
 	//UTIL_ParticleEffect ( pev->origin + pev->view_ofs, g_vecZero, 255, 10 );
 

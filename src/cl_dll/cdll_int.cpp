@@ -270,6 +270,7 @@ Called by engine every frame that client .dll is loaded
 
 void DLLEXPORT HUD_Frame( double time )
 {
+	RcProf_PopIf( RCP_SERVER );	// ReCoF (B337): the local server's frame ends here (CL_CreateMove)
 	RcProfScope prof( RCP_CLFRAME );	// ReCoF
 	RcCrash_Frame();	// ReCoF (B314): the hang watchdog's heartbeat
 	RcSmooth_GameFrame();	// ReCoF (B315): smooth frames count the game frames

@@ -3,9 +3,11 @@
 // rc_prof 1 shows where the client spends each frame: the CPU time of each phase (rc_prof.h), averaged over
 // half a second. rc_prof 2 adds the GPU time of the same phases from timestamp queries (GL_ARB_timer_query),
 // read back a few frames later so the game never waits for the GPU. rc_prof_dump prints the numbers to the
-// console (with -condebug they also land in qconsole.log). Everything outside the client scopes, which
-// includes the engine, the server game logic of hl.dll, sound and the buffer swap, is "other";
-// host_speeds 1 splits that part.
+// console (with -condebug they also land in qconsole.log). "server" is the local server's whole frame (B337),
+// all of the game logic of hl.dll and the engine's physics for it, timed from the end of CL_CreateMove to
+// HUD_Frame, which the engine calls just before and just after SV_Frame; rc_svprof in hl.dll splits it.
+// Everything else outside the client scopes, which includes the engine, sound and the buffer swap, is
+// "other". rc_prof_log 1 prints a line with the numbers every half second, for test runs (B337).
 
 #include "hud.h"
 #include "cl_util.h"
@@ -38,19 +40,21 @@ struct RcGpuFrame_t
 
 static const char *s_szScopeName[RCP_COUNT] =
 {
-	"other", "view", "entities", "client frame", "world", "world 1st", "bump", "dlights", "world 2nd",
+	"other", "server", "view", "entities", "client frame", "world", "world 1st", "bump", "dlights", "world 2nd",
 	"specular", "brush ents", "decals", "sky", "models", "mdl vertices", "mdl lighting", "mdl drawing",
-	"transparent", "water", "post fx", "hud"
+	"mdl bones", "mdl studiolt", "transparent", "water", "post fx", "hud"
 };
 
 // the scopes that issue GL work get their own GPU time; the GPU time of the others falls to "other"
 static const bool s_bGLScope[RCP_COUNT] =
 {
-	false, false, false, false, true, true, true, true, true,
-	true, true, true, true, true, false, false, false, true, true, true, true
+	false, false, false, false, false, true, true, true, true, true,
+	true, true, true, true, true, false, false, false,
+	false, false, true, true, true, true
 };
 
 static cvar_t		*rc_prof;
+static cvar_t		*rc_prof_log;			// a line every half second (B337)
 static int			s_iOn;					// rc_prof as read at the last frame boundary
 static double		s_flTickMs;				// milliseconds per performance counter tick
 static int			s_iStack[RC_STACK];
@@ -115,7 +119,7 @@ static void RcGpuFollow( void )
 	int cur = RcCurrent();
 
 	// the parts of models are timed on the CPU only; the GPU keeps charging models, so they add no marks
-	if ( cur == RCP_MDL_VERTS || cur == RCP_MDL_LIGHT || cur == RCP_MDL_DRAW )
+	if ( cur == RCP_MDL_VERTS || cur == RCP_MDL_LIGHT || cur == RCP_MDL_DRAW || cur == RCP_MDL_BONES || cur == RCP_MDL_SLIGHT )
 		cur = RCP_MODELS;
 
 	int scope = s_bGLScope[cur] ? cur : RCP_OTHER;
@@ -157,6 +161,12 @@ void RcProf_Pop( void )
 	RcCharge();
 	s_iDepth--;
 	RcGpuFollow();
+}
+
+void RcProf_PopIf( int scope )
+{
+	if ( s_iOn && !s_iOverflow && RcCurrent() == scope && s_iDepth )
+		RcProf_Pop();
 }
 
 void RcProf_Count( int counter )
@@ -246,6 +256,46 @@ static void RcClearWindow( void )
 	s_iWinFrames = s_iWinGpuFrames = 0;
 }
 
+// rc_prof_log 1: the half second just shown, on one line of name=value pairs (B337)
+static void RcProfLogLine( void )
+{
+	char line[2048];
+	int len = sprintf( line, "rcp t=%.1f frame=%.3f fps=%.1f worst=%.2f models=%.1f monsters=%.1f gpumeshes=%.0f",
+		gEngfuncs.GetClientTime(), s_flShowFrame, s_flShowFrame > 0 ? 1000.0 / s_flShowFrame : 0.0, s_flShowWorst,
+		s_flShowCount[RCC_MODELS], s_flShowCount[RCC_MONSTERS], s_flShowCount[RCC_GPUMESHES] );
+
+	for ( int i = 0; i < RCP_COUNT && len < (int)sizeof( line ) - 40; i++ )
+	{
+		if ( s_flShowCpu[i] < 0.0005 )
+			continue;
+
+		line[len++] = ' ';
+		for ( const char *s = s_szScopeName[i]; *s; s++ )
+			line[len++] = ( *s == ' ' ) ? '_' : *s;
+		len += sprintf( line + len, "=%.3f", s_flShowCpu[i] );
+	}
+
+	// rc_prof 2: the GPU frame and the GPU time of each scope, with g_ before its name
+	if ( s_iOn >= 2 && s_iGpuState == 1 && s_iShowGpuValid )
+	{
+		len += sprintf( line + len, " gpu=%.3f", s_flShowGpuFrame );
+
+		for ( int i = 0; i < RCP_COUNT && len < (int)sizeof( line ) - 40; i++ )
+		{
+			if ( s_flShowGpu[i] < 0.0005 )
+				continue;
+
+			len += sprintf( line + len, " g_" );
+			for ( const char *s = s_szScopeName[i]; *s; s++ )
+				line[len++] = ( *s == ' ' ) ? '_' : *s;
+			len += sprintf( line + len, "=%.3f", s_flShowGpu[i] );
+		}
+	}
+
+	strcpy( line + len, "\n" );
+	ConsolePrint( line );
+}
+
 //-----------------------------------------------------------------------------
 // the frame boundary, at the start of HUD_Redraw: closes the frame that ends here and opens the next
 //-----------------------------------------------------------------------------
@@ -292,6 +342,9 @@ void RcProf_Frame( void )
 				s_flShowCount[c] = (double)s_iWinCount[c] / s_iWinFrames;
 			s_flShowFrame = s_flWinFrame / s_iWinFrames;
 			s_flShowWorst = s_flWinWorst;
+
+			if ( s_iOn && rc_prof_log && rc_prof_log->value )
+				RcProfLogLine();
 		}
 
 		s_iShowGpuValid = s_iWinGpuFrames > 0;
@@ -386,8 +439,8 @@ void RcProf_Draw( void )
 		y += h;
 	}
 
-	sprintf( text, "models %.1f, dlights %.1f, world draws %.0f, gpu meshes %.0f", s_flShowCount[RCC_MODELS], s_flShowCount[RCC_DLIGHTS],
-		s_flShowCount[RCC_WORLDDRAWS], s_flShowCount[RCC_GPUMESHES] );
+	sprintf( text, "models %.1f (monsters %.1f), dlights %.1f, world draws %.0f, gpu meshes %.0f", s_flShowCount[RCC_MODELS],
+		s_flShowCount[RCC_MONSTERS], s_flShowCount[RCC_DLIGHTS], s_flShowCount[RCC_WORLDDRAWS], s_flShowCount[RCC_GPUMESHES] );
 	RcDrawLine( x, y, text );
 	y += h;
 
@@ -434,9 +487,9 @@ static void RcProf_Dump( void )
 
 	int gpu = s_iOn >= 2 && s_iGpuState == 1 && s_iShowGpuValid;
 
-	sprintf( line, "rc_prof: frame %.2f ms (%.0f fps), worst %.2f ms, models %.1f, dlights %.1f, world draws %.0f, gpu meshes %.0f\n",
-		s_flShowFrame, s_flShowFrame > 0 ? 1000.0 / s_flShowFrame : 0.0, s_flShowWorst, s_flShowCount[RCC_MODELS], s_flShowCount[RCC_DLIGHTS],
-		s_flShowCount[RCC_WORLDDRAWS], s_flShowCount[RCC_GPUMESHES] );
+	sprintf( line, "rc_prof: frame %.2f ms (%.0f fps), worst %.2f ms, models %.1f (monsters %.1f), dlights %.1f, world draws %.0f, gpu meshes %.0f\n",
+		s_flShowFrame, s_flShowFrame > 0 ? 1000.0 / s_flShowFrame : 0.0, s_flShowWorst, s_flShowCount[RCC_MODELS], s_flShowCount[RCC_MONSTERS],
+		s_flShowCount[RCC_DLIGHTS], s_flShowCount[RCC_WORLDDRAWS], s_flShowCount[RCC_GPUMESHES] );
 	ConsolePrint( line );
 
 	if ( gpu )
@@ -462,5 +515,6 @@ void RcProf_Init( void )
 	s_flTickMs = 1000.0 / (double)freq.QuadPart;
 
 	rc_prof = gEngfuncs.pfnRegisterVariable( "rc_prof", "0", 0 );
+	rc_prof_log = gEngfuncs.pfnRegisterVariable( "rc_prof_log", "0", 0 );
 	gEngfuncs.pfnAddCommand( "rc_prof_dump", RcProf_Dump );
 }

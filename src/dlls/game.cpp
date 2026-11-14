@@ -16,6 +16,7 @@
 #include "eiface.h"
 #include "util.h"
 #include "game.h"
+#include "rc_svprof.h"	// ReCoF (B337)
 
 // Cry of Fear: GameDLLInit starts the Steam API (steam_api.dll)
 extern "C" __declspec( dllimport ) bool __cdecl SteamAPI_Init();
@@ -571,6 +572,7 @@ void GameDLLInit( void )
 	CVAR_REGISTER (&rc_novis);
 	CVAR_REGISTER (&rc_show_triggers);
 	CVAR_REGISTER (&rc_require_recof);
+	RcSvProf_Init();	// ReCoF (B337): rc_svprof
 	CVAR_REGISTER (&cof_walksteptime);
 	CVAR_REGISTER (&cof_runsteptime);
 	CVAR_REGISTER (&cof_sprintsteptime);

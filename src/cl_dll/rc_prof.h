@@ -7,7 +7,8 @@
 // the times add up to the whole frame without counting anything twice.
 enum
 {
-	RCP_OTHER = 0,		// outside every client scope: engine, server game logic, sound, buffer swap
+	RCP_OTHER = 0,		// outside every client scope: engine, sound, buffer swap
+	RCP_SERVER,			// from the end of CL_CreateMove to HUD_Frame: the local server's frame, all of its game logic (B337)
 	RCP_VIEW,			// V_CalcRefdef
 	RCP_ENTS,			// HUD_CreateEntities and HUD_AddEntity
 	RCP_CLFRAME,		// HUD_Frame (music, voice)
@@ -24,6 +25,8 @@ enum
 	RCP_MDL_VERTS,		// models: the vertices moved by their bones (GL_DrawPoints)
 	RCP_MDL_LIGHT,		// models: the normals lit (GL_DrawPoints)
 	RCP_MDL_DRAW,		// models: the meshes sent to the driver (GL_DrawPoints)
+	RCP_MDL_BONES,		// models: StudioSetupBones and StudioMergeBones (B337)
+	RCP_MDL_SLIGHT,		// models: the engine's studio lighting, StudioDynamicLight, StudioEntityLight and StudioSetupLighting (B337)
 	RCP_TRANS,			// transparent triangles: fog, particles, objects, grass, weather, glows
 	RCP_WATER,			// Cg water
 	RCP_POST,			// post effects
@@ -37,6 +40,7 @@ enum
 	RCC_DLIGHTS,		// dynamic lights drawn on the world
 	RCC_WORLDDRAWS,		// draw calls of world and brush polygons from the vertex buffer (B195)
 	RCC_GPUMESHES,		// studio model meshes moved and lit by the vertex shader (B287 step 4)
+	RCC_MONSTERS,		// studio models drawn that are monsters (MOVETYPE_STEP), apart from props (B337)
 	RCC_COUNT
 };
 
@@ -45,6 +49,8 @@ void RcProf_Frame( void );			// frame boundary (start of HUD_Redraw)
 void RcProf_Draw( void );			// the overlay (end of CHud::Redraw)
 void RcProf_Push( int scope );
 void RcProf_Pop( void );
+void RcProf_PopIf( int scope );	// pops the innermost scope only if it is this one (B337)
+void RcProf_HookStudio( void );	// times the engine's studio lighting (HUD_GetStudioModelInterface, B337)
 void RcProf_Count( int counter );
 
 // opens a scope for the rest of the block

@@ -4,6 +4,7 @@
 #include	"movewith.h"
 #include	"saverestore.h"
 #include	"player.h"
+#include "rc_svprof.h"	// ReCoF (B337)
 
 CWorld *g_pWorld = NULL; //LRC
 
@@ -308,6 +309,7 @@ void CheckAssistList( void )
 // called every frame, by PostThink
 void CheckDesiredList( void )
 {
+	RcSvScope rcsv( RCSV_DESIRED );	// ReCoF (B337): rc_svprof
 	CBaseEntity *pListMember;
 	int loopbreaker = 1000; //assume this is the max. number of entities which will use DesiredList in any one frame
 //	BOOL liststart = FALSE;

@@ -13,6 +13,7 @@ They live outside the repository. The paths are the defaults the scripts use.
 | Visual C++ 6.0, and 6.0 SP6 with the Processor Pack | `I:\Tools\vc6\VC98`, `I:\Tools\vc6pp\VC98` | hw.dll, opengl32.dll, GameUI.dll, cof.exe (`tools/msvc6.py`) |
 | csc.exe 4.0.30319.1 (.NET Framework 4.0) | `I:\Tools\csc40` | CoFLaunchApp.exe |
 | Python 3 with pefile and capstone | system install | the scripts |
+| SDHLT 1.3.1 (github.com/seedee/SDHLT), the Win64 tools | `I:\Tools\sdhlt\sdhlt-v1.3.1\tools\Win64` | the test maps of `tools/rc_stressmap.py` (SDHLT) |
 
 The retail game goes in `versions/1.6a` (read only, never committed): the links compare against it, and hw.dll takes the third-party code that has no source from it.
 
@@ -26,6 +27,7 @@ python tools/check_runner.py                LiveSplit and BunnymodXT addresses k
 python tools/compare_build.py               compare build/bin with the baseline (docs/baseline.md)
 python tools/name_addr.py hw.dll <offset>   name an address from a crash report
 python tools/make_dist.py --keep --bin build/bin    a playable copy in dist/
+python tools/rc_stressmap.py --install      test maps with 0, 16, 32 and 64 monsters into dist/ (rc_svprof, B337)
 python tools/make_release.py --version X.Y.Z [--channel stable]    the release files for GitHub and the launcher
 ```
 

@@ -80,6 +80,8 @@ int R_StudioDrawModel( int flags )
 {
 	RcProfScope prof( RCP_MODELS );	// ReCoF
 	RcProf_Count( RCC_MODELS );
+	if ( IEngineStudio.GetCurrentEntity() && IEngineStudio.GetCurrentEntity()->curstate.movetype == MOVETYPE_STEP )
+		RcProf_Count( RCC_MONSTERS );	// ReCoF (B337)
 
 	if (IEngineStudio.GetCurrentEntity() != IEngineStudio.GetViewEntity() && IEngineStudio.GetCurrentEntity()->curstate.renderfx != 161)
 		RendererDrawNormal(); // buz: make shure that world draws before any studiomodel
@@ -122,6 +124,40 @@ HUD_GetStudioModelInterface
 Export this function for the engine to use the studio renderer class to render objects.
 ====================
 */
+// ReCoF (B337): rc_prof times the engine's studio lighting, which every model drawn calls, through wrappers in
+// IEngineStudio that pass each call on unchanged
+static void ( *s_pfnRcDynamicLight )( struct cl_entity_s *ent, struct alight_s *plight );
+static void ( *s_pfnRcEntityLight )( struct alight_s *plight );
+static void ( *s_pfnRcSetupLighting )( struct alight_s *plighting );
+
+static void RcProfDynamicLight( struct cl_entity_s *ent, struct alight_s *plight )
+{
+	RcProfScope prof( RCP_MDL_SLIGHT );
+	s_pfnRcDynamicLight( ent, plight );
+}
+
+static void RcProfEntityLight( struct alight_s *plight )
+{
+	RcProfScope prof( RCP_MDL_SLIGHT );
+	s_pfnRcEntityLight( plight );
+}
+
+static void RcProfSetupLighting( struct alight_s *plighting )
+{
+	RcProfScope prof( RCP_MDL_SLIGHT );
+	s_pfnRcSetupLighting( plighting );
+}
+
+void RcProf_HookStudio( void )
+{
+	s_pfnRcDynamicLight = IEngineStudio.StudioDynamicLight;
+	s_pfnRcEntityLight = IEngineStudio.StudioEntityLight;
+	s_pfnRcSetupLighting = IEngineStudio.StudioSetupLighting;
+	IEngineStudio.StudioDynamicLight = RcProfDynamicLight;
+	IEngineStudio.StudioEntityLight = RcProfEntityLight;
+	IEngineStudio.StudioSetupLighting = RcProfSetupLighting;
+}
+
 #define DLLEXPORT __declspec( dllexport )
 extern "C" int DLLEXPORT HUD_GetStudioModelInterface( int version, struct r_studio_interface_s **ppinterface, struct engine_studio_api_s *pstudio )
 {
@@ -133,6 +169,7 @@ extern "C" int DLLEXPORT HUD_GetStudioModelInterface( int version, struct r_stud
 
 	// Copy in engine helper functions
 	memcpy( &IEngineStudio, pstudio, sizeof( IEngineStudio ) );
+	RcProf_HookStudio();	// ReCoF (B337)
 
 	// Initialize local variables, etc.
 	R_StudioInit();

@@ -26,6 +26,7 @@
 #include	"weapons.h"
 #include	"studio.h"
 #include	"CoF_Dual_Weapon.h"
+#include "rc_svprof.h"	// ReCoF (B337)
 
 CDualWeaponRight gDualWeapon;
 
@@ -224,6 +225,7 @@ void DispatchKeyValue( edict_t *pentKeyvalue, KeyValueData *pkvd )
 BOOL gTouchDisabled = FALSE;
 void DispatchTouch( edict_t *pentTouched, edict_t *pentOther )
 {
+	RcSvScope rcsv( RCSV_TOUCH );	// ReCoF (B337): rc_svprof
 	if ( gTouchDisabled )
 		return;
 
@@ -246,6 +248,7 @@ void DispatchUse( edict_t *pentUsed, edict_t *pentOther )
 
 void DispatchThink( edict_t *pent )
 {
+	RcSvScope rcsv( RCSV_THINK );	// ReCoF (B337): rc_svprof
 	CBaseEntity *pEntity = (CBaseEntity *)GET_PRIVATE(pent);
 
 	if (pEntity)
@@ -260,6 +263,7 @@ void DispatchThink( edict_t *pent )
 
 void DispatchBlocked( edict_t *pentBlocked, edict_t *pentOther )
 {
+	RcSvScope rcsv( RCSV_TOUCH );	// ReCoF (B337): rc_svprof
 	CBaseEntity *pEntity = (CBaseEntity *)GET_PRIVATE( pentBlocked );
 	CBaseEntity *pOther = (CBaseEntity *)GET_PRIVATE( pentOther );
 
