@@ -507,9 +507,13 @@ static void RcPerfHeader( void )
 	}
 	fprintf( s_pPerf, "\n\n" );
 	fprintf( s_pPerf, "Each second: the frame rate, the average frame, the slowest 1%% and the slowest frame (ms), the main thread's "
-		"busy share, stutters, disk reads (operations/KB), page faults, then the CPU ms of each part of an average frame "
-		"and the GPU frame. STUTTER lines: one frame, its ms against the recent average, how many of them the main thread "
-		"was running, its disk reads and page faults, and the parts that took 0.5 ms or more in it.\n\n" );
+		"busy share, stutters, disk reads (operations/KB), page faults, then the CPU ms of each part of an average frame, "
+		"the GPU frame (from one frame to the next on the GPU, idle included) and the GPU ms of each part that took 0.05 ms "
+		"or more, and the models, monsters, particles and "
+		"particle systems of an average frame. STUTTER lines: one frame, its ms against the recent average, how many of "
+		"them the main thread was running, its disk reads and page faults, and the parts that took 0.5 ms or more in it. "
+		"PAUSE lines: a time of pictures without HUD frames (a menu, the inventory, a note, a cutscene or a load), left out "
+		"of the numbers.\n\n" );
 	fflush( s_pPerf );
 }
 
@@ -605,7 +609,18 @@ static void RcPerfSecond( LONGLONG qpcNow )
 		fprintf( s_pPerf, " %s %.2f", name, ms );
 	}
 	if ( s_iShowGpuValid )
+	{
 		fprintf( s_pPerf, " | gpu %.2f", s_flShowGpuFrame );
+		// B344: where the GPU time goes, from the last half second; a player whose game waits for the GPU shows which
+		// pass makes it wait
+		for ( int i = 0; i < RCP_COUNT; i++ )
+		{
+			if ( s_flShowGpu[i] < 0.05 )
+				continue;
+			RcPerfName( name, s_szScopeName[i] );
+			fprintf( s_pPerf, " %s %.2f", name, s_flShowGpu[i] );
+		}
+	}
 	fprintf( s_pPerf, " | models %.0f monsters %.0f particles %.0f psystems %.0f\n", s_flPerfCount[RCC_MODELS] / s_iPerfFrames,
 		s_flPerfCount[RCC_MONSTERS] / s_iPerfFrames, s_flPerfCount[RCC_PARTICLES] / s_iPerfFrames,
 		s_flPerfCount[RCC_PSYSTEMS] / s_iPerfFrames );	// B341
