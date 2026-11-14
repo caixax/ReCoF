@@ -393,6 +393,12 @@ static volatile LONG		s_lPerfFrameGen;		// twice the frames closed since the log
 static LONGLONG				s_llPerfFrameStartQpc;	// when the frame now running began
 static volatile LONG		s_lStallQuit;
 static HANDLE				s_hStallThread, s_hStallMain;
+// B349: the sampler, at the highest priority, sleeps 2 ms at a time; when it wakes 8 ms or more late the system (a
+// driver's interrupt or DPC, or the BIOS) held the processors, and the main thread was most likely held with it
+static volatile LONG		s_lLateSeq = -1;		// the frame of the longest late wake below
+static volatile float		s_flLateMs;
+static volatile LONG		s_lLateCount;		// late wakes since the last second's line
+static volatile float		s_flLateMax;
 
 static DWORD WINAPI RcStallThread( LPVOID )
 {
@@ -401,11 +407,31 @@ static DWORD WINAPI RcStallThread( LPVOID )
 	double tickMs = 1000.0 / (double)freq.QuadPart;
 	LONG lastSeq = -1;
 	int taken = 0;
-	LONGLONG lastQpc = 0;
+	LONGLONG lastQpc = 0, prevWake = 0;
 
 	while ( !s_lStallQuit )
 	{
 		Sleep( 2 );
+
+		LARGE_INTEGER woke;
+		QueryPerformanceCounter( &woke );
+		if ( prevWake )
+		{
+			double late = ( woke.QuadPart - prevWake ) * tickMs - 2.0;
+			if ( late >= 8.0 )
+			{
+				LONG frame = s_lPerfFrameGen / 2;
+				if ( s_lLateSeq != frame || late > s_flLateMs )
+				{
+					s_flLateMs = (float)late;
+					s_lLateSeq = frame;
+				}
+				InterlockedIncrement( &s_lLateCount );
+				if ( late > s_flLateMax )
+					s_flLateMax = (float)late;
+			}
+		}
+		prevWake = woke.QuadPart;
 
 		// the 64-bit start is read between two equal even generations, so never half written
 		LONG gen = s_lPerfFrameGen;
@@ -469,6 +495,9 @@ static void RcStallStart( void )
 	for ( int i = 0; i < RC_STALL_SLOTS; i++ )
 		s_Stall[i].seq = -1;
 	s_lStallQuit = 0;
+	s_lLateSeq = -1;
+	s_flLateMs = s_flLateMax = 0;
+	s_lLateCount = 0;
 	s_hStallThread = CreateThread( NULL, 64 * 1024, RcStallThread, NULL, 0, NULL );
 	if ( s_hStallThread )
 		SetThreadPriority( s_hStallThread, THREAD_PRIORITY_HIGHEST );
@@ -697,7 +726,8 @@ static void RcPerfHeader( void )
 		"particle systems of an average frame. STUTTER lines: one frame, its ms against the recent average, how many of "
 		"them the main thread was running, its disk reads and page faults, and the parts that took 0.5 ms or more in it. "
 		"Then the buffer swap (average and longest ms) and the share of frames another program's window was in front, "
-		"when the engine sleeps up to 20 ms a frame. "
+		"when the engine sleeps up to 20 ms a frame. System stalls: times the log's own highest-priority thread woke 8 ms "
+		"or more late, when drivers or the BIOS held the processors whatever the game did. "
 		"PAUSE lines: a time of pictures without HUD frames (a menu, the inventory, a note, a cutscene or a load), left out "
 		"of the numbers.\n\n" );
 	fflush( s_pPerf );
@@ -827,6 +857,10 @@ static void RcPerfSecond( LONGLONG qpcNow )
 		s_flPerfCount[RCC_PSYSTEMS] / s_iPerfFrames );	// B341
 	if ( s_pfnPerfSwap )
 		fprintf( s_pPerf, " | swap %.2f max %.2f", s_flPerfSecSwap / s_iPerfFrames, s_flPerfSecSwapMax );	// B347
+	LONG lates = InterlockedExchange( &s_lLateCount, 0 );	// B349
+	if ( lates )
+		fprintf( s_pPerf, " | system stalls %ld, longest %.0f ms", lates, (double)s_flLateMax );
+	s_flLateMax = 0;
 	if ( s_iPerfSecAway )
 		fprintf( s_pPerf, " | game window not in front %d%%", s_iPerfSecAway * 100 / s_iPerfFrames );
 	fprintf( s_pPerf, "\n" );
@@ -938,11 +972,16 @@ static void RcPerfFrame( double frame, LONGLONG qpcNow )
 	{
 		s_iPerfHitches++;
 
+		// B349: whether the system held the processors during this frame
+		char sysText[96] = "";
+		if ( s_lLateSeq == s_lPerfFrameGen / 2 && s_flLateMs > 0 )
+			_snprintf( sysText, sizeof( sysText ), ", the system held the processors %.0f ms (drivers or the BIOS)", (double)s_flLateMs );
+		sysText[sizeof( sysText ) - 1] = 0;
 		cl_entity_t *player = gEngfuncs.GetLocalPlayer();
 		fprintf( s_pPerf, "STUTTER %8.3f s %s at %.0f %.0f %.0f: frame %.2f ms (average %.2f), main thread running %.2f, reads "
-			"%llu/%llu KB, faults %lu, swap %.2f ms%s |", gEngfuncs.GetClientTime(), map, player ? player->origin[0] : 0.0f,
+			"%llu/%llu KB, faults %lu, swap %.2f ms%s%s |", gEngfuncs.GetClientTime(), map, player ? player->origin[0] : 0.0f,
 			player ? player->origin[1] : 0.0f, player ? player->origin[2] : 0.0f, frame, s_flPerfAvg, busy, reads,
-			readBytes / 1024, faults, swap, away ? ", the game window not in front" : "" );
+			readBytes / 1024, faults, swap, away ? ", the game window not in front" : "", sysText );
 
 		char name[32];
 		for ( int i = 0; i < RCP_COUNT; i++ )
