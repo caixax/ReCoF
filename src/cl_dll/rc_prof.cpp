@@ -367,6 +367,183 @@ static int			s_iPerfSecAway;				// B347: frames this second with another program
 static ULONGLONG	s_ullPerfSecReads, s_ullPerfSecReadBytes;
 static DWORD		s_dwPerfSecFaults;
 
+//-----------------------------------------------------------------------------
+// B348: where a long frame waits. While the perf log is open, a thread of its own looks every 2 ms at how long the
+// frame has run; past 12 ms and 1.3 times the recent frame it holds the main thread still for a moment (SuspendThread),
+// copies its instruction pointer and the top of its stack, and lets it go. Nothing else runs while it is held, so no
+// lock the main thread may own is touched. The frame's STUTTER line then names the place and the code addresses on
+// the stack (module+offset): a wait in the driver, the sound system or Windows shows as such.
+//-----------------------------------------------------------------------------
+#define RC_STALL_SLOTS		16
+#define RC_STALL_WORDS		256
+#define RC_STALL_PER_FRAME	6
+
+struct RcStallSample_t
+{
+	volatile LONG	seq;		// the frame it was taken in, written last
+	float			ms;			// how long the frame had run
+	DWORD			eip;
+	DWORD			stack[RC_STALL_WORDS];
+	DWORD			words;
+};
+
+static RcStallSample_t		s_Stall[RC_STALL_SLOTS];
+static volatile LONG		s_lStallNext;
+static volatile LONG		s_lPerfFrameGen;		// twice the frames closed since the log opened, odd while the next start is written
+static LONGLONG				s_llPerfFrameStartQpc;	// when the frame now running began
+static volatile LONG		s_lStallQuit;
+static HANDLE				s_hStallThread, s_hStallMain;
+
+static DWORD WINAPI RcStallThread( LPVOID )
+{
+	LARGE_INTEGER freq;
+	QueryPerformanceFrequency( &freq );
+	double tickMs = 1000.0 / (double)freq.QuadPart;
+	LONG lastSeq = -1;
+	int taken = 0;
+	LONGLONG lastQpc = 0;
+
+	while ( !s_lStallQuit )
+	{
+		Sleep( 2 );
+
+		// the 64-bit start is read between two equal even generations, so never half written
+		LONG gen = s_lPerfFrameGen;
+		if ( gen & 1 )
+			continue;
+		LONGLONG start = s_llPerfFrameStartQpc;
+		if ( gen != s_lPerfFrameGen )
+			continue;
+		LONG seq = gen / 2;
+		LARGE_INTEGER now;
+		QueryPerformanceCounter( &now );
+		double ms = ( now.QuadPart - start ) * tickMs;
+
+		if ( seq != lastSeq )
+		{
+			lastSeq = seq;
+			taken = 0;
+		}
+
+		// from early in a long frame, so a wait is caught while it lasts; only a frame that turns out a STUTTER is written
+		double limit = s_flPerfAvg * 1.3;
+		if ( limit < 12.0 )
+			limit = 12.0;
+		if ( ms < limit || taken >= RC_STALL_PER_FRAME || ( now.QuadPart - lastQpc ) * tickMs < 3.0 )
+			continue;
+
+		RcStallSample_t *s = &s_Stall[InterlockedIncrement( &s_lStallNext ) % RC_STALL_SLOTS];
+		InterlockedExchange( &s->seq, -1 );
+
+		CONTEXT context;
+		memset( &context, 0, sizeof( context ) );
+		context.ContextFlags = CONTEXT_CONTROL;
+		SIZE_T read = 0;
+		if ( SuspendThread( s_hStallMain ) != (DWORD)-1 )
+		{
+			if ( GetThreadContext( s_hStallMain, &context ) )
+				ReadProcessMemory( GetCurrentProcess(), (LPCVOID)context.Esp, s->stack, sizeof( s->stack ), &read );
+			ResumeThread( s_hStallMain );
+		}
+
+		s->ms = (float)ms;
+		s->eip = context.Eip;
+		s->words = (DWORD)( read / sizeof( DWORD ) );
+		InterlockedExchange( &s->seq, seq );
+		taken++;
+		lastQpc = now.QuadPart;
+	}
+
+	return 0;
+}
+
+static void RcStallStart( void )
+{
+	if ( s_hStallThread )
+		return;
+
+	if ( !DuplicateHandle( GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &s_hStallMain, 0, FALSE,
+		DUPLICATE_SAME_ACCESS ) )
+		return;
+
+	for ( int i = 0; i < RC_STALL_SLOTS; i++ )
+		s_Stall[i].seq = -1;
+	s_lStallQuit = 0;
+	s_hStallThread = CreateThread( NULL, 64 * 1024, RcStallThread, NULL, 0, NULL );
+	if ( s_hStallThread )
+		SetThreadPriority( s_hStallThread, THREAD_PRIORITY_HIGHEST );
+}
+
+static void RcStallStop( void )
+{
+	if ( s_hStallThread )
+	{
+		InterlockedExchange( &s_lStallQuit, 1 );
+		WaitForSingleObject( s_hStallThread, 1000 );
+		CloseHandle( s_hStallThread );
+		s_hStallThread = NULL;
+	}
+	if ( s_hStallMain )
+	{
+		CloseHandle( s_hStallMain );
+		s_hStallMain = NULL;
+	}
+}
+
+// an address inside the code of a loaded module, as rc_crash.cpp tests the candidates on a stack
+static bool RcStallIsCode( DWORD dwAddress )
+{
+	MEMORY_BASIC_INFORMATION mbi;
+	if ( !VirtualQuery( (LPCVOID)dwAddress, &mbi, sizeof( mbi ) ) || mbi.State != MEM_COMMIT || mbi.Type != MEM_IMAGE )
+		return false;
+	return ( mbi.Protect & ( PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY ) ) != 0;
+}
+
+static void RcStallName( DWORD dwAddress, char *pszOut, size_t size )
+{
+	HMODULE hModule = NULL;
+	char szPath[MAX_PATH];
+	if ( GetModuleHandleExA( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+		(LPCSTR)dwAddress, &hModule ) && GetModuleFileNameA( hModule, szPath, sizeof( szPath ) ) )
+	{
+		const char *pszName = strrchr( szPath, '\\' );
+		_snprintf( pszOut, size, "%s+0x%X", pszName ? pszName + 1 : szPath, dwAddress - (DWORD)hModule );
+	}
+	else
+		_snprintf( pszOut, size, "0x%08X", dwAddress );
+	pszOut[size - 1] = 0;
+}
+
+// the samples of the frame that just ended, under its STUTTER line; the others are let go
+static void RcStallWrite( LONG seq, bool bPrint )
+{
+	char name[MAX_PATH];
+
+	for ( int i = 0; i < RC_STALL_SLOTS; i++ )
+	{
+		RcStallSample_t *s = &s_Stall[i];
+		if ( s->seq != seq )
+			continue;
+
+		if ( bPrint )
+		{
+			RcStallName( s->eip, name, sizeof( name ) );
+			fprintf( s_pPerf, "    at %.1f ms: %s", s->ms, name );
+			int found = 0;
+			for ( DWORD w = 0; w < s->words && found < 12; w++ )
+			{
+				if ( !RcStallIsCode( s->stack[w] ) )
+					continue;
+				RcStallName( s->stack[w], name, sizeof( name ) );
+				fprintf( s_pPerf, " < %s", name );
+				found++;
+			}
+			fprintf( s_pPerf, "\n" );
+		}
+		InterlockedExchange( &s->seq, -1 );
+	}
+}
+
 static int RcPerfCompare( const void *a, const void *b )
 {
 	float x = *(const float *)a, y = *(const float *)b;
@@ -529,6 +706,7 @@ static void RcPerfClose( void )
 	if ( !s_pPerf )
 		return;
 
+	RcStallStop();	// B348
 	fprintf( s_pPerf, "end of the log\n" );
 	fclose( s_pPerf );
 	s_pPerf = NULL;
@@ -569,6 +747,9 @@ static void RcPerfOpen( LONGLONG qpcNow )
 
 	RcPerfHeader();
 	gEngfuncs.Con_Printf( "rc_perflog: writing %s (rc_perflog 0 ends it)\n", path );
+	s_lPerfFrameGen = 0;
+	s_llPerfFrameStartQpc = qpcNow;
+	RcStallStart();	// B348
 
 	s_ullPerfTsc0 = __rdtsc();
 	s_llPerfQpc0 = qpcNow;
@@ -771,6 +952,7 @@ static void RcPerfFrame( double frame, LONGLONG qpcNow )
 			fprintf( s_pPerf, " %s %.2f", name, ms );
 		}
 		fprintf( s_pPerf, "\n" );
+		RcStallWrite( s_lPerfFrameGen / 2, true );	// B348
 		fflush( s_pPerf );
 	}
 
@@ -807,6 +989,13 @@ void RcProf_Frame( void )
 
 		if ( s_pPerf )
 			RcPerfFrame( frame, now.QuadPart );	// B340
+		if ( s_pPerf )
+		{
+			RcStallWrite( s_lPerfFrameGen / 2, false );	// B348: the next frame starts
+			InterlockedIncrement( &s_lPerfFrameGen );
+			s_llPerfFrameStartQpc = now.QuadPart;
+			InterlockedIncrement( &s_lPerfFrameGen );
+		}
 
 		if ( s_iOn >= 2 && s_iGpuState == 1 )
 		{
