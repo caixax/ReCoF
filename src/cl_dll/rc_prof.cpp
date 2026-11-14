@@ -309,6 +309,380 @@ static void RcProfLogLine( void )
 	ConsolePrint( line );
 }
 
+
+//-----------------------------------------------------------------------------
+// rc_perflog 1 (B340): a performance log a player can send. It writes cryoffear/perflogs/perflog_<date>.txt: what
+// the computer is (processor, graphics card and driver, Windows, power plan, the game's settings), one line a
+// second (frame rate, the slowest 1% of frames, the main thread's busy share, disk reads, page faults, the
+// scopes of rc_prof and the GPU time), and a line for every stutter, a frame twice the recent average and
+// 10 ms or more above it: where its time went (the scopes), how much of it the main thread was running (the
+// rest it waited: the frame limiter, the driver, Windows), the disk reads and page faults in it, the map and the
+// place. It turns the scopes and the GPU times on while it runs (rc_prof 2) without the overlay.
+//-----------------------------------------------------------------------------
+#include "rc_version.h"
+#include <intrin.h>
+#include <time.h>
+
+typedef struct
+{
+	DWORD	cb;
+	DWORD	PageFaultCount;
+	SIZE_T	PeakWorkingSetSize, WorkingSetSize, QuotaPeakPagedPoolUsage, QuotaPagedPoolUsage;
+	SIZE_T	QuotaPeakNonPagedPoolUsage, QuotaNonPagedPoolUsage, PagefileUsage, PeakPagefileUsage;
+} RcProcMem_t;	// PROCESS_MEMORY_COUNTERS
+typedef BOOL ( WINAPI *RcGetProcessMemoryInfo_t )( HANDLE, RcProcMem_t *, DWORD );
+typedef LONG ( WINAPI *RcRtlGetVersion_t )( OSVERSIONINFOW * );
+typedef BOOL ( WINAPI *RcQueryThreadCycleTime_t )( HANDLE, unsigned __int64 * );
+typedef DWORD ( WINAPI *RcPowerGetActiveScheme_t )( HKEY, GUID ** );
+typedef DWORD ( WINAPI *RcPowerReadFriendlyName_t )( HKEY, const GUID *, const GUID *, const GUID *, UCHAR *, DWORD * );
+
+#define RC_PERF_TIMES	4096	// frames a second kept for the slowest 1%
+
+static cvar_t					*rc_perflog;
+static FILE						*s_pPerf;
+static RcGetProcessMemoryInfo_t	s_pfnPerfMem;
+static RcQueryThreadCycleTime_t	s_pfnPerfCycles;
+static unsigned __int64			s_ullPerfTsc0, s_ullPerfCycles;
+static LONGLONG					s_llPerfQpc0;
+static ULONGLONG				s_ullPerfReads, s_ullPerfReadBytes;
+static DWORD					s_dwPerfFaults;
+static double					s_flPerfAvg;		// the recent frame time, which stutters are measured against
+static int						s_iPerfSkip;		// frames not judged after the log starts or the map changes
+static char						s_szPerfMap[64];
+
+// the second being collected
+static LONGLONG		s_llPerfSecStart;
+static int			s_iPerfFrames, s_iPerfHitches;
+static double		s_flPerfSum, s_flPerfWorst, s_flPerfBusy;
+static float		s_flPerfTimes[RC_PERF_TIMES];
+static double		s_flPerfCpu[RCP_COUNT];
+static ULONGLONG	s_ullPerfSecReads, s_ullPerfSecReadBytes;
+static DWORD		s_dwPerfSecFaults;
+
+static int RcPerfCompare( const void *a, const void *b )
+{
+	float x = *(const float *)a, y = *(const float *)b;
+	return ( x > y ) ? -1 : ( x < y ) ? 1 : 0;
+}
+
+static void RcPerfName( char *out, const char *name )
+{
+	for ( ; *name; name++ )
+		*out++ = ( *name == ' ' ) ? '_' : *name;
+	*out = 0;
+}
+
+static const char *RcPerfMap( void )
+{
+	const char *level = gEngfuncs.pfnGetLevelName();
+	return ( level && *level ) ? level : "(none)";
+}
+
+// the main thread's CPU time in the frame, from its cycle count and the time stamp counter's rate
+static double RcPerfBusyMs( LONGLONG qpcNow )
+{
+	unsigned __int64 cycles = 0;
+	if ( !s_pfnPerfCycles || !s_pfnPerfCycles( GetCurrentThread(), &cycles ) )
+		return 0.0;
+
+	double ms = ( qpcNow - s_llPerfQpc0 ) * s_flTickMs;
+	double tscPerMs = ms > 100.0 ? (double)( __rdtsc() - s_ullPerfTsc0 ) / ms : 0.0;
+	double busy = tscPerMs > 0 ? (double)( cycles - s_ullPerfCycles ) / tscPerMs : 0.0;
+
+	s_ullPerfCycles = cycles;
+	return busy;
+}
+
+static void RcPerfHeader( void )
+{
+	char text[256];
+	int regs[4];
+	char brand[49];
+	time_t now = time( NULL );
+	struct tm *lt = localtime( &now );
+
+	strftime( text, sizeof( text ), "%Y-%m-%d %H:%M:%S", lt );
+	fprintf( s_pPerf, "ReCoF %s performance log, %s\n", RECOF_VERSION, text );
+
+	memset( brand, 0, sizeof( brand ) );
+	__cpuid( regs, 0x80000000 );
+	if ( (unsigned int)regs[0] >= 0x80000004 )
+	{
+		__cpuid( (int *)( brand + 0 ), 0x80000002 );
+		__cpuid( (int *)( brand + 16 ), 0x80000003 );
+		__cpuid( (int *)( brand + 32 ), 0x80000004 );
+	}
+	int invariant = 0;
+	if ( (unsigned int)regs[0] >= 0x80000007 )
+	{
+		__cpuid( regs, 0x80000007 );
+		invariant = ( regs[3] >> 8 ) & 1;
+	}
+
+	SYSTEM_INFO si;
+	GetSystemInfo( &si );
+	DWORD_PTR process = 0, system = 0;
+	int affinity = 0;
+	if ( GetProcessAffinityMask( GetCurrentProcess(), &process, &system ) )
+		for ( ; process; process &= process - 1 )
+			affinity++;
+
+	const char *b = brand;
+	while ( *b == ' ' )
+		b++;
+	fprintf( s_pPerf, "cpu: %s, %d logical processors (%d for the game), invariant time stamp counter %s\n", *b ? b : "unknown",
+		(int)si.dwNumberOfProcessors, affinity, invariant ? "yes" : "no" );
+
+	MEMORYSTATUSEX mem;
+	mem.dwLength = sizeof( mem );
+	if ( GlobalMemoryStatusEx( &mem ) )
+		fprintf( s_pPerf, "memory: %.1f GB, %.1f GB free\n", mem.ullTotalPhys / 1073741824.0, mem.ullAvailPhys / 1073741824.0 );
+
+	OSVERSIONINFOW os;
+	memset( &os, 0, sizeof( os ) );
+	os.dwOSVersionInfoSize = sizeof( os );
+	RcRtlGetVersion_t pfnVersion = (RcRtlGetVersion_t)GetProcAddress( GetModuleHandleA( "ntdll.dll" ), "RtlGetVersion" );
+	if ( pfnVersion && pfnVersion( &os ) == 0 )
+		fprintf( s_pPerf, "windows: %lu.%lu build %lu\n", os.dwMajorVersion, os.dwMinorVersion, os.dwBuildNumber );
+
+	HMODULE power = LoadLibraryA( "powrprof.dll" );
+	if ( power )
+	{
+		RcPowerGetActiveScheme_t pfnActive = (RcPowerGetActiveScheme_t)GetProcAddress( power, "PowerGetActiveScheme" );
+		RcPowerReadFriendlyName_t pfnName = (RcPowerReadFriendlyName_t)GetProcAddress( power, "PowerReadFriendlyName" );
+		GUID *scheme = NULL;
+		if ( pfnActive && pfnName && pfnActive( NULL, &scheme ) == 0 && scheme )
+		{
+			WCHAR name[128];
+			DWORD size = sizeof( name );
+			char ascii[128];
+			if ( pfnName( NULL, scheme, NULL, NULL, (UCHAR *)name, &size ) == 0 &&
+				 WideCharToMultiByte( CP_UTF8, 0, name, -1, ascii, sizeof( ascii ), NULL, NULL ) )
+				fprintf( s_pPerf, "power plan: %s\n", ascii );
+			LocalFree( scheme );
+		}
+		FreeLibrary( power );
+	}
+
+	const char *vendor = (const char *)glGetString( GL_VENDOR );
+	const char *renderer = (const char *)glGetString( GL_RENDERER );
+	const char *version = (const char *)glGetString( GL_VERSION );
+	fprintf( s_pPerf, "gpu: %s, %s, OpenGL %s\n", vendor ? vendor : "?", renderer ? renderer : "?", version ? version : "?" );
+	fprintf( s_pPerf, "screen: %d x %d\n", ScreenWidth, ScreenHeight );
+
+	// the command line without the path of the game, which may hold the Windows user name
+	const char *cmd = GetCommandLineA();
+	if ( *cmd == '"' )
+		cmd = strchr( cmd + 1, '"' ) ? strchr( cmd + 1, '"' ) + 1 : "";
+	else
+		cmd = strchr( cmd, ' ' ) ? strchr( cmd, ' ' ) : "";
+	fprintf( s_pPerf, "launch options:%s\n", cmd );
+
+	static const char *s_szCvars[] =
+	{
+		"fps_max", "developer", "gl_vsync", "rc_vsync", "rc_smoothframes", "rc_smoothframes_fps", "rc_threads",
+		"rc_gpumodels", "rc_worldbatch", "rc_lightshader", "rc_dlightcull", "rc_rawinput", "gl_dynlight", "r_dynamic",
+		"cg_water", "gl_bump", "r_weather", "gl_renderer", "cl_himodels", NULL
+	};
+	fprintf( s_pPerf, "settings:" );
+	for ( int i = 0; s_szCvars[i]; i++ )
+	{
+		const char *value = gEngfuncs.pfnGetCvarString( (char *)s_szCvars[i] );
+		if ( value )
+			fprintf( s_pPerf, " %s=%s", s_szCvars[i], value );
+	}
+	fprintf( s_pPerf, "\n\n" );
+	fprintf( s_pPerf, "Each second: the frame rate, the average frame, the slowest 1%% and the slowest frame (ms), the main thread's "
+		"busy share, stutters, disk reads (operations/KB), page faults, then the CPU ms of each part of an average frame "
+		"and the GPU frame. STUTTER lines: one frame, its ms against the recent average, how many of them the main thread "
+		"was running, its disk reads and page faults, and the parts that took 0.5 ms or more in it.\n\n" );
+	fflush( s_pPerf );
+}
+
+static void RcPerfClose( void )
+{
+	if ( !s_pPerf )
+		return;
+
+	fprintf( s_pPerf, "end of the log\n" );
+	fclose( s_pPerf );
+	s_pPerf = NULL;
+}
+
+static void RcPerfOpen( LONGLONG qpcNow )
+{
+	char dir[MAX_PATH], path[MAX_PATH], stamp[32];
+	time_t now = time( NULL );
+
+	_snprintf( dir, sizeof( dir ), "%s\\perflogs", gEngfuncs.pfnGetGameDirectory() );
+	dir[sizeof( dir ) - 1] = 0;
+	CreateDirectoryA( dir, NULL );
+	strftime( stamp, sizeof( stamp ), "%Y%m%d_%H%M%S", localtime( &now ) );
+	_snprintf( path, sizeof( path ), "%s\\perflog_%s.txt", dir, stamp );
+	path[sizeof( path ) - 1] = 0;
+
+	s_pPerf = fopen( path, "w" );
+	if ( !s_pPerf )
+	{
+		gEngfuncs.Con_Printf( "rc_perflog: could not write %s\n", path );
+		return;
+	}
+
+	if ( !s_pfnPerfMem )
+		s_pfnPerfMem = (RcGetProcessMemoryInfo_t)GetProcAddress( GetModuleHandleA( "kernel32.dll" ), "K32GetProcessMemoryInfo" );
+	if ( !s_pfnPerfCycles )
+		s_pfnPerfCycles = (RcQueryThreadCycleTime_t)GetProcAddress( GetModuleHandleA( "kernel32.dll" ), "QueryThreadCycleTime" );
+
+	RcPerfHeader();
+	gEngfuncs.Con_Printf( "rc_perflog: writing %s (rc_perflog 0 ends it)\n", path );
+
+	s_ullPerfTsc0 = __rdtsc();
+	s_llPerfQpc0 = qpcNow;
+	if ( s_pfnPerfCycles )
+		s_pfnPerfCycles( GetCurrentThread(), &s_ullPerfCycles );
+
+	IO_COUNTERS io;
+	if ( GetProcessIoCounters( GetCurrentProcess(), &io ) )
+	{
+		s_ullPerfReads = io.ReadOperationCount;
+		s_ullPerfReadBytes = io.ReadTransferCount;
+	}
+	RcProcMem_t mem;
+	mem.cb = sizeof( mem );
+	if ( s_pfnPerfMem && s_pfnPerfMem( GetCurrentProcess(), &mem, sizeof( mem ) ) )
+		s_dwPerfFaults = mem.PageFaultCount;
+
+	s_flPerfAvg = 0;
+	s_iPerfSkip = 30;
+	s_szPerfMap[0] = 0;
+	s_llPerfSecStart = qpcNow;
+	s_iPerfFrames = s_iPerfHitches = 0;
+	s_flPerfSum = s_flPerfWorst = s_flPerfBusy = 0;
+	memset( s_flPerfCpu, 0, sizeof( s_flPerfCpu ) );
+	s_ullPerfSecReads = s_ullPerfSecReadBytes = 0;
+	s_dwPerfSecFaults = 0;
+}
+
+static void RcPerfSecond( LONGLONG qpcNow )
+{
+	if ( !s_iPerfFrames )
+		return;
+
+	double secs = ( qpcNow - s_llPerfSecStart ) * s_flTickMs / 1000.0;
+	double avg = s_flPerfSum / s_iPerfFrames;
+	int n = s_iPerfFrames < RC_PERF_TIMES ? s_iPerfFrames : RC_PERF_TIMES;
+	qsort( s_flPerfTimes, n, sizeof( float ), RcPerfCompare );
+	double low = s_flPerfTimes[n / 100];	// the slowest 1%: the frame at the 99th percentile
+
+	fprintf( s_pPerf, "%8.1f s %-16s %6.1f fps frame %6.2f 1%% %6.2f worst %6.2f busy %3.0f%% stutters %d reads %llu/%llu "
+		"faults %lu |", gEngfuncs.GetClientTime(), RcPerfMap(), s_iPerfFrames / ( secs > 0 ? secs : 1 ), avg, low,
+		s_flPerfWorst, 100.0 * s_flPerfBusy / ( s_flPerfSum > 0 ? s_flPerfSum : 1 ), s_iPerfHitches, s_ullPerfSecReads,
+		s_ullPerfSecReadBytes / 1024, s_dwPerfSecFaults );
+
+	char name[32];
+	for ( int i = 0; i < RCP_COUNT; i++ )
+	{
+		double ms = s_flPerfCpu[i] / s_iPerfFrames;
+		if ( ms < 0.01 )
+			continue;
+		RcPerfName( name, s_szScopeName[i] );
+		fprintf( s_pPerf, " %s %.2f", name, ms );
+	}
+	if ( s_iShowGpuValid )
+		fprintf( s_pPerf, " | gpu %.2f", s_flShowGpuFrame );
+	fprintf( s_pPerf, "\n" );
+	fflush( s_pPerf );
+
+	s_llPerfSecStart = qpcNow;
+	s_iPerfFrames = s_iPerfHitches = 0;
+	s_flPerfSum = s_flPerfWorst = s_flPerfBusy = 0;
+	memset( s_flPerfCpu, 0, sizeof( s_flPerfCpu ) );
+	s_ullPerfSecReads = s_ullPerfSecReadBytes = 0;
+	s_dwPerfSecFaults = 0;
+}
+
+// one frame (RcProf_Frame, before its scopes are cleared)
+static void RcPerfFrame( double frame, LONGLONG qpcNow )
+{
+	double busy = RcPerfBusyMs( qpcNow );
+
+	ULONGLONG reads = 0, readBytes = 0;
+	IO_COUNTERS io;
+	if ( GetProcessIoCounters( GetCurrentProcess(), &io ) )
+	{
+		reads = io.ReadOperationCount - s_ullPerfReads;
+		readBytes = io.ReadTransferCount - s_ullPerfReadBytes;
+		s_ullPerfReads = io.ReadOperationCount;
+		s_ullPerfReadBytes = io.ReadTransferCount;
+	}
+
+	DWORD faults = 0;
+	RcProcMem_t mem;
+	mem.cb = sizeof( mem );
+	if ( s_pfnPerfMem && s_pfnPerfMem( GetCurrentProcess(), &mem, sizeof( mem ) ) )
+	{
+		faults = mem.PageFaultCount - s_dwPerfFaults;
+		s_dwPerfFaults = mem.PageFaultCount;
+	}
+
+	// a map change starts over: its loading is not a stutter of play
+	const char *map = RcPerfMap();
+	if ( strcmp( map, s_szPerfMap ) )
+	{
+		strncpy( s_szPerfMap, map, sizeof( s_szPerfMap ) - 1 );
+		s_szPerfMap[sizeof( s_szPerfMap ) - 1] = 0;
+		fprintf( s_pPerf, "%8.1f s map %s\n", gEngfuncs.GetClientTime(), s_szPerfMap );
+		s_iPerfSkip = 30;
+		s_flPerfAvg = 0;
+	}
+
+	if ( s_iPerfFrames < RC_PERF_TIMES )
+		s_flPerfTimes[s_iPerfFrames] = (float)frame;
+	s_iPerfFrames++;
+	s_flPerfSum += frame;
+	s_flPerfBusy += busy < frame ? busy : frame;
+	if ( frame > s_flPerfWorst )
+		s_flPerfWorst = frame;
+	for ( int i = 0; i < RCP_COUNT; i++ )
+		s_flPerfCpu[i] += s_llCpu[i] * s_flTickMs;
+	s_ullPerfSecReads += reads;
+	s_ullPerfSecReadBytes += readBytes;
+	s_dwPerfSecFaults += faults;
+
+	if ( s_iPerfSkip > 0 )
+	{
+		s_iPerfSkip--;
+		s_flPerfAvg = s_flPerfAvg > 0 ? s_flPerfAvg * 0.9 + frame * 0.1 : frame;
+		return;
+	}
+
+	if ( frame >= s_flPerfAvg * 2.0 && frame >= s_flPerfAvg + 10.0 )
+	{
+		s_iPerfHitches++;
+
+		cl_entity_t *player = gEngfuncs.GetLocalPlayer();
+		fprintf( s_pPerf, "STUTTER %8.3f s %s at %.0f %.0f %.0f: frame %.2f ms (average %.2f), main thread running %.2f, reads "
+			"%llu/%llu KB, faults %lu |", gEngfuncs.GetClientTime(), map, player ? player->origin[0] : 0.0f,
+			player ? player->origin[1] : 0.0f, player ? player->origin[2] : 0.0f, frame, s_flPerfAvg, busy, reads,
+			readBytes / 1024, faults );
+
+		char name[32];
+		for ( int i = 0; i < RCP_COUNT; i++ )
+		{
+			double ms = s_llCpu[i] * s_flTickMs;
+			if ( ms < 0.5 )
+				continue;
+			RcPerfName( name, s_szScopeName[i] );
+			fprintf( s_pPerf, " %s %.2f", name, ms );
+		}
+		fprintf( s_pPerf, "\n" );
+		fflush( s_pPerf );
+	}
+
+	// the recent average, which one slow frame moves only a little
+	s_flPerfAvg = s_flPerfAvg * 0.95 + ( frame < s_flPerfAvg * 3.0 ? frame : s_flPerfAvg * 3.0 ) * 0.05;
+}
+
 //-----------------------------------------------------------------------------
 // the frame boundary, at the start of HUD_Redraw: closes the frame that ends here and opens the next
 //-----------------------------------------------------------------------------
@@ -335,6 +709,9 @@ void RcProf_Frame( void )
 				s_flWinWorstCpu[i] = s_llCpu[i] * s_flTickMs;
 		}
 		s_iWinFrames++;
+
+		if ( s_pPerf )
+			RcPerfFrame( frame, now.QuadPart );	// B340
 
 		if ( s_iOn >= 2 && s_iGpuState == 1 )
 		{
@@ -377,7 +754,18 @@ void RcProf_Frame( void )
 		s_llWinStart = now.QuadPart;
 	}
 
+	if ( s_pPerf && ( now.QuadPart - s_llPerfSecStart ) * s_flTickMs >= 1000 )
+		RcPerfSecond( now.QuadPart );
+
+	int perf = rc_perflog && rc_perflog->value;
+	if ( perf && !s_pPerf )
+		RcPerfOpen( now.QuadPart );
+	else if ( !perf && s_pPerf )
+		RcPerfClose();
+
 	int on = rc_prof ? (int)rc_prof->value : 0;
+	if ( s_pPerf && on < 2 )
+		on = 2;	// B340: the log needs the scopes and the GPU times, without the overlay
 	if ( on != s_iOn )
 	{
 		s_iOn = on;
@@ -421,7 +809,7 @@ static void RcDrawLine( int x, int y, const char *text )
 //-----------------------------------------------------------------------------
 void RcProf_Draw( void )
 {
-	if ( !s_iOn )
+	if ( !s_iOn || !rc_prof || !rc_prof->value )
 		return;
 
 	char text[128];
@@ -534,5 +922,6 @@ void RcProf_Init( void )
 
 	rc_prof = gEngfuncs.pfnRegisterVariable( "rc_prof", "0", 0 );
 	rc_prof_log = gEngfuncs.pfnRegisterVariable( "rc_prof_log", "0", 0 );
+	rc_perflog = gEngfuncs.pfnRegisterVariable( "rc_perflog", "0", 0 );	// B340
 	gEngfuncs.pfnAddCommand( "rc_prof_dump", RcProf_Dump );
 }

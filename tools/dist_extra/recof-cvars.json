@@ -224,6 +224,14 @@
       "desc_en": "Sets up the bones of the models on other processor cores. -1 picks the number of threads from your processor: none below 8 threads, where it would slow the graphics driver down. 0 is off. The picture is the same either way."
     },
     {
+      "name": "rc_perflog",
+      "type": "bool",
+      "default": "0",
+      "group": "Performance",
+      "label_en": "Performance log",
+      "desc_en": "Writes a log of the frame rate and of every stutter, with what your computer is, to cryoffear/perflogs. Turn it on, play the part that runs badly, quit, and send the newest file to the ReCoF developers. It does not change the game."
+    },
+    {
       "name": "rc_prof",
       "type": "int",
       "default": "0",
