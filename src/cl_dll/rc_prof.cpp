@@ -433,6 +433,17 @@ static void RcPerfHeader( void )
 	fprintf( s_pPerf, "cpu: %s, %d logical processors (%d for the game), invariant time stamp counter %s\n", *b ? b : "unknown",
 		(int)si.dwNumberOfProcessors, affinity, invariant ? "yes" : "no" );
 
+	// the clock the engine reads all the time: 10 MHz is Windows' own from the processor's counter, 14.3 MHz the
+	// HPET and 3.58 MHz the ACPI timer, which some boards and tuning guides leave on and which cost far more a read
+	LARGE_INTEGER freq, c0, c1, c;
+	QueryPerformanceFrequency( &freq );
+	QueryPerformanceCounter( &c0 );
+	for ( int i = 0; i < 10000; i++ )
+		QueryPerformanceCounter( &c );
+	QueryPerformanceCounter( &c1 );
+	fprintf( s_pPerf, "timer: %.6f MHz, %.0f ns a read\n", freq.QuadPart / 1e6,
+		( c1.QuadPart - c0.QuadPart ) * 1e9 / (double)freq.QuadPart / 10000.0 );
+
 	MEMORYSTATUSEX mem;
 	mem.dwLength = sizeof( mem );
 	if ( GlobalMemoryStatusEx( &mem ) )
