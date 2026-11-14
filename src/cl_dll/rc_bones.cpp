@@ -91,6 +91,7 @@ struct RcBoneStats_t
 	int		iRotation;		// their rotation matrix is another one
 	int		iVerified;
 	int		iMismatches;
+	int		iLetGo;			// workers let go before they started, every job being taken (B345)
 	double	flBatchMs;		// the main thread's time in the work
 	double	flWorstMs;
 };
@@ -121,7 +122,7 @@ static int							s_iWorkers;
 static HANDLE						s_hThread[RCB_MAX_WORKERS];
 static HANDLE						s_hWake[RCB_MAX_WORKERS];
 static CGameStudioModelRenderer		*s_pRenderer[RCB_MAX_WORKERS + 1];	// the last one is the main thread's
-static volatile LONG				s_lBusy[RCB_MAX_WORKERS];
+static volatile LONG				s_lBusy[RCB_MAX_WORKERS];	// 0 asleep, 1 woken for the work, 2 working (B345)
 static volatile LONG				s_lNext, s_lCount, s_lDone;
 static volatile LONG				s_lQuit;
 static unsigned int					s_uCsr;		// the main thread's SSE and x87 settings, for the workers
@@ -208,6 +209,11 @@ static DWORD WINAPI RcBonesWorker( LPVOID pParam )
 
 		if ( s_lQuit )
 			break;
+
+		// B345: the main thread lets a worker go that has not started when every job is taken; such a worker
+		// finds 0 here and goes back to sleep without touching the work
+		if ( InterlockedCompareExchange( &s_lBusy[w], 2, 1 ) != 1 )
+			continue;
 
 		// the main thread's floating point settings, so the results are the same bytes
 		_mm_setcsr( s_uCsr );
@@ -467,6 +473,18 @@ void RcBones_Launch( void )
 
 		RcBonesWork( s_pRenderer[RCB_MAX_WORKERS] );
 
+		// B345: every job is taken now. A worker that has not woken up yet has nothing left to do, so it is let go
+		// at once rather than waited for: on a laptop with efficiency cores, or with the cores asleep, a worker
+		// can take milliseconds to start, which the whole frame waited for
+		for ( int w = 0; w < s_iWorkers; w++ )
+		{
+			if ( InterlockedCompareExchange( &s_lBusy[w], 0, 1 ) == 1 )
+			{
+				ResetEvent( s_hWake[w] );
+				s_Stats.iLetGo++;
+			}
+		}
+
 		// the workers finish what they took; then none of them is still looking for work
 		for ( ;; )
 		{
@@ -614,6 +632,7 @@ static void RcBones_Debug( void )
 		s.iFrames, s.iJobs, s.iFrames ? s.flBatchMs / s.iFrames : 0.0, s.flWorstMs );
 	gEngfuncs.Con_Printf( "models drawn with the work's bones %d; set up on the main thread: %d not in the work, %d with "
 		"changed inputs, %d with another rotation\n", s.iReplays, s.iNoJob, s.iChanged, s.iRotation );
+	gEngfuncs.Con_Printf( "workers let go before they started, every job being taken: %d\n", s.iLetGo );	// B345
 	if ( s_iVerify )
 		gEngfuncs.Con_Printf( "verified %d, different %d\n", s.iVerified, s.iMismatches );
 }
